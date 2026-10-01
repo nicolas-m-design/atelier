@@ -2,6 +2,22 @@
 
 > **Summary:** What changed in this repository, newest first, written for someone arriving with no context.
 
+## 2026-10-01 — Reload all previews
+
+Nicolas asked for one control in the sidebar header that refreshes every design at once. Until now each preview and each linked page had only its own reload.
+
+- **Sidebar header.** A reload control sits beside the sidebar toggle. It reloads every loaded preview of the selected project, and the linked page if one is open, from their manifest routes, and asks for a fresh project check so a changed manifest is picked up too.
+- **How.** `Workspace` keeps a count (`reloads`) and passes it to `Canvas`, `Frame` and `Page`, where it joins each one's own reload count in the iframe's key.
+
+**Checks.** `npm run typecheck` and `npm test` (23 checks, unchanged) pass. In the browser: on Palier all five previews were replaced and loaded again; on Marvin all four previews and the open library were; canvas position, zoom and selection stayed as they were.
+
+**What a newcomer would get wrong.**
+
+- The control shows only while the project is live. Otherwise there is nothing to reload, the status card already offers "Check again", and the longer status lines ("Not running · …") need the width.
+- It lives in the sidebar, so it is not reachable while the sidebar is hidden.
+- Previews far from the viewport are not loaded in the first place, so they are not reloaded; they load fresh when they come near.
+- A preview that is entered is reloaded with the rest and returns to its starting route.
+
 ## 2026-10-01 — Linked pages open inside Atelier
 
 Nicolas asked for the UI library to sit in the sidebar the way Palier's own canvas has it, for both projects. Until now a manifest's `links` were new-tab links at the bottom of the sidebar.

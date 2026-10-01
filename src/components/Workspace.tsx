@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ChevronDown, File, Frame as FrameIcon, Layers, Library, PanelLeftClose, PanelLeftOpen } from "lucide-react";
+import { ChevronDown, File, Frame as FrameIcon, Layers, Library, PanelLeftClose, PanelLeftOpen, RefreshCw } from "lucide-react";
 import type { Camera } from "../camera";
 import { layoutBoard } from "../layout";
 import type { Project } from "../projects";
@@ -53,6 +53,9 @@ export function Workspace({ project, status, store, sidebar, onSidebar, onRetry 
   const exit = useCallback(() => { setInteractive(null); canvas.current?.focus(); }, []);
   const changeInteractive = useCallback((id: string | null) => { if (id === null) exit(); else setInteractive(id); }, [exit]);
   const showPage = (id: string | null) => { setInteractive(null); setPage(id); };
+  // Counts the project-wide reloads. Every preview and the open page start again from their route when it changes.
+  const [reloads, setReloads] = useState(0);
+  const reloadAll = () => { setReloads((n) => n + 1); onRetry(); };
   const showSidebar = <button type="button" onClick={() => onSidebar(true)} aria-label="Show the sidebar" className="tool"><PanelLeftOpen size={17} aria-hidden /></button>;
   const pageItem = (active: boolean) => `flex min-h-10 w-full items-center gap-2.5 rounded-md px-2 text-left font-medium outline-offset-2 focus-visible:outline-2 focus-visible:outline-neutral-700 ${active ? "bg-neutral-200 text-neutral-900" : "text-neutral-600 hover:bg-neutral-100"}`;
   // Escape leaves a preview whenever the keyboard is in Atelier. Keys pressed inside
@@ -75,7 +78,11 @@ export function Workspace({ project, status, store, sidebar, onSidebar, onRetry 
                 <span aria-hidden className={`size-1.5 shrink-0 rounded-full ${STATUS_DOT[status.state]}`} /><span className="truncate">{statusLine(project, status)}</span>
               </p>
             </div>
-            <button type="button" className="tool" onClick={() => onSidebar(false)} aria-label="Hide the sidebar"><PanelLeftClose size={16} aria-hidden /></button>
+            <div className="flex shrink-0 items-center gap-0.5">
+              {/* Only while live: there is nothing to reload otherwise, and the longer status lines need the room. */}
+              {live && <button type="button" className="tool" onClick={reloadAll} aria-label={`Reload all of ${project.name}'s previews`} title="Reload all previews"><RefreshCw size={15} aria-hidden /></button>}
+              <button type="button" className="tool" onClick={() => onSidebar(false)} aria-label="Hide the sidebar"><PanelLeftClose size={16} aria-hidden /></button>
+            </div>
           </div>
           {links.length > 0 && (
             <nav aria-label={`${project.name} pages`} className="shrink-0 space-y-1 border-t border-black/[0.07] px-3 py-3 text-[13px]">
@@ -107,14 +114,14 @@ export function Workspace({ project, status, store, sidebar, onSidebar, onRetry 
         {!sidebar && !open && <div className="absolute top-4 left-4 z-20 rounded-[5px] bg-white shadow-sm">{showSidebar}</div>}
         {/* The canvas stays mounted under an open page, so its previews and position are there on return. */}
         <div className="flex min-w-0 flex-1" inert={Boolean(open)}>
-          <Canvas ref={canvas} label={`${project.name} canvas`} origin={project.origin} board={board ?? EMPTY_BOARD} live={live}
+          <Canvas ref={canvas} label={`${project.name} canvas`} origin={project.origin} board={board ?? EMPTY_BOARD} live={live} reloads={reloads}
             initialCamera={view.camera} selected={current} interactive={entered}
             onSelect={setSelected} onInteractive={changeInteractive} onCamera={saveCamera}>
             <StatusCard project={project} status={status} hasBoard={Boolean(board)} onRetry={onRetry} />
           </Canvas>
         </div>
         {open && (
-          <Page key={open.id} link={open} src={live && project.origin ? project.origin + open.route : null} leading={sidebar ? null : showSidebar}>
+          <Page key={open.id} link={open} reloads={reloads} src={live && project.origin ? project.origin + open.route : null} leading={sidebar ? null : showSidebar}>
             <StatusCard project={project} status={status} hasBoard={false} onRetry={onRetry} />
           </Page>
         )}

@@ -10,6 +10,8 @@ interface Props {
   src: string | null;
   /** Near enough to the viewport to hold a live preview. */
   mounted: boolean;
+  /** The project-wide reload count; a change reloads this preview with the rest. */
+  reloads: number;
   selected: boolean;
   interactive: boolean;
   onSelect(): void;
@@ -24,8 +26,8 @@ const scaled = (size: number, zoom: number, cap: number) => Math.min(size * zoom
  * One screen on the board. The preview is the project's own page in an iframe;
  * everything Atelier adds (label, outline, controls) sits outside that iframe.
  */
-export function Frame({ screen, camera, src, mounted, selected, interactive, onSelect, onEnter, onExit }: Props) {
-  const [reloads, setReloads] = useState(0);
+export function Frame({ screen, camera, src, mounted, reloads, selected, interactive, onSelect, onEnter, onExit }: Props) {
+  const [own, setOwn] = useState(0);
   const rect = project(screen.rect, camera);
   const { zoom } = camera;
   const titleSize = scaled(TYPE.screenTitle.size, zoom, 15);
@@ -43,14 +45,14 @@ export function Frame({ screen, camera, src, mounted, selected, interactive, onS
             {interactive
               ? <button type="button" onClick={onExit} className="flex h-[30px] items-center gap-1.5 rounded-[5px] bg-neutral-900 px-2.5 text-[12px] font-medium whitespace-nowrap text-white hover:bg-neutral-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-700"><LogOut size={14} aria-hidden />Exit preview</button>
               : <button type="button" className="tool" onClick={onEnter} aria-label={`Interact with ${screen.title}`} title="Interact (double-click or Enter)"><MousePointerClick size={15} aria-hidden /></button>}
-            <button type="button" className="tool" onClick={() => setReloads((n) => n + 1)} aria-label={`Reload ${screen.title}`} title="Reload from its starting route"><RotateCcw size={14} aria-hidden /></button>
+            <button type="button" className="tool" onClick={() => setOwn((n) => n + 1)} aria-label={`Reload ${screen.title}`} title="Reload from its starting route"><RotateCcw size={14} aria-hidden /></button>
             <a className="tool" href={src} target="_blank" rel="noreferrer" aria-label={`Open ${screen.title} in a new tab`} title="Open in a new tab"><ArrowUpRight size={15} aria-hidden /></a>
           </div>
         )}
       </div>
       <div className={`relative bg-white shadow-[0_2px_6px_#00000006] ${interactive ? "outline-2 outline-offset-4 outline-neutral-900" : selected ? "outline-2 outline-offset-4 outline-neutral-400" : ""}`} style={{ height: rect.height }}>
         {src && mounted
-          ? <Preview key={reloads} screen={screen} src={src} zoom={zoom} interactive={interactive} />
+          ? <Preview key={`${reloads}:${own}`} screen={screen} src={src} zoom={zoom} interactive={interactive} />
           : <Placeholder label={src ? null : "Preview unavailable"} wide={rect.width >= 180} muted={!src} />}
         {!interactive && (
           <button type="button" aria-pressed={selected}

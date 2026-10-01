@@ -24,6 +24,8 @@ interface Props {
   board: Board;
   /** The project is reachable: frames may load. */
   live: boolean;
+  /** Changes when every preview should start again from its route. */
+  reloads: number;
   initialCamera?: Camera;
   selected: string | null;
   interactive: string | null;
@@ -35,7 +37,7 @@ interface Props {
 
 const sameSet = (a: ReadonlySet<string>, b: ReadonlySet<string>) => a.size === b.size && [...a].every((id) => b.has(id));
 
-export function Canvas({ ref, label, origin, board, live, initialCamera, selected, interactive, onSelect, onInteractive, onCamera, children }: Props) {
+export function Canvas({ ref, label, origin, board, live, reloads, initialCamera, selected, interactive, onSelect, onInteractive, onCamera, children }: Props) {
   const viewport = useRef<HTMLDivElement>(null);
   const [camera, setCamera] = useState<Camera>(initialCamera ?? { x: 56, y: 60, zoom: OVERVIEW_ZOOM.max });
   /** False until the camera is either restored or given its opening view. */
@@ -190,7 +192,7 @@ export function Canvas({ ref, label, origin, board, live, initialCamera, selecte
               {group.screens.map((screen) => (
                 <Frame key={screen.id} screen={screen} camera={camera}
                   src={live && origin ? origin + screen.route : null}
-                  mounted={mounted.has(screen.id)}
+                  mounted={mounted.has(screen.id)} reloads={reloads}
                   selected={selected === screen.id} interactive={interactive === screen.id}
                   onSelect={() => { onSelect(screen.id); if (interactive) onInteractive(null); }}
                   onEnter={() => { onSelect(screen.id); onInteractive(screen.id); }}

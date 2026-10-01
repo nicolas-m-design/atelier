@@ -14,6 +14,8 @@ Marvin's UI library was added after that, also on Nicolas's instruction: Marvin 
 
 Linked pages now open inside Atelier, for both projects. With `links` in a manifest, the sidebar opens with a page switcher ("Screens", then each link), and a linked page fills the workspace under a bar with reload and open-in-a-new-tab. The canvas stays mounted underneath. Two changes outside this repository go with it: Marvin's link declares `width: 1280`, and Palier's library hides its own wordmark and page switcher when framed (one more commit on `claude/atelier-connector` in the worktree, rebuilt and served on 3101 for the check).
 
+The sidebar header has a reload control for the whole project: every loaded preview and the open linked page start again from their routes. It shows only while the project is live and is not reachable with the sidebar hidden.
+
 Checks run: `npm run typecheck` and `npm test` (23 checks) pass here. In the browser, against the worktree preview: a single click selects without reaching the preview; double-click or Enter enters; links and scrolling work inside an entered, scaled preview; all three exits work; switching projects and reloading restore each project's position, zoom and selection; stopping the Palier preview shows the not-running state and restarting it recovers without a reload; at 100% after a reload one of five previews loads, at 49% three or four, with everything visible all five.
 
 ## Remaining work
@@ -33,6 +35,7 @@ Checks run: `npm run typecheck` and `npm test` (23 checks) pass here. In the bro
 
 | Id | Task | Status | Notes |
 | --- | --- | --- | --- |
+| `reload-all` | Reload every preview of a project at once | done (2026-10-01) | Control in the sidebar header, beside the sidebar toggle. Not exercised: a project that is not live (the control is hidden then), and a reload while a preview is entered. |
 | `library-view` | Show a project's UI library inside Atelier | done (2026-10-01) | Page switcher at the top of the sidebar and a page view over the canvas. The nesting worry is settled by the contract: a framed page keeps its own section list and hides its prototype-level navigation. Not exercised: a manifest with several links, and a narrow Atelier window against Palier's library. |
 | `marvin-library` | Add Marvin's UI library | done (2026-10-01) | Built in Marvin at `/ui` and listed in its manifest. Marvin's plan had deferred the library until a second surface existed, and Nicolas asked for it now. |
 | `marvin-connection` | Connect Marvin | done (2026-10-01) | Manifest route added in Marvin; registered at port 3210. Marvin's own documents had already withdrawn the plan to copy Palier's canvas, so no plan note was needed. |
