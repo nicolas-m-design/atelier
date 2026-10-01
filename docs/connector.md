@@ -1,13 +1,15 @@
 # Connecting a project to Atelier
 
-> **Summary:** The contract between Atelier and a project: one JSON manifest at `/atelier.json`, and preview routes that behave well inside a frame. Palier and Marvin both implement it. There is no package to install yet; a project implements these two things in its own code.
+> **Summary:** The contract between Atelier and a project: one JSON manifest at `/atelier.json`, preview routes that behave well inside a frame, and optionally linked pages such as a UI library. Palier and Marvin both implement it. There is no package to install yet; a project implements these two things in its own code.
 
 ## What a project provides
 
 1. **A manifest** at `<origin>/atelier.json`, readable from another local origin.
 2. **Preview routes**: ordinary pages of the project's own app, one per screen, that render the product only and take their state from the URL.
 
-Atelier provides everything else: the project rail, the sidebar, the canvas, labels, selection and controls. None of that is ever drawn inside a preview.
+A project may also name **linked pages**, such as its UI library, which Atelier shows whole in place of the canvas.
+
+Atelier provides everything else: the project rail, the sidebar, the canvas, labels, selection and controls. None of that is ever drawn inside a preview or a linked page.
 
 ## The manifest
 
@@ -29,7 +31,7 @@ Served with `Content-Type: application/json` and `Access-Control-Allow-Origin: *
       ]
     }
   ],
-  "links": [{ "id": "library", "title": "UI library", "route": "/ui" }]
+  "links": [{ "id": "library", "title": "UI library", "route": "/ui", "width": 1280 }]
 }
 ```
 
@@ -45,7 +47,8 @@ Served with `Content-Type: application/json` and `Access-Control-Allow-Origin: *
 | `screens[].caption` | no | A short line under the title: a persona, a state, a fixture name. |
 | `screens[].route` | yes | A path on the project's own origin, starting with one `/`. Full URLs are rejected. |
 | `screens[].width`, `screens[].height` | no | Override the default frame size for one screen. |
-| `links[]` | no | Other project pages, such as a UI library. Atelier opens them in a new tab. |
+| `links[].id`, `links[].title`, `links[].route` | no | Other project pages, such as a UI library. See "Linked pages" below. Atelier stores the open page by its id; the id `library` gets a library icon. |
+| `links[].width` | no | The narrowest width the page is designed for, in CSS pixels (integer, 240 to 4096). With less room Atelier lays the page out at this width and scales it down. Leave it out for a page that adapts to any width. |
 
 Strings are limited to 200 characters. Unknown fields are ignored. An invalid manifest is rejected as a whole, and Atelier says why.
 
@@ -60,6 +63,17 @@ Strings are limited to 200 characters. Unknown fields are ignored. An invalid ma
 - **In-frame navigation is fine.** Product links work once a preview is entered. Atelier cannot see where a preview has navigated; its reload control returns the frame to the manifest route.
 
 Captures for a portfolio are taken from the project's own route in a browser window of the right size, not from Atelier.
+
+## Linked pages
+
+When a manifest has `links`, Atelier's sidebar opens with a page switcher: "Screens" for the canvas, then one entry per link. A linked page is shown whole, in a frame that fills the workspace, under a bar holding Atelier's reload and open-in-a-new-tab controls.
+
+- **Not a preview.** A linked page has no fixed frame size and is always interactive. Its state is its own business; Atelier passes it nothing but its route.
+- **Allow framing**, as for preview routes.
+- **Keep the page's own navigation, hide the prototype's.** A library's section list belongs to the page and stays. A wordmark, a page switcher or a link back to the project's own canvas duplicates what Atelier already shows; hide those when framed. Palier does this with the same `data-embedded` check as its previews. Marvin's library has only its section list and a logotype, and hides nothing.
+- **Declare `width` if the page has a minimum width.** Marvin's library shares its product's 1280 px minimum and declares it; Palier's adapts and does not.
+
+Atelier keeps the canvas mounted underneath an open page, so previews and position are unchanged on return.
 
 ## Registering the project in Atelier
 

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { centerOn, clampZoom, isCamera, isNear, MAX_ZOOM, MIN_ZOOM, project, zoomAt } from "../src/camera";
+import { centerOn, clampZoom, fitPage, isCamera, isNear, MAX_ZOOM, MIN_ZOOM, project, zoomAt } from "../src/camera";
 
 describe("camera", () => {
   it("keeps the board point under the pointer fixed while zooming", () => {
@@ -42,5 +42,20 @@ describe("camera", () => {
     expect(isCamera({ x: Number.NaN, y: 2, zoom: 1 })).toBe(false);
     expect(isCamera({ x: "1", y: 2, zoom: 1 })).toBe(false);
     expect(isCamera(null)).toBe(false);
+  });
+});
+
+describe("linked page fit", () => {
+  it("fills the area when there is room or no design width", () => {
+    expect(fitPage({ width: 1600, height: 900 }, 1280)).toEqual({ width: 1600, height: 900, scale: 1 });
+    expect(fitPage({ width: 900, height: 700 })).toEqual({ width: 900, height: 700, scale: 1 });
+    expect(fitPage({ width: 0, height: 0 }, 1280).scale).toBe(1);
+  });
+
+  it("lays a wide page out at its design width and scales it to the area", () => {
+    const fit = fitPage({ width: 960, height: 600 }, 1280);
+    expect(fit).toEqual({ width: 1280, height: 800, scale: 0.75 });
+    expect(fit.width * fit.scale).toBe(960);
+    expect(fit.height * fit.scale).toBeGreaterThanOrEqual(600);
   });
 });

@@ -2,6 +2,27 @@
 
 > **Summary:** What changed in this repository, newest first, written for someone arriving with no context.
 
+## 2026-10-01 — Linked pages open inside Atelier
+
+Nicolas asked for the UI library to sit in the sidebar the way Palier's own canvas has it, for both projects. Until now a manifest's `links` were new-tab links at the bottom of the sidebar.
+
+- **Sidebar.** When a manifest has `links`, a page switcher sits under the project header: "Screens" for the canvas, then one entry per link, styled after Palier's "Scénarios / Bibliothèque UI" pair. The screen list hides while a page is open, because the page brings its own navigation.
+- **Page view** (`src/components/Page.tsx`). The linked page fills the workspace in a frame, always interactive, under a 48 px bar with its title, reload and open-in-a-new-tab. When the sidebar is hidden, its toggle moves into that bar so nothing of Atelier's is drawn over the page.
+- **Contract** (`docs/connector.md`, "Linked pages"). `links[].width` is new and optional: the narrowest width a page is designed for. With less room Atelier lays the page out at that width and scales it down (`fitPage` in `src/camera.ts`). A framed page keeps its own section list and hides its prototype-level navigation.
+- **Saved state.** Each project remembers its open page (`page` in `src/storage.ts`). A saved page the project no longer lists falls back to the canvas.
+- **In Marvin:** the library link declares `width: 1280`, its product minimum. **In Palier** (branch `claude/atelier-connector`, worktree only): the library hides its wordmark and page switcher when framed, with the existing `data-embedded` check.
+
+**Checks.** `npm run typecheck` and `npm test` pass (23 checks; new ones cover link width validation, the saved page and page fitting). In the browser at 1440 × 900: Marvin's library opens scaled to 0.8875 in the 1136 px beside the sidebar and unscaled at 1384 px with the sidebar hidden; a section link inside it scrolls it; the open page survives a reload; "Screens" returns to the canvas with its five Palier previews still mounted. Palier's library opens with only its section list. Palier was checked against a fresh production build of the worktree on 3101.
+
+**What a newcomer would get wrong.**
+
+- The canvas is not unmounted when a page opens. It sits underneath, `inert`, so its previews keep running and its position is untouched. Unmounting it would reload every preview on return.
+- "Screens" is Atelier's word. Palier's own canvas says "Scénarios"; Marvin's groups are product destinations, so the neutral word is used for both.
+- After a reload the page area is empty for a moment: a page loads only once the project's manifest check has answered.
+- Palier's canonical checkout on 3100 still shows its own switcher if framed, because the hiding rule is on the connector branch.
+
+**Not done.** A manifest with more than one link was not exercised. Nothing was merged or pushed.
+
 ## 2026-10-01 — Marvin's UI library
 
 Nicolas asked how to add the UI library now that Marvin is connected, then asked for it to be built. Atelier holds no project content, so the whole change is in Marvin; this repository's code is unchanged.
@@ -14,7 +35,7 @@ Nicolas asked how to add the UI library now that Marvin is connected, then asked
 **What a newcomer would get wrong.**
 
 - A project's library appears in Atelier only because its manifest names it under `links`. There is nothing to register here, and the link is hidden while the project is not live.
-- The library opens in a new tab. Showing it inside the canvas is still the deferred `library-view` task, and it would change the connector contract.
+- At this point the library opened in a new tab. The entry above replaces that.
 - Marvin's development server on 3210 was already running and was not restarted. Atelier's own server on 3200 was not running and was started for the check.
 
 ## 2026-10-01 — Connect Marvin

@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ArrowUpRight, ChevronDown, Frame as FrameIcon, PanelLeftClose, PanelLeftOpen } from "lucide-react";
+import { ChevronDown, File, Frame as FrameIcon, Layers, Library, PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import type { Camera } from "../camera";
 import { layoutBoard } from "../layout";
 import type { Project } from "../projects";
 import type { Status } from "../status";
 import type { Store } from "../storage";
 import { Canvas, type CanvasHandle } from "./Canvas";
+import { Page } from "./Page";
 import { STATUS_DOT, StatusCard, statusLine } from "./StatusCard";
 
 interface Props {
@@ -18,8 +19,9 @@ interface Props {
 }
 
 /**
- * One project's scenario sidebar and canvas. Mounted per project, so its
- * camera, selection and previews never leak into another project's.
+ * One project's sidebar and canvas, and its linked pages when one is open.
+ * Mounted per project, so its camera, selection and previews never leak into
+ * another project's.
  */
 export function Workspace({ project, status, store, sidebar, onSidebar, onRetry }: Props) {
   const canvas = useRef<CanvasHandle>(null);
@@ -34,6 +36,10 @@ export function Workspace({ project, status, store, sidebar, onSidebar, onRetry 
   const known = (id: string | null) => id !== null && Boolean(board?.screens.some((screen) => screen.id === id));
   const current = known(selected) ? selected : null;
   const entered = live && known(interactive) ? interactive : null;
+  // The canvas, or one of the pages the manifest links to. A saved page the project no longer lists falls back to the canvas.
+  const [page, setPage] = useState<string | null>(view.page ?? null);
+  const links = manifest?.links ?? [];
+  const open = links.find((link) => link.id === page) ?? null;
 
   useEffect(() => {
     if (status.state !== "online") return;
@@ -41,10 +47,14 @@ export function Workspace({ project, status, store, sidebar, onSidebar, onRetry 
     store.updateProject(project.id, { manifest: status.manifest });
   }, [status, store, project.id]);
   useEffect(() => { if (board) store.updateProject(project.id, { selected: current }); }, [current, board, store, project.id]);
+  useEffect(() => { if (manifest) store.updateProject(project.id, { page: open?.id ?? null }); }, [open?.id, manifest, store, project.id]);
   const saveCamera = useCallback((camera: Camera) => store.updateProject(project.id, { camera }), [store, project.id]);
 
   const exit = useCallback(() => { setInteractive(null); canvas.current?.focus(); }, []);
   const changeInteractive = useCallback((id: string | null) => { if (id === null) exit(); else setInteractive(id); }, [exit]);
+  const showPage = (id: string | null) => { setInteractive(null); setPage(id); };
+  const showSidebar = <button type="button" onClick={() => onSidebar(true)} aria-label="Show the sidebar" className="tool"><PanelLeftOpen size={17} aria-hidden /></button>;
+  const pageItem = (active: boolean) => `flex min-h-10 w-full items-center gap-2.5 rounded-md px-2 text-left font-medium outline-offset-2 focus-visible:outline-2 focus-visible:outline-neutral-700 ${active ? "bg-neutral-200 text-neutral-900" : "text-neutral-600 hover:bg-neutral-100"}`;
   // Escape leaves a preview whenever the keyboard is in Atelier. Keys pressed inside
   // a preview stay in that page, which is why the Exit controls are always on screen.
   useEffect(() => {
@@ -67,7 +77,17 @@ export function Workspace({ project, status, store, sidebar, onSidebar, onRetry 
             </div>
             <button type="button" className="tool" onClick={() => onSidebar(false)} aria-label="Hide the sidebar"><PanelLeftClose size={16} aria-hidden /></button>
           </div>
-          <nav aria-label={`${project.name} screens`} className="flex-1 overflow-y-auto border-t border-black/[0.07] px-3 py-4 text-[12px]">
+          {links.length > 0 && (
+            <nav aria-label={`${project.name} pages`} className="shrink-0 space-y-1 border-t border-black/[0.07] px-3 py-3 text-[13px]">
+              <button type="button" onClick={() => showPage(null)} aria-current={open ? undefined : "page"} className={pageItem(!open)}><Layers size={16} className="shrink-0" aria-hidden />Screens</button>
+              {links.map((link) => {
+                const Icon = link.id === "library" ? Library : File;
+                return <button key={link.id} type="button" onClick={() => showPage(link.id)} aria-current={open?.id === link.id ? "page" : undefined} className={pageItem(open?.id === link.id)}><Icon size={16} className="shrink-0" aria-hidden /><span className="truncate">{link.title}</span></button>;
+              })}
+            </nav>
+          )}
+          {/* A linked page brings its own navigation, so the screen list steps aside for it. */}
+          <nav aria-label={`${project.name} screens`} hidden={Boolean(open)} className="flex-1 overflow-y-auto border-t border-black/[0.07] px-3 py-4 text-[12px]">
             {board?.groups.map((group) => (
               <div key={group.id} className="mb-5">
                 <button type="button" onClick={() => canvas.current?.focusGroup(group.id)} className="mb-1 flex w-full items-center gap-2 rounded-md px-2 py-2 text-left font-medium outline-offset-2 hover:bg-neutral-100 focus-visible:outline-2 focus-visible:outline-neutral-700"><ChevronDown size={12} className="shrink-0 text-neutral-400" aria-hidden />{group.title}</button>
@@ -81,24 +101,23 @@ export function Workspace({ project, status, store, sidebar, onSidebar, onRetry 
             ))}
             {!board && <p className="px-2 py-2 leading-relaxed text-neutral-500">No screens to list yet.</p>}
           </nav>
-          {live && manifest && manifest.links.length > 0 && (
-            <nav aria-label={`${project.name} pages`} className="shrink-0 space-y-0.5 border-t border-black/[0.07] px-3 py-3 text-[12px]">
-              {manifest.links.map((link) => (
-                <a key={link.id} href={project.origin + link.route} target="_blank" rel="noreferrer" className="flex items-center justify-between gap-2 rounded-md px-2 py-2 text-neutral-600 outline-offset-2 hover:bg-neutral-100 hover:text-neutral-900 focus-visible:outline-2 focus-visible:outline-neutral-700">
-                  {link.title}<ArrowUpRight size={13} className="shrink-0 text-neutral-400" aria-hidden />
-                </a>
-              ))}
-            </nav>
-          )}
         </aside>
       )}
       <div className="relative flex min-w-0 flex-1">
-        {!sidebar && <button type="button" onClick={() => onSidebar(true)} aria-label="Show the sidebar" className="tool absolute top-4 left-4 z-20 bg-white shadow-sm"><PanelLeftOpen size={17} aria-hidden /></button>}
-        <Canvas ref={canvas} label={`${project.name} canvas`} origin={project.origin} board={board ?? EMPTY_BOARD} live={live}
-          initialCamera={view.camera} selected={current} interactive={entered}
-          onSelect={setSelected} onInteractive={changeInteractive} onCamera={saveCamera}>
-          <StatusCard project={project} status={status} hasBoard={Boolean(board)} onRetry={onRetry} />
-        </Canvas>
+        {!sidebar && !open && <div className="absolute top-4 left-4 z-20 rounded-[5px] bg-white shadow-sm">{showSidebar}</div>}
+        {/* The canvas stays mounted under an open page, so its previews and position are there on return. */}
+        <div className="flex min-w-0 flex-1" inert={Boolean(open)}>
+          <Canvas ref={canvas} label={`${project.name} canvas`} origin={project.origin} board={board ?? EMPTY_BOARD} live={live}
+            initialCamera={view.camera} selected={current} interactive={entered}
+            onSelect={setSelected} onInteractive={changeInteractive} onCamera={saveCamera}>
+            <StatusCard project={project} status={status} hasBoard={Boolean(board)} onRetry={onRetry} />
+          </Canvas>
+        </div>
+        {open && (
+          <Page key={open.id} link={open} src={live && project.origin ? project.origin + open.route : null} leading={sidebar ? null : showSidebar}>
+            <StatusCard project={project} status={status} hasBoard={false} onRetry={onRetry} />
+          </Page>
+        )}
       </div>
     </>
   );

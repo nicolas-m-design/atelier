@@ -27,14 +27,20 @@ export interface ManifestGroup {
   screens: ManifestScreen[];
 }
 
-export interface ManifestLink { id: string; title: string; route: string }
+export interface ManifestLink {
+  id: string;
+  title: string;
+  route: string;
+  /** The narrowest width the page is designed for. With less room, Atelier scales it down. */
+  width?: number;
+}
 
 export interface Manifest {
   atelier: typeof MANIFEST_VERSION;
   name: string;
   frame: { width: number; height: number };
   groups: ManifestGroup[];
-  /** Project pages outside the canvas, such as a UI library. Opened in a new tab. */
+  /** Project pages outside the canvas, such as a UI library. Listed above the screens and shown whole. */
   links: ManifestLink[];
 }
 
@@ -92,7 +98,8 @@ export function parseManifest(input: unknown): Manifest {
     groups,
     links: links.map((link, l): ManifestLink => {
       if (!isRecord(link) || !isText(link.id) || !isText(link.title) || !isRoute(link.route)) throw new Error(`link ${l + 1} needs an id, a title and a route`);
-      return { id: link.id, title: link.title, route: link.route };
+      if (link.width !== undefined && !isDimension(link.width)) throw new Error(`link "${link.id}" has an invalid width`);
+      return { id: link.id, title: link.title, route: link.route, width: link.width as number | undefined };
     }),
   };
 }

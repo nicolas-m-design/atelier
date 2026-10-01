@@ -1,6 +1,6 @@
 /**
  * What Atelier remembers in this browser: the open project, and each project's
- * own canvas position, zoom, selection and last good manifest. Preview frames
+ * own canvas position, zoom, selection, open page and last good manifest. Preview frames
  * never read this; their state comes from their route alone.
  */
 import { isCamera, type Camera } from "./camera";
@@ -11,6 +11,8 @@ export const STORAGE_KEY = "atelier:v1";
 export interface ProjectView {
   camera?: Camera;
   selected?: string | null;
+  /** The linked page shown instead of the canvas, by its manifest id; null for the canvas. */
+  page?: string | null;
   /** The last manifest the project served, so its scenarios stay listed while it is stopped. */
   manifest?: Manifest;
 }
@@ -37,6 +39,7 @@ export function parseSaved(raw: string | null): Saved {
     const view: ProjectView = {};
     if (isCamera(value.camera)) view.camera = { x: value.camera.x, y: value.camera.y, zoom: value.camera.zoom };
     if (typeof value.selected === "string" || value.selected === null) view.selected = value.selected;
+    if (typeof value.page === "string" || value.page === null) view.page = value.page;
     try { if (value.manifest !== undefined) view.manifest = parseManifest(value.manifest); } catch { /* a stale or damaged copy is not worth keeping */ }
     projects[id] = view;
   }

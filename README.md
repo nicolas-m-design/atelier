@@ -7,7 +7,7 @@
 The scenario canvas started inside Palier. Atelier is that canvas, moved out so it can be improved once and used by every project:
 
 - a narrow **project rail** to switch projects, each with a status dot;
-- the selected project's **scenario sidebar**;
+- the selected project's **sidebar**: a switch between its screens and its linked pages, such as a UI library, then the list of screens;
 - the **canvas**, with each screen shown as a live preview from the project's own server.
 
 Atelier holds no product code. A project lists its screens in a small manifest it serves itself, and each screen is one of the project's own pages in an iframe, so it keeps its own styles, dependencies and state. The contract is in [docs/connector.md](docs/connector.md).
@@ -48,11 +48,12 @@ Remove the line, and the launch entry, once the canonical checkout serves the ma
 - **Move:** drag, or scroll. **Zoom:** pinch on a trackpad, or Ctrl/Command + wheel, or the controls at the bottom. 100% is the screen's real size.
 - **Keyboard, with the canvas focused:** arrow keys pan, `+` and `-` zoom, `0` shows everything, `1` is actual size, Enter enters the selected screen.
 - **Sidebar:** a group name shows that row; a screen name centres that screen and selects it.
+- **Pages:** when a project links a page such as its UI library, the top of the sidebar switches between "Screens" (the canvas) and that page. The page fills the workspace and is interactive straight away; reload and open-in-a-new-tab sit in the bar above it. The canvas keeps its position and previews meanwhile.
 - **Select a screen:** click it. Nothing inside the screen reacts. A selected screen shows three controls above its top-right corner: interact, reload, open in a new tab.
 - **Interact with a screen:** double-click it, or press Enter on a selected one. Its links, forms and scrolling now work; the rest of the canvas still pans and zooms.
 - **Leave a screen:** "Exit preview" above the screen or in the bar at the bottom, a click on the bare canvas, or Escape while the keyboard is in Atelier.
 
-Each project remembers its own position, zoom and selected screen in this browser. Previews are never affected by that memory: a screen's state comes from its route alone.
+Each project remembers its own position, zoom, selected screen and open page in this browser. Previews are never affected by that memory: a screen's state comes from its route alone.
 
 ## What the project states mean
 

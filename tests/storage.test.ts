@@ -18,14 +18,14 @@ describe("saved state", () => {
       active: "marvin",
       sidebar: false,
       projects: {
-        palier: { camera: { x: 10, y: 20, zoom: 0.4 }, selected: "photo-1" },
-        marvin: { camera: { x: 0, y: 0, zoom: 99 }, selected: 7, manifest: { atelier: 1 } },
+        palier: { camera: { x: 10, y: 20, zoom: 0.4 }, selected: "photo-1", page: "library" },
+        marvin: { camera: { x: 0, y: 0, zoom: 99 }, selected: 7, page: 3, manifest: { atelier: 1 } },
         broken: "nope",
       },
     }));
     expect(saved.active).toBe("marvin");
     expect(saved.sidebar).toBe(false);
-    expect(saved.projects.palier).toEqual({ camera: { x: 10, y: 20, zoom: 0.4 }, selected: "photo-1" });
+    expect(saved.projects.palier).toEqual({ camera: { x: 10, y: 20, zoom: 0.4 }, selected: "photo-1", page: "library" });
     expect(saved.projects.marvin).toEqual({});
     expect(saved.projects).not.toHaveProperty("broken");
   });

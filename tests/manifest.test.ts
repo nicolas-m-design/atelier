@@ -18,12 +18,22 @@ const valid = {
   links: [{ id: "library", title: "Library", route: "/ui" }],
 };
 
+const manifestLinks = (links: unknown[]) => parseManifest({ ...valid, links }).links;
+
 describe("manifest", () => {
   it("accepts a valid manifest and keeps only known fields", () => {
     const manifest = parseManifest({ ...valid, extra: "ignored" });
     expect(screenIds(manifest)).toEqual(["one", "two", "three"]);
     expect(manifest).not.toHaveProperty("extra");
     expect(parseManifest({ ...valid, links: undefined }).links).toEqual([]);
+  });
+
+  it("keeps a linked page's design width and rejects an unusable one", () => {
+    expect(manifestLinks([{ id: "library", title: "Library", route: "/ui" }])).toEqual([{ id: "library", title: "Library", route: "/ui", width: undefined }]);
+    expect(manifestLinks([{ id: "library", title: "Library", route: "/ui", width: 1280 }])[0]!.width).toBe(1280);
+    for (const width of [0, 12.5, "1280", 99999]) {
+      expect(() => manifestLinks([{ id: "library", title: "Library", route: "/ui", width }]), String(width)).toThrow(/width/);
+    }
   });
 
   it("rejects routes that could leave the project's origin", () => {

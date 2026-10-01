@@ -60,6 +60,16 @@ export function distanceFromCenter(rect: Rect, viewport: Size): number {
   return Math.hypot(rect.x + rect.width / 2 - viewport.width / 2, rect.y + rect.height / 2 - viewport.height / 2);
 }
 
+/**
+ * How a linked page fills an area: at the area's own size when there is room,
+ * otherwise laid out at the width it was designed for and scaled down to fit.
+ */
+export function fitPage(area: Size, minWidth?: number): Size & { scale: number } {
+  if (!minWidth || area.width <= 0 || area.width >= minWidth) return { width: area.width, height: area.height, scale: 1 };
+  const scale = area.width / minWidth;
+  return { width: minWidth, height: Math.ceil(area.height / scale), scale };
+}
+
 export function isCamera(value: unknown): value is Camera {
   if (typeof value !== "object" || value === null) return false;
   const { x, y, zoom } = value as Record<string, unknown>;
