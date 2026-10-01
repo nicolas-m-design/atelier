@@ -2,6 +2,21 @@
 
 > **Summary:** What changed in this repository, newest first, written for someone arriving with no context.
 
+## 2026-10-01 — Marvin's UI library
+
+Nicolas asked how to add the UI library now that Marvin is connected, then asked for it to be built. Atelier holds no project content, so the whole change is in Marvin; this repository's code is unchanged.
+
+- **In Marvin** (still not a git repository, so uncommitted files there): a `/ui` page showing its colour tokens, type sizes, logotype, robot form, map markers, status glyphs and the five Overview components, each rendered by the product's own code from its fixture. Its manifest now lists `{ id: "library", title: "UI library", route: "/ui" }` under `links`. Three small exports were added to two product components; nothing in the product's markup or behaviour changed. Details are in Marvin's own changelog.
+- **Here:** documentation only.
+
+**Checks.** Marvin: TypeScript clean, 34 tests pass (31 before). In the browser at 1440 × 900 and 1280 × 800 the library renders with no console errors on a clean load, and selection carries across its examples. In Atelier, Marvin's sidebar shows "UI library" linking to `http://localhost:3210/ui`. Here: `npm run typecheck` and `npm test` (20 checks) pass.
+
+**What a newcomer would get wrong.**
+
+- A project's library appears in Atelier only because its manifest names it under `links`. There is nothing to register here, and the link is hidden while the project is not live.
+- The library opens in a new tab. Showing it inside the canvas is still the deferred `library-view` task, and it would change the connector contract.
+- Marvin's development server on 3210 was already running and was not restarted. Atelier's own server on 3200 was not running and was started for the check.
+
 ## 2026-10-01 — Connect Marvin
 
 Nicolas asked for Marvin's UI to be added now that its shell and Overview exist. Marvin already had four product-only preview frames at `/preview/<id>` and a document anticipating a manifest route; it lacked the manifest itself.

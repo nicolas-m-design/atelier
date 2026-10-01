@@ -10,6 +10,8 @@ Palier is connected through a manifest it serves itself. That change is **not in
 
 Marvin was connected later the same day, on Nicolas's instruction: it now serves `/atelier.json` from its preview frame registry (added to Marvin from this session; Marvin is not a git repository, so that change is uncommitted files there), and is registered here at `http://localhost:3210`. Its four Overview frames show at 1440 × 900.
 
+Marvin's UI library was added after that, also on Nicolas's instruction: Marvin now has a `/ui` page built from its own components and names it under `links` in its manifest, so "UI library" appears at the bottom of Marvin's sidebar here and opens in a new tab. Nothing in Atelier's code changed for it. The work is uncommitted files in Marvin, like the manifest.
+
 Checks run: `npm run typecheck` and `npm test` (20 checks) pass here. In the browser, against the worktree preview: a single click selects without reaching the preview; double-click or Enter enters; links and scrolling work inside an entered, scaled preview; all three exits work; switching projects and reloading restore each project's position, zoom and selection; stopping the Palier preview shows the not-running state and restarting it recovers without a reload; at 100% after a reload one of five previews loads, at 49% three or four, with everything visible all five.
 
 ## Remaining work
@@ -23,12 +25,13 @@ Checks run: `npm run typecheck` and `npm test` (20 checks) pass here. In the bro
 | `preview-pinch` | Keep pinch zoom on the canvas over an entered preview | deferred | Same mechanism as `preview-keys`. The browser's own page zoom in that case was not exercised. |
 | `thumbnails` | Lighter previews for large projects | deferred | Every preview is a full page. Fine at Palier's five; revisit when a project passes about a dozen screens. |
 | `palier-canvas-future` | Decide what happens to Palier's built-in canvas | open question for Nicolas | It stays as Palier's standalone and public entry for now, so improvements made here do not reach it. |
-| `library-view` | Show a project's UI library inside Atelier | deferred | It is a new-tab link today. Palier's `/ui` has its own sidebar, which would nest. |
+| `library-view` | Show a project's UI library inside Atelier | deferred | It is a new-tab link today, for Palier and Marvin. Both `/ui` pages have their own sidebar, which would nest. |
 
 ## Completed
 
 | Id | Task | Status | Notes |
 | --- | --- | --- | --- |
+| `marvin-library` | Add Marvin's UI library | done (2026-10-01) | Built in Marvin at `/ui` and listed in its manifest; no change here. Marvin's plan had deferred the library until a second surface existed, and Nicolas asked for it now. |
 | `marvin-connection` | Connect Marvin | done (2026-10-01) | Manifest route added in Marvin; registered at port 3210. Marvin's own documents had already withdrawn the plan to copy Palier's canvas, so no plan note was needed. |
 | `first-milestone` | Workspace shell, canvas, persistence, interaction mode, project states | done on `work/first-milestone` (2026-10-01) | Canvas mechanics ported from Palier's `ScenarioCanvas.tsx` at `5eda020`; board units changed to source pixels and frame sizes taken from the manifest. |
 | `palier-connector` | Palier serves a derived manifest and hides scenario navigation when framed | done on Palier branch `claude/atelier-connector` (2026-10-01); not merged | Tests there: 158 pass, plus the one suite that already failed before the change. |
