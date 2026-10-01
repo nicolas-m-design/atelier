@@ -1,6 +1,6 @@
 # Atelier
 
-> **Summary:** A local workspace that shows several projects' prototype screens on one pannable, zoomable canvas, with a project switcher. Each project stays in its own repository and runs its own server; Atelier embeds its screens as live previews. First milestone: Palier is connected, Marvin is registered as an empty project. Local only: nothing is published or deployed.
+> **Summary:** A local workspace that shows several projects' prototype screens on one pannable, zoomable canvas, with a project switcher. Each project stays in its own repository and runs its own server; Atelier embeds its screens as live previews. Palier and Marvin are both connected. Local only: nothing is published or deployed.
 
 ## What it is
 
@@ -33,7 +33,7 @@ Start each project's own server yourself, in its own folder. Atelier never start
 | Project | Address Atelier expects | Start it with |
 | --- | --- | --- |
 | Palier | http://localhost:3100 | `npm run dev` in `/Users/nico/Sites/palier` |
-| Marvin | none yet | no application exists |
+| Marvin | http://localhost:3210 | `npm run dev` in `/Users/nico/Sites/marvin` |
 
 **Until Palier's connector branch is consolidated**, the server on 3100 does not serve `/atelier.json`, and Atelier reports "No manifest" for it. The connector lives on the branch `claude/atelier-connector`, checked out at `/Users/nico/Sites/palier-atelier`. To use it, build and serve that worktree on port 3101 (`npm run build`, then `npx next start --port 3101` there, or the `palier-connector-preview` entry in `.claude/launch.json`) and keep this line in `.env.local`:
 
@@ -61,7 +61,7 @@ Each project remembers its own position, zoom and selected screen in this browse
 | Green | Live | The project serves a valid manifest. Screens load when they come near the viewport. |
 | Grey | Not running | Nothing answers. The last known screens stay listed as placeholders; Atelier reconnects by itself when the server is back. |
 | Amber | No manifest | A server answers without a usable `/atelier.json`. |
-| Hollow | No preview yet | Registered without an address. |
+| Hollow | No preview yet | Registered without an address. No current project is in this state. |
 
 ## Known limits
 

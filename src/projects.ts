@@ -15,8 +15,7 @@ export interface Project {
 
 const REGISTRY: readonly Project[] = [
   { id: "palier", name: "Palier", origin: "http://localhost:3100", start: { cwd: "/Users/nico/Sites/palier", command: "npm run dev" } },
-  // No application exists yet. Give it an address once it serves /atelier.json.
-  { id: "marvin", name: "Marvin", origin: null },
+  { id: "marvin", name: "Marvin", origin: "http://localhost:3210", start: { cwd: "/Users/nico/Sites/marvin", command: "npm run dev" } },
 ];
 
 /**

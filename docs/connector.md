@@ -1,6 +1,6 @@
 # Connecting a project to Atelier
 
-> **Summary:** The contract between Atelier and a project: one JSON manifest at `/atelier.json`, and preview routes that behave well inside a frame. Palier implements it; Marvin can adopt it when its app exists. There is no package to install yet; a project implements these two things in its own code.
+> **Summary:** The contract between Atelier and a project: one JSON manifest at `/atelier.json`, and preview routes that behave well inside a frame. Palier and Marvin both implement it. There is no package to install yet; a project implements these two things in its own code.
 
 ## What a project provides
 
@@ -49,7 +49,7 @@ Served with `Content-Type: application/json` and `Access-Control-Allow-Origin: *
 
 Strings are limited to 200 characters. Unknown fields are ignored. An invalid manifest is rejected as a whole, and Atelier says why.
 
-**Derive the manifest from the project's own scenario data** instead of writing a second list by hand. Palier builds its manifest from the same module its own canvas reads (`src/components/canvas/screens.ts` and `atelier.ts` there), and a test checks that the two agree.
+**Derive the manifest from the project's own scenario data** instead of writing a second list by hand. Palier builds its manifest from the same module its own canvas reads (`src/components/canvas/screens.ts` and `atelier.ts` there), and a test checks that the two agree. Marvin builds its manifest from its preview frame registry (`src/preview/frames.ts` and `manifest.ts` there), with the same kind of test.
 
 ## Preview routes
 

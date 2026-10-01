@@ -2,6 +2,17 @@
 
 > **Summary:** What changed in this repository, newest first, written for someone arriving with no context.
 
+## 2026-10-01 — Connect Marvin
+
+Nicolas asked for Marvin's UI to be added now that its shell and Overview exist. Marvin already had four product-only preview frames at `/preview/<id>` and a document anticipating a manifest route; it lacked the manifest itself.
+
+- **In Marvin** (not a git repository, so these are uncommitted files there): `/atelier.json`, derived from its preview frame registry and its list of built destinations, with four tests comparing the two. No product screen changed. Its development server on port 3210 was already running and was not restarted.
+- **Here:** Marvin's registry entry now has the address `http://localhost:3210` and a start command.
+
+**Checks.** Marvin: TypeScript clean, 31 tests pass (27 before). In the browser: Marvin shows as live with one group and four frames at 1440 × 900 beside Palier's 1280 × 720 frames; frames near the viewport load and the others wait; entering a frame and clicking an attention item changes its selection. This is also the first check against a development server rather than a production build. One frame appeared unstyled for a moment on first load while the dev server compiled, then settled.
+
+**What a newcomer would get wrong.** No project is in the empty state any more, but the state and its message remain for the next project registered without an address.
+
 ## 2026-10-01 — First milestone: a shared canvas workspace for Palier and Marvin
 
 Nicolas asked for Palier's prototype canvas to be extracted into a shared local workspace with project switching, after reviewing a plan. Built as its own repository: Vite, React, TypeScript and Tailwind, with no backend.
