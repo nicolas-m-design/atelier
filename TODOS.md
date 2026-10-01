@@ -4,6 +4,8 @@
 
 ## Handoff note
 
+*2026-10-02.* Text selection is disabled throughout Atelier's interface, with an exception for editable fields. Start commands still have their Copy button. This CSS belongs to Atelier's document and does not affect project iframe contents.
+
 *2026-10-01, Claude.* The first milestone is committed on `work/first-milestone` (`main` holds only the empty starting commit). Atelier runs on http://localhost:3200 with a project rail, scenario sidebar, canvas, per-project saved view, a select/interact split for previews, and live, not-running, no-manifest and empty project states.
 
 Palier is connected through a manifest it serves itself. That change is **not in Palier's canonical checkout**: it is on the branch `claude/atelier-connector` in a separate worktree at `/Users/nico/Sites/palier-atelier`, based on `5eda020` (the tip of `codex/cal-sans-wordmark` when the work started). For verification that worktree was built and served on port 3101, and `.env.local` here points Palier at it. Port 3100 was not running at the time and was never touched.

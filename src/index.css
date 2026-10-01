@@ -10,6 +10,12 @@
     @apply bg-[#e8e8e8] font-sans text-[#252525] antialiased;
     cursor: default;
     overscroll-behavior: none;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+  input, textarea, [contenteditable="true"] {
+    -webkit-user-select: text;
+    user-select: text;
   }
   button, a { cursor: pointer; }
   button:disabled { cursor: default; }

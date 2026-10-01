@@ -41,7 +41,7 @@ export function StatusCard({ project, status, hasBoard, onRetry }: { project: Pr
           </p>
           {command && (
             <div className="mt-3 flex items-center gap-2 rounded-lg bg-neutral-100 py-1.5 pr-1.5 pl-3">
-              <code className="min-w-0 flex-1 overflow-x-auto text-[12px] whitespace-nowrap text-neutral-800 select-text">{command}</code>
+              <code className="min-w-0 flex-1 overflow-x-auto text-[12px] whitespace-nowrap text-neutral-800">{command}</code>
               <button type="button" className="tool" aria-label="Copy the start command" title="Copy"
                 onClick={() => { void navigator.clipboard?.writeText(command).then(() => { setCopied(true); setTimeout(() => setCopied(false), 1600); }); }}>
                 {copied ? <Check size={14} aria-hidden /> : <Copy size={14} aria-hidden />}

@@ -2,6 +2,14 @@
 
 > **Summary:** What changed in this repository, newest first, written for someone arriving with no context.
 
+## 2026-10-02 — Disable interface text selection
+
+Text in Atelier's sidebar, controls and canvas labels can no longer be selected accidentally. The document-level CSS includes Safari support and preserves selection in editable fields. The start-command text follows the same rule; its Copy button remains available.
+
+This does not affect project previews or linked pages: each iframe has its own document and styles. No connector change is needed.
+
+**Checks.** `npm run typecheck` and `npm test` pass (34 tests). Browser interaction was not exercised.
+
 ## 2026-10-02 — Local branches in the sidebar
 
 Nicolas asked for a simple way to see a project's current branches in Atelier. The plan was reviewed by a second agent before building; the review removed ahead/behind counts and the uncommitted-changes mark, and added the access rule below.
