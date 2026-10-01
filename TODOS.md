@@ -16,7 +16,9 @@ Linked pages now open inside Atelier, for both projects. With `links` in a manif
 
 The sidebar header has a reload control for the whole project: every loaded preview and the open linked page start again from their routes. It shows only while the project is live and is not reachable with the sidebar hidden.
 
-Checks run: `npm run typecheck` and `npm test` (23 checks) pass here. In the browser, against the worktree preview: a single click selects without reaching the preview; double-click or Enter enters; links and scrolling work inside an entered, scaled preview; all three exits work; switching projects and reloading restore each project's position, zoom and selection; stopping the Palier preview shows the not-running state and restarting it recovers without a reload; at 100% after a reload one of five previews loads, at 49% three or four, with everything visible all five.
+*2026-10-02.* The sidebar now ends with "Local branches": the branches of the project's repository, read by Atelier's own dev server from the folder named in `src/registry.ts`. This is the first code here that runs outside the browser (`server/branches.ts`); it runs two read-only git commands and answers Atelier's own page only. Palier lists five branches with its two checkouts marked; Marvin says it is not a Git repository. The list does not say which branch a preview is serving (`preview-branch` below).
+
+Checks run: `npm run typecheck` and `npm test` (34 checks) pass here. In the browser, against the worktree preview: a single click selects without reaching the preview; double-click or Enter enters; links and scrolling work inside an entered, scaled preview; all three exits work; switching projects and reloading restore each project's position, zoom and selection; stopping the Palier preview shows the not-running state and restarting it recovers without a reload; at 100% after a reload one of five previews loads, at 49% three or four, with everything visible all five.
 
 ## Remaining work
 
@@ -28,6 +30,8 @@ Checks run: `npm run typecheck` and `npm test` (23 checks) pass here. In the bro
 | `page-keys` | Keyboard and focus when a linked page is open | noted | Keys pressed inside a linked page stay there, as with an entered preview. Atelier does not move focus into the page when it opens. |
 | `preview-keys` | Let Escape leave a preview from inside it, and show a preview's current route | deferred | Needs a small script in the project that posts messages to Atelier. An addition to the connector contract. |
 | `preview-pinch` | Keep pinch zoom on the canvas over an entered preview | deferred | Same mechanism as `preview-keys`. The browser's own page zoom in that case was not exercised. |
+| `preview-branch` | Say which branch a preview is serving | deferred | Atelier cannot tell which folder a port was started from, so the branch list marks "checked out", not "previewed". The registry names Palier's main folder while `.env.local` points at the worktree's server. Needs the project to report it, for example an optional field in the manifest, and a production build can outlive the checkout it was built from, so a commit says more than a branch name. A change to the contract in both projects. |
+| `branch-details` | Ahead/behind counts and uncommitted-changes marks in the branch list | left out on purpose | Counts against `main` include inherited history (Palier's connector branch would show its parent branch's commits too) and fail when a project has no `main`. A changes mark means running `git status`, which scans each working folder. Add only if Nicolas asks. |
 | `thumbnails` | Lighter previews for large projects | deferred | Every preview is a full page. Fine at Palier's five; revisit when a project passes about a dozen screens. |
 | `palier-canvas-future` | Decide what happens to Palier's built-in canvas | open question for Nicolas | It stays as Palier's standalone and public entry for now, so improvements made here do not reach it. |
 
@@ -35,6 +39,7 @@ Checks run: `npm run typecheck` and `npm test` (23 checks) pass here. In the bro
 
 | Id | Task | Status | Notes |
 | --- | --- | --- | --- |
+| `local-branches` | List a project's local branches in the sidebar | done (2026-10-02) | Dev-server endpoint, parsing with tests, and a collapsible section at the foot of the sidebar. Not exercised against a real repository: a detached checkout, a worktree whose folder was deleted, a repository without commits, and the "Not refreshed" mark after a failed read. Those are covered by tests on hand-written git output only. |
 | `reload-all` | Reload every preview of a project at once | done (2026-10-01) | Control in the sidebar header, beside the sidebar toggle. Not exercised: a project that is not live (the control is hidden then), and a reload while a preview is entered. |
 | `library-view` | Show a project's UI library inside Atelier | done (2026-10-01) | Page switcher at the top of the sidebar and a page view over the canvas. The nesting worry is settled by the contract: a framed page keeps its own section list and hides its prototype-level navigation. Not exercised: a manifest with several links, and a narrow Atelier window against Palier's library. |
 | `marvin-library` | Add Marvin's UI library | done (2026-10-01) | Built in Marvin at `/ui` and listed in its manifest. Marvin's plan had deferred the library until a second surface existed, and Nicolas asked for it now. |

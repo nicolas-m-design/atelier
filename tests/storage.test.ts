@@ -9,7 +9,7 @@ function memory(initial?: string) {
 describe("saved state", () => {
   it("starts empty when nothing or nonsense is stored", () => {
     for (const raw of [null, "", "not json", "[]", "42"]) {
-      expect(parseSaved(raw)).toEqual({ active: null, sidebar: true, projects: {} });
+      expect(parseSaved(raw)).toEqual({ active: null, sidebar: true, branches: true, projects: {} });
     }
   });
 
@@ -17,6 +17,7 @@ describe("saved state", () => {
     const saved = parseSaved(JSON.stringify({
       active: "marvin",
       sidebar: false,
+      branches: false,
       projects: {
         palier: { camera: { x: 10, y: 20, zoom: 0.4 }, selected: "photo-1", page: "library" },
         marvin: { camera: { x: 0, y: 0, zoom: 99 }, selected: 7, page: 3, manifest: { atelier: 1 } },
@@ -25,6 +26,7 @@ describe("saved state", () => {
     }));
     expect(saved.active).toBe("marvin");
     expect(saved.sidebar).toBe(false);
+    expect(saved.branches).toBe(false);
     expect(saved.projects.palier).toEqual({ camera: { x: 10, y: 20, zoom: 0.4 }, selected: "photo-1", page: "library" });
     expect(saved.projects.marvin).toEqual({});
     expect(saved.projects).not.toHaveProperty("broken");

@@ -1,6 +1,7 @@
 /**
- * What Atelier remembers in this browser: the open project, and each project's
- * own canvas position, zoom, selection, open page and last good manifest. Preview frames
+ * What Atelier remembers in this browser: the open project, whether the branch
+ * list is open, and each project's own canvas position, zoom, selection, open
+ * page and last good manifest. Preview frames
  * never read this; their state comes from their route alone.
  */
 import { isCamera, type Camera } from "./camera";
@@ -20,10 +21,12 @@ export interface ProjectView {
 export interface Saved {
   active: string | null;
   sidebar: boolean;
+  /** Whether the sidebar's branch list is open. */
+  branches: boolean;
   projects: Record<string, ProjectView>;
 }
 
-export const EMPTY: Saved = { active: null, sidebar: true, projects: {} };
+export const EMPTY: Saved = { active: null, sidebar: true, branches: true, projects: {} };
 
 const isRecord = (value: unknown): value is Record<string, unknown> => typeof value === "object" && value !== null && !Array.isArray(value);
 
@@ -46,6 +49,7 @@ export function parseSaved(raw: string | null): Saved {
   return {
     active: typeof data.active === "string" ? data.active : null,
     sidebar: typeof data.sidebar === "boolean" ? data.sidebar : true,
+    branches: typeof data.branches === "boolean" ? data.branches : true,
     projects,
   };
 }

@@ -7,7 +7,7 @@
 The scenario canvas started inside Palier. Atelier is that canvas, moved out so it can be improved once and used by every project:
 
 - a narrow **project rail** to switch projects, each with a status dot;
-- the selected project's **sidebar**: a switch between its screens and its linked pages, such as a UI library, then the list of screens;
+- the selected project's **sidebar**: a switch between its screens and its linked pages, such as a UI library, then the list of screens, and at the foot the local branches of its repository;
 - the **canvas**, with each screen shown as a live preview from the project's own server.
 
 Atelier holds no product code. A project lists its screens in a small manifest it serves itself, and each screen is one of the project's own pages in an iframe, so it keeps its own styles, dependencies and state. The contract is in [docs/connector.md](docs/connector.md).
@@ -53,6 +53,8 @@ Remove the line, and the launch entry, once the canonical checkout serves the ma
 - **Interact with a screen:** double-click it, or press Enter on a selected one. Its links, forms and scrolling now work; the rest of the canvas still pans and zooms.
 - **Leave a screen:** "Exit preview" above the screen or in the bar at the bottom, a click on the bare canvas, or Escape while the keyboard is in Atelier.
 
+- **Local branches:** the foot of the sidebar lists the branches of the project's repository: name, age of the last commit, its subject, and a folder mark on each branch that is checked out, with the folder's name. Hover a row for the commit hash and the full path. It is a list to read; nothing in it is a control. It is read when the list opens and when the window regains focus, and it does not depend on the project's server running.
+
 Each project remembers its own position, zoom, selected screen and open page in this browser. Previews are never affected by that memory: a screen's state comes from its route alone.
 
 ## What the project states mean
@@ -70,6 +72,8 @@ Each project remembers its own position, zoom, selected screen and open page in 
 - **A pinch or Ctrl/Command + wheel over an entered preview goes to the preview, not the canvas**, and the browser may zoom the whole page instead. Pinch outside the preview, or exit first. (Wheel input was confirmed to stay inside an entered preview; the browser's page zoom itself was not exercised.)
 - **A preview's current page is not shown.** After you navigate inside a preview, its label still names the starting screen. Reload returns it there.
 - **Loaded previews stay loaded** until more than twelve are held, so in-preview navigation survives panning. Switching projects, or a project going offline, discards them.
+- **The branch list does not say which branch a preview shows.** Atelier cannot tell which folder a server on a given port was started from. A folder mark means "checked out there", which is the most a preview could be served from.
+- **The branch list needs the dev server.** It is read by `npm run dev` itself; a built copy of Atelier shows "Not available".
 - **Each preview is a full page.** That is fine for a handful of screens; a project with dozens would need thumbnails, which do not exist yet.
 - **Text can shimmer while zooming**, and settles when the zoom stops. At 100% a preview is not scaled at all.
 
@@ -81,12 +85,14 @@ Each project remembers its own position, zoom, selected screen and open page in 
 | `TODOS.md` | Handoff note and open work |
 | `CHANGELOG.md` | What changed, newest first |
 | `docs/connector.md` | The manifest and preview-route contract a project implements |
-| `src/projects.ts` | The registry: which projects exist and where they answer |
+| `src/registry.ts`, `src/projects.ts` | The registry: which projects exist, where they answer and where their repository is; then the same list with local address overrides, for the browser |
 | `src/manifest.ts` | The manifest's shape and its validation |
 | `src/status.ts`, `src/useStatuses.ts` | Deciding whether a project is live, stopped, unconnected or empty |
 | `src/camera.ts`, `src/layout.ts` | Camera maths, board layout and which frames stay loaded; no framework |
 | `src/storage.ts` | What is remembered per project in this browser |
-| `src/components/` | Rail, sidebar and workspace, canvas, frame, status card |
+| `src/branches.ts`, `src/useBranches.ts` | Turning git's output into the branch list, and reading it from the dev server |
+| `server/branches.ts` | The only code outside the browser: the dev server's read-only answer at `/__atelier/branches/<id>` |
+| `src/components/` | Rail, sidebar and workspace, canvas, frame, status card, branch list |
 | `tests/` | Checks for the framework-free modules, run by Vitest |
 
 ```bash
@@ -99,4 +105,4 @@ npm run typecheck
 
 ## Not in scope yet
 
-Annotations, an MCP server, collaboration, starting or stopping project servers, public publishing, shared component libraries across projects, and an installable connector package. The connector is a documented contract for now; a package should wait until two projects use it.
+Annotations, an MCP server, collaboration, starting or stopping project servers, switching or creating branches, public publishing, shared component libraries across projects, and an installable connector package. The connector is a documented contract for now; a package should wait until two projects use it.

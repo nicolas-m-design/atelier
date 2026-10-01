@@ -77,7 +77,9 @@ Atelier keeps the canvas mounted underneath an open page, so previews and positi
 
 ## Registering the project in Atelier
 
-Add or edit its entry in `src/projects.ts`: `id`, `name`, `origin` (for example `http://localhost:3300`) and, optionally, the folder and command that start its preview. An entry with `origin: null` appears as an empty project.
+Add or edit its entry in `src/registry.ts`: `id`, `name`, `origin` (for example `http://localhost:3300`) and, optionally, the folder and command that start its preview. An entry with `origin: null` appears as an empty project.
+
+An optional `repo` names the project's main folder. Atelier's dev server reads the local branches there for the sidebar's "Local branches" list, and never writes to it. This is outside the contract: the project provides nothing for it, and without `repo` the list says no folder is registered.
 
 `VITE_ORIGIN_<ID>` in Atelier's `.env.local` points a project at a different address without editing the registry, for example a worktree's preview on another port.
 

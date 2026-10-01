@@ -5,6 +5,7 @@ import { layoutBoard } from "../layout";
 import type { Project } from "../projects";
 import type { Status } from "../status";
 import type { Store } from "../storage";
+import { Branches } from "./Branches";
 import { Canvas, type CanvasHandle } from "./Canvas";
 import { Page } from "./Page";
 import { STATUS_DOT, StatusCard, statusLine } from "./StatusCard";
@@ -108,6 +109,7 @@ export function Workspace({ project, status, store, sidebar, onSidebar, onRetry 
             ))}
             {!board && <p className="px-2 py-2 leading-relaxed text-neutral-500">No screens to list yet.</p>}
           </nav>
+          <Branches project={project} store={store} />
         </aside>
       )}
       <div className="relative flex min-w-0 flex-1">

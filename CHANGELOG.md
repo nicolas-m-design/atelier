@@ -2,6 +2,28 @@
 
 > **Summary:** What changed in this repository, newest first, written for someone arriving with no context.
 
+## 2026-10-02 — Local branches in the sidebar
+
+Nicolas asked for a simple way to see a project's current branches in Atelier. The plan was reviewed by a second agent before building; the review removed ahead/behind counts and the uncommitted-changes mark, and added the access rule below.
+
+- **Sidebar.** A collapsible "Local branches" section at the foot of the sidebar. Each row gives the branch name, the age of its last commit and the commit's subject; a branch that is checked out carries a folder mark and the folder's name. `main` comes first, the rest by last commit. A checkout on no branch gets its own "Detached at …" row. Whether the section is open is remembered in this browser, for all projects.
+- **Where the data comes from.** A browser cannot read git, so Atelier's dev server does: `server/branches.ts` adds `/__atelier/branches/<project id>` to Vite. It runs `git for-each-ref` and `git worktree list` in the folder the registry names, with a 3-second limit, and nothing that writes or scans a working folder.
+- **Who may ask.** Only Atelier's own page. The endpoint refuses any request whose `Sec-Fetch-Site` header is not `same-origin` before git runs, and the address takes a registered id, never a folder. The dev server also no longer sends cross-origin headers at all (`cors: false`); before, any page on another localhost port could read Atelier's files.
+- **Registry.** The plain list moved to `src/registry.ts` so the dev server can read it, and each project gained a `repo` folder. `src/projects.ts` still applies the `.env.local` address overrides for the browser.
+
+No change to the connector contract, and nothing was changed in Palier or Marvin.
+
+**Checks.** `npm run typecheck` and `npm test` (34 checks; 11 new) pass. In the browser, on a second copy of the dev server on port 3201 (another session held 3200): Palier listed its five branches with `palier` and `palier-atelier` marked on the two checked-out ones; Marvin showed "Marvin is not a Git repository"; closing the section survived a reload and made no request while closed; regaining focus read the list again; with a linked page open the section stays at the foot. A fetch from a Marvin page on port 3210 could not read the endpoint. With curl: no header, a cross-site header, POST, an unknown id and a path with `..` were all refused.
+
+**What a newcomer would get wrong.**
+
+- The list is about the repository, not the preview. A folder mark means the branch is checked out there, not that the canvas shows it. `.env.local` can point a project at a worktree's server while the registry names the main folder.
+- Opening the endpoint's address directly in a browser tab, or with curl, answers 403. That is the access rule, not a fault.
+- An address under `/__atelier/` that does not exist answers 200 with Atelier's own page, because Vite serves that for any unknown address. The browser side therefore checks the content type, not the status.
+- The endpoint exists only under `npm run dev`. A built Atelier shows "Not available" in the section.
+- Files reachable from `vite.config.ts` import each other with the `.ts` extension. Vite warns otherwise.
+- `GIT_CEILING_DIRECTORIES` keeps git inside the named folder. Without it, a project folder that is not a repository would list the branches of any repository above it.
+
 ## 2026-10-01 — Reload all previews
 
 Nicolas asked for one control in the sidebar header that refreshes every design at once. Until now each preview and each linked page had only its own reload.
