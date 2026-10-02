@@ -14,7 +14,8 @@
 - **Neighbouring projects are separate repositories with their own rules.** Read a project's `AGENTS.md` before touching it, work in a separate worktree there, and never edit its active checkout or replace its running server. Do not build Marvin's application from here.
 - **Presentation controls stay outside previews.** Nothing Atelier draws may appear inside a frame or in a project's captures.
 - **Previews are deterministic.** A screen's state comes from its route. Atelier's saved preferences must never reach a preview.
-- **Keep it small.** No plugin system, installer, server management, annotations or collaboration without Nicolas asking for it. Change `docs/connector.md` and the code together, and only when a real project needs the change.
+- **No project in the code.** Projects are listed in a file on the machine (`README.md`, "The project list"). No project's name, address or folder goes into `src/` or `server/`.
+- **Keep it small.** No plugin system, server management, annotations or collaboration without Nicolas asking for it. The installable package he asked for on 2026-10-02 follows `docs/package-plan.md`, one step at a time. Change `docs/connector.md` and the code together, and only when a real project needs the change.
 
 ## Working rules
 

@@ -28,7 +28,22 @@ npm run dev
 
 Atelier runs at http://localhost:3200. The port is fixed, because saved canvas positions belong to that address; if 3200 is taken, the command fails instead of moving. In the Claude desktop app, the preview uses `.claude/launch.json` (`atelier-dev`).
 
-Start each project's own server yourself, in its own folder. Atelier never starts or stops anything.
+### The project list
+
+No project is named in Atelier's code. The list is a file on this machine, `~/.config/agent-atelier/projects.json` (or the file named by `ATELIER_PROJECTS`), read by Atelier's server each time the page asks:
+
+```json
+{
+  "projects": [
+    { "repo": "/Users/nico/Sites/palier", "origin": "http://localhost:3100", "start": "npm run dev" },
+    "/path/to/another/project"
+  ]
+}
+```
+
+An entry is a project's folder, or an object naming it. What the entry leaves out comes from that folder's `package.json`: the id from its `name`, and `origin`, `start` and `name` from an `atelier` field, when it has one. An entry may also give `id` and `name` itself, and may leave out `repo` for a project that is only an address. An entry that cannot be used is skipped; the page says why when nothing else is listed, and the browser console says so otherwise. Reload the page after editing the file. Atelier only reads it.
+
+Start each project's own server yourself, in its own folder. Atelier never starts or stops anything. The projects listed on Nicolas's machine:
 
 | Project | Address Atelier expects | Start it with |
 | --- | --- | --- |
@@ -62,7 +77,7 @@ Each project remembers its own position, zoom, selected screen and open page in 
 | Green | Live | The project serves a valid manifest. Screens load when they come near the viewport. |
 | Grey | Not running | Nothing answers. The last known screens stay listed as placeholders; Atelier reconnects by itself when the server is back. |
 | Amber | No manifest | A server answers without a usable `/atelier.json`. |
-| Hollow | No preview yet | Registered without an address. No current project is in this state. |
+| Hollow | No preview yet | Listed without an address. No current project is in this state. |
 
 ## Known limits
 
@@ -71,7 +86,7 @@ Each project remembers its own position, zoom, selected screen and open page in 
 - **A preview's current page is not shown.** After you navigate inside a preview, its label still names the starting screen. Reload returns it there.
 - **Loaded previews stay loaded** until more than twelve are held, so in-preview navigation survives panning. Switching projects, or a project going offline, discards them.
 - **The branch list does not say which branch a preview shows.** Atelier cannot tell which folder a server on a given port was started from. A folder mark means "checked out there", which is the most a preview could be served from.
-- **The branch list needs the dev server.** It is read by `npm run dev` itself; a built copy of Atelier shows "Not available".
+- **The project list and the branch list need the dev server.** Both are answered by `npm run dev` itself. A built copy of Atelier has no server behind it and says the project list is not available. The packaged command in `docs/package-plan.md` removes this.
 - **Each preview is a full page.** That is fine for a handful of screens; a project with dozens would need thumbnails, which do not exist yet.
 - **Text can shimmer while zooming**, and settles when the zoom stops. At 100% a preview is not scaled at all.
 
@@ -83,13 +98,13 @@ Each project remembers its own position, zoom, selected screen and open page in 
 | `TODOS.md` | Handoff note and open work |
 | `CHANGELOG.md` | What changed, newest first |
 | `docs/connector.md` | The manifest and preview-route contract a project implements |
-| `src/registry.ts`, `src/projects.ts` | The registry: which projects exist, where they answer and where their repository is; then the same list with local address overrides, for the browser |
+| `src/projects.ts`, `src/useProjects.ts` | The shape of a project and of the list, their validation, address overrides; and reading the list from Atelier's server |
 | `src/manifest.ts` | The manifest's shape and its validation |
 | `src/status.ts`, `src/useStatuses.ts` | Deciding whether a project is live, stopped, unconnected or empty |
 | `src/camera.ts`, `src/layout.ts` | Camera maths, board layout and which frames stay loaded; no framework |
 | `src/storage.ts` | What is remembered per project in this browser |
 | `src/branches.ts`, `src/useBranches.ts` | Turning git's output into the branch list, and reading it from the dev server |
-| `server/branches.ts` | The only code outside the browser: the dev server's read-only answer at `/__atelier/branches/<id>` |
+| `server/` | The only code outside the browser. `projects.ts` reads the project list from the file on this machine; `branches.ts` runs git, read-only; `handler.ts` answers both at `/__atelier/projects` and `/__atelier/branches/<id>` for Atelier's own page only; `vite.ts` mounts that on the dev server |
 | `src/components/` | Rail, sidebar and workspace, canvas, frame, status card, branch list |
 | `tests/` | Checks for the framework-free modules, run by Vitest |
 
@@ -103,4 +118,6 @@ npm run typecheck
 
 ## Not in scope yet
 
-Annotations, an MCP server, collaboration, starting or stopping project servers, switching or creating branches, public publishing, shared component libraries across projects, and an installable connector package. The connector is a documented contract for now; a package should wait until two projects use it.
+Annotations, an MCP server, collaboration, starting or stopping project servers, switching or creating branches, public publishing, and shared component libraries across projects.
+
+An installable package is no longer out of scope: Nicolas asked for it on 2026-10-02, with two projects connected. It follows `docs/package-plan.md`, whose first step, the project list read from a file, is done. Until the package exists the connector remains a documented contract.

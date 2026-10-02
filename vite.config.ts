@@ -1,10 +1,10 @@
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 import { defineConfig } from "vitest/config";
-import { branches } from "./server/branches.ts";
+import { atelierServer } from "./server/vite.ts";
 
 export default defineConfig({
-  plugins: [react(), tailwindcss(), branches()],
+  plugins: [react(), tailwindcss(), atelierServer()],
   // A fixed port, so saved canvas positions stay with one browser origin.
   // strictPort: fail instead of silently moving when 3200 is taken.
   // cors: no other page, a framed preview included, needs to read anything from this server.

@@ -1,14 +1,13 @@
 /**
- * The one piece of Atelier that runs outside the browser: the dev server
- * answers `/__atelier/branches/<project id>` with that project's local
- * branches. It runs two git commands that only read, in the folder the
- * registry names, and nothing else. It exists only under `npm run dev`.
+ * A project's local branches, read for `/__atelier/branches/<project id>`
+ * (`server/handler.ts`). It runs two git commands that only read, in the
+ * folder the project list names, and nothing else.
  */
 import { execFile } from "node:child_process";
 import { dirname } from "node:path";
-import type { Plugin } from "vite";
-import { BRANCHES_PATH, REFS_FORMAT, listBranches, parseRefs, parseWorktrees, type BranchReport } from "../src/branches.ts";
-import { REGISTRY, type Project } from "../src/registry.ts";
+import { REFS_FORMAT, listBranches, parseRefs, parseWorktrees, type BranchReport } from "../src/branches.ts";
+import type { Project } from "../src/projects.ts";
+import { refusal, type Answer, type EndpointRequest } from "./request.ts";
 
 /** Runs git in a folder and returns what it printed. */
 export type Git = (repo: string, args: string[]) => Promise<string>;
@@ -33,51 +32,16 @@ export async function readBranches(repo: string, run: Git = git): Promise<Branch
   }
 }
 
-export interface BranchRequest {
-  method: string | undefined;
-  /** The address after `BRANCHES_PATH`, such as `/palier`. */
-  path: string;
-  /** The browser's `Sec-Fetch-Site` header. A page cannot set it itself. */
-  site: string | undefined;
-}
-
 /**
  * Decides what a request gets. Only Atelier's own page may ask: a framed
  * preview is another origin, and is refused before git runs. The address
- * carries a registered id, never a folder.
+ * carries a listed id, never a folder.
  */
-export async function answer(request: BranchRequest, projects: readonly Project[], read: (repo: string) => Promise<BranchReport>): Promise<{ status: number; body: BranchReport | { error: string } }> {
-  if (request.method !== "GET") return { status: 405, body: { error: "Only GET is answered." } };
-  if (request.site !== "same-origin") return { status: 403, body: { error: "Only Atelier's own page may ask." } };
+export async function answer(request: EndpointRequest, projects: readonly Project[], read: (repo: string) => Promise<BranchReport>): Promise<Answer<BranchReport>> {
+  const refused = refusal(request);
+  if (refused) return refused;
   const project = projects.find((entry) => request.path === `/${entry.id}`);
   if (!project) return { status: 404, body: { error: "No such project." } };
   if (!project.repo) return { status: 200, body: { state: "unregistered" } };
   return { status: 200, body: await read(project.repo) };
-}
-
-export function branches(projects: readonly Project[] = REGISTRY): Plugin {
-  // Requests that arrive while git is running share its answer.
-  const running = new Map<string, Promise<BranchReport>>();
-  const read = (repo: string) => {
-    let report = running.get(repo);
-    if (!report) {
-      report = readBranches(repo).finally(() => running.delete(repo));
-      running.set(repo, report);
-    }
-    return report;
-  };
-  return {
-    name: "atelier-branches",
-    configureServer(server) {
-      server.middlewares.use(BRANCHES_PATH, (request, response) => {
-        const site = request.headers["sec-fetch-site"];
-        void answer({ method: request.method, path: (request.url ?? "").split("?")[0] ?? "", site: typeof site === "string" ? site : undefined }, projects, read).then(({ status, body }) => {
-          response.statusCode = status;
-          response.setHeader("Content-Type", "application/json");
-          response.setHeader("Cache-Control", "no-store");
-          response.end(JSON.stringify(body));
-        });
-      });
-    },
-  };
 }

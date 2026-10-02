@@ -58,7 +58,7 @@ export function StatusCard({ project, status, hasBoard, onRetry }: { project: Pr
         {status.state === "empty" && <>
           <h2 className="text-[14px] font-semibold">{project.name} has no preview yet</h2>
           <p className="mt-1.5 text-[13px] leading-relaxed text-pretty text-neutral-600">
-            This project is registered without a preview address. Once its app serves <code className="text-[12px]">{MANIFEST_PATH}</code> (docs/connector.md), add the address in <code className="text-[12px]">src/projects.ts</code> and its screens appear here.
+            This project is listed without a preview address. Once its app serves <code className="text-[12px]">{MANIFEST_PATH}</code> (docs/connector.md), give its entry in the project list an <code className="text-[12px]">origin</code>, reload this page, and its screens appear here.
           </p>
         </>}
         {status.state !== "empty" && (

@@ -1,10 +1,10 @@
 /**
- * A project's local branches, as the sidebar lists them. Atelier's dev server
+ * A project's local branches, as the sidebar lists them. Atelier's server
  * runs git (`server/branches.ts`); everything here is plain text handling, so
  * it never touches a repository and can be checked without one.
  */
 
-/** Where the dev server answers, followed by `/<project id>`. */
+/** Where Atelier's server answers, followed by `/<project id>`. */
 export const BRANCHES_PATH = "/__atelier/branches";
 
 /** One branch per line, fields separated by NUL: a commit subject may hold any other character. */
@@ -34,7 +34,7 @@ export interface Detached extends Checkout {
 export type BranchReport =
   /** No branches means a repository without a commit yet. */
   | { state: "listed"; branches: Branch[]; detached: Detached[] }
-  /** The registry names no folder for this project. */
+  /** The project list names no folder for this project. */
   | { state: "unregistered" }
   | { state: "not-a-repository" }
   /** Git could not be run, or did not finish. */

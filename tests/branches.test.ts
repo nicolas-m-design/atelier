@@ -83,7 +83,7 @@ describe("branch endpoint", () => {
   const ask = (request: Partial<Parameters<typeof answer>[0]>, read = vi.fn(async (): Promise<BranchReport> => ({ state: "listed", branches: [], detached: [] }))) =>
     answer({ method: "GET", path: "/palier", site: "same-origin", ...request }, projects, read).then((result) => ({ ...result, read }));
 
-  it("reads the registered folder for Atelier's own page", async () => {
+  it("reads the listed folder for Atelier's own page", async () => {
     const { status, body, read } = await ask({});
     expect(status).toBe(200);
     expect(body).toEqual({ state: "listed", branches: [], detached: [] });
@@ -102,7 +102,7 @@ describe("branch endpoint", () => {
     }
   });
 
-  it("says so when the registry names no folder, without running git", async () => {
+  it("says so when the project list names no folder, without running git", async () => {
     const { status, body, read } = await ask({ path: "/loose" });
     expect([status, body]).toEqual([200, { state: "unregistered" }]);
     expect(read).not.toHaveBeenCalled();

@@ -76,20 +76,33 @@ When a manifest has `links`, Atelier's sidebar opens with a page switcher: "Scre
 
 Atelier keeps the canvas mounted underneath an open page, so previews and position are unchanged on return.
 
-## Registering the project in Atelier
+## Listing the project in Atelier
 
-Add or edit its entry in `src/registry.ts`: `id`, `name`, `origin` (for example `http://localhost:3300`) and, optionally, the folder and command that start its preview. An entry with `origin: null` appears as an empty project.
+Atelier's code names no project. Add the project to the list on the machine, `~/.config/agent-atelier/projects.json` (or the file named by `ATELIER_PROJECTS`), and reload Atelier:
 
-An optional `repo` names the project's main folder. Atelier's dev server reads the local branches there for the sidebar's "Local branches" list, and never writes to it. This is outside the contract: the project provides nothing for it, and without `repo` the list says no folder is registered.
+```json
+{ "projects": [{ "repo": "/path/to/project", "origin": "http://localhost:3300", "start": "npm run dev" }] }
+```
 
-`VITE_ORIGIN_<ID>` in Atelier's `.env.local` points a project at a different address without editing the registry, for example a worktree's preview on another port.
+| Field | Meaning |
+| --- | --- |
+| `repo` | The project's main folder, as an absolute path. Atelier's server reads the local branches there for the sidebar's "Local branches" list, and never writes to it. Without it the list says no folder is registered. |
+| `origin` | Where the preview answers: scheme, host and port, no path. Left out or `null`, the project appears as an empty one. |
+| `start` | The command that starts the preview, run in `repo`. Atelier shows it; it never runs it. |
+| `id`, `name` | Default to the `name` in the folder's `package.json` (without its scope), and to that id with a capital. The id is lowercase letters, digits and hyphens; Atelier stores each project's canvas view under it, so keep it stable. |
+
+An entry may be just the folder, as a string. A project can then describe itself, in an `atelier` field of its own `package.json`: `{ "origin": "http://localhost:3300", "start": "npm run dev" }`, and optionally `name`. What the list entry gives wins over that field. Neither connected project has the field yet; their entries in the list are complete.
+
+This is outside the contract: Atelier reads only the manifest from a running project, and the list only tells it where to look.
+
+`VITE_ORIGIN_<ID>` in Atelier's `.env.local` points a project at a different address without editing the list, for example a worktree's preview on another port. Hyphens in the id become underscores. It works under `npm run dev` only, and the planned command replaces it with an option.
 
 ## How Atelier reads a project's state
 
 | What Atelier finds | State | What it shows |
 | --- | --- | --- |
-| No `origin` registered | Empty | "No preview yet" and how to connect. |
-| Nothing answers at the origin | Not running | The last manifest it saw, placeholder frames, and the start command when one is registered. It rechecks every 3 seconds and when the window regains focus. |
+| No `origin` listed | Empty | "No preview yet" and how to connect. |
+| Nothing answers at the origin | Not running | The last manifest it saw, placeholder frames, and the start command when one is listed. It rechecks every 3 seconds and when the window regains focus. |
 | A server answers, but the manifest is missing, unreadable or invalid | No manifest | The reason. Typical cause: the served branch does not include the connector. |
 | A valid manifest | Live | The screens, loaded near the viewport. Rechecked every 10 seconds. |
 

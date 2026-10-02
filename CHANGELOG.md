@@ -2,6 +2,21 @@
 
 > **Summary:** What changed in this repository, newest first, written for someone arriving with no context.
 
+## 2026-10-02 — The project list leaves the code (package plan, step 1)
+
+Nicolas asked for step 1 of `docs/package-plan.md`. Until now the projects were a constant in `src/registry.ts`, compiled into the page with their names and folders on his machine. A package cannot ship that.
+
+- **The list is a file on the machine**: `~/.config/agent-atelier/projects.json`, or the file named by `ATELIER_PROJECTS`. An entry is a project's folder, or an object naming it with `origin`, `start`, `id` and `name`; what it leaves out comes from the folder's `package.json` (its `name`, and an `atelier` field). `server/projects.ts` reads it and never writes.
+- **The page asks for it** at `/__atelier/projects` (`src/useProjects.ts`), once, when it opens. With no usable project it shows where the file is, an example, and why each entry was skipped (`src/components/NoProjects.tsx`).
+- **The server code no longer depends on Vite.** `server/handler.ts` answers the project list and the branch list for Atelier's own page only, as before; `server/vite.ts` is the few lines that mount it on the dev server. `server/branches.ts` keeps only git.
+- **Address overrides (`VITE_ORIGIN_<ID>`) are applied by the server**, which gets them from Vite. Behaviour is the same, with one addition: a hyphen in an id becomes an underscore in the name.
+- **`src/registry.ts` is deleted.** `AGENTS.md` gains the rule that no project goes into the code, and no longer lists an installer as out of scope; the README and `docs/connector.md` describe the file.
+- **Outside this repository**: the file `~/.config/agent-atelier/projects.json` was created on Nicolas's machine with Palier and Marvin. Neither project was touched.
+
+**What a newcomer would get wrong.** A fresh clone shows "No projects yet" until that file exists; the page says where. The plan had the machine's file hold folders only, with each project describing itself in its `package.json`. Entries that carry their own `origin` and `start` were added so that this step needed no change in Palier or Marvin; neither has the `atelier` field. The page reads the list once, so reload after editing the file. A built copy of Atelier (`npm run build`) has no server behind it and says the project list is not available, as it already did for branches; step 2 fixes that. Comments in `src/layout.ts` and `src/components/Canvas.tsx` still mention Palier as where a few sizes came from; they are not the list. The leftover `VITE_ORIGIN_PALIER` line in `.env.local` still points Palier at port 3101.
+
+**Checks.** `npm run typecheck` passes; `npm test`: 46 pass (34 before, 12 new, for the file, the page's validation, the overrides and the endpoints). By an agent in the in-app Chromium browser, against a temporary dev server on port 3201 reading the real file: both projects appear in the rail; Marvin is live and its previews load; Palier's branch list loads, although Palier itself shows as not running because of the leftover override, so Palier was not seen live; the endpoint returns the overridden address without folder or command, as before. Against a second temporary server on port 3202 pointed at a faulty list: the "No projects yet" card shows the file, the example and the reason. Both servers were stopped afterwards. Not seen: the "not available" card of a built copy, a list that mixes usable and unusable entries, a project described by its own `package.json` (tests only), and Atelier on its usual port 3200.
+
 ## 2026-10-02 — The documents follow the removal of Palier's built-in canvas
 
 Nicolas had Palier's own canvas removed, in Palier, and asked for the documents here to be corrected now instead of after that work is merged. Documents only; no code and no change to the contract's fields.
