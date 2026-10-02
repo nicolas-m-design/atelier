@@ -1,7 +1,7 @@
 /** What Atelier's server needs to know about a request to one of its own endpoints. */
 export interface EndpointRequest {
   method: string | undefined;
-  /** The address after the endpoint's own path, such as `/palier`. */
+  /** The address after the endpoint's own path, such as `/my-project`. */
   path: string;
   /** The browser's `Sec-Fetch-Site` header. A page cannot set it itself. */
   site: string | undefined;

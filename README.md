@@ -1,10 +1,10 @@
 # Atelier
 
-> **Summary:** A local workspace that shows several projects' prototype screens on one pannable, zoomable canvas, with a project switcher. Each project stays in its own repository and runs its own server; Atelier embeds its screens as live previews. Palier and Marvin are both connected. Local only: nothing is published or deployed. Its full name is Agent Atelier and its package name `agent-atelier`; these documents and the interface say Atelier.
+> **Summary:** A local workspace that shows several projects' prototype screens on one pannable, zoomable canvas, with a project switcher. Each project stays in its own repository and runs its own server; Atelier embeds its screens as live previews. Local only: nothing is published or deployed. Its full name is Agent Atelier and its package name `agent-atelier`; these documents and the interface say Atelier. What is specific to the machine it is developed on is in [docs/local-setup.md](docs/local-setup.md).
 
 ## What it is
 
-The scenario canvas started inside Palier. Atelier is that canvas, moved out so it can be improved once and used by every project:
+Atelier started as the canvas inside one project, and was moved out so it can be improved once and used by every project:
 
 - a narrow **project rail** to switch projects, each with a status dot;
 - the selected project's **sidebar**: a switch between its screens and its linked pages, such as a UI library, then the list of screens, and at the foot the local branches of its repository;
@@ -12,11 +12,11 @@ The scenario canvas started inside Palier. Atelier is that canvas, moved out so 
 
 Atelier holds no product code. A project lists its screens in a small manifest it serves itself, and each screen is one of the project's own pages in an iframe, so it keeps its own styles, dependencies and state. The contract is in [docs/connector.md](docs/connector.md).
 
-Palier no longer keeps a canvas of its own: Nicolas had it removed on 2026-10-02, so Atelier is the only canvas for its screens. That removal is on Palier's branch `work/atelier-name-restored`; until it is in Palier's `main`, port 3100 still serves the old canvas at `/`.
-
 ## Run it
 
 Requires Node 22.12 or later, and npm.
+
+**From this repository**, while working on Atelier itself:
 
 ```bash
 npm install
@@ -26,35 +26,45 @@ npm install
 npm run dev
 ```
 
-Atelier runs at http://localhost:3200. The port is fixed, because saved canvas positions belong to that address; if 3200 is taken, the command fails instead of moving. In the Claude desktop app, the preview uses `.claude/launch.json` (`atelier-dev`).
+**As the packaged command**, which serves the built page without Vite:
+
+```bash
+npx agent-atelier
+```
+
+The package is not published. `npm pack` here builds it into a tarball that another project can install; see [docs/package-plan.md](docs/package-plan.md). The command is `agent-atelier`, never `atelier`: an unrelated npm package owns that name.
+
+Either way Atelier runs at http://localhost:3200. The port is fixed, because saved canvas positions belong to that address; if 3200 is taken, it fails instead of moving. The command takes `--port` for a second copy, which keeps its own positions. It listens on this machine only.
+
+Start each project's own server yourself, in its own folder. Atelier never starts or stops anything.
 
 ### The project list
 
-No project is named in Atelier's code. The list is a file on this machine, `~/.config/agent-atelier/projects.json` (or the file named by `ATELIER_PROJECTS`), read by Atelier's server each time the page asks:
+No project is named in Atelier's code. The list is a file on the machine, `~/.config/agent-atelier/projects.json` (or the file named by `ATELIER_PROJECTS`), read by Atelier's server each time the page asks:
 
 ```json
 {
   "projects": [
-    { "repo": "/Users/nico/Sites/palier", "origin": "http://localhost:3100", "start": "npm run dev" },
+    { "repo": "/path/to/project", "origin": "http://localhost:3000", "start": "npm run dev" },
     "/path/to/another/project"
   ]
 }
 ```
 
-An entry is a project's folder, or an object naming it. What the entry leaves out comes from that folder's `package.json`: the id from its `name`, and `origin`, `start` and `name` from an `atelier` field, when it has one. An entry may also give `id` and `name` itself, and may leave out `repo` for a project that is only an address. An entry that cannot be used is skipped; the page says why when nothing else is listed, and the browser console says so otherwise. Reload the page after editing the file. Atelier only reads it.
+An entry is a project's folder, or an object naming it. What the entry leaves out comes from that folder's `package.json`: the id from its `name`, and `origin`, `start` and `name` from an `atelier` field, when it has one. An entry may also give `id` and `name` itself, and may leave out `repo` for a project that is only an address. An entry that cannot be used is skipped; the page says why when nothing else is listed, and the browser console says so otherwise. Reload the page after editing the file.
 
-Start each project's own server yourself, in its own folder. Atelier never starts or stops anything. The projects listed on Nicolas's machine:
+Edit the file by hand, or let the command append to it, from the project's folder:
 
-| Project | Address Atelier expects | Start it with |
-| --- | --- | --- |
-| Palier | http://localhost:3100 | `npm run dev` in `/Users/nico/Sites/palier` |
-| Marvin | http://localhost:3210 | `npm run dev` in `/Users/nico/Sites/marvin` |
-
-Palier's connector is part of its `main` since 2026-10-02, so the server on 3100 serves `/atelier.json`. The separate worktree and its preview on port 3101 no longer exist. If `.env.local` still holds the line below, delete it: it points Palier at 3101, where nothing answers, and Atelier then shows Palier as not running.
-
+```bash
+npx agent-atelier add --origin http://localhost:3000 --start "npm run dev"
 ```
-VITE_ORIGIN_PALIER=http://localhost:3101
-```
+
+`add` is the only thing in Atelier that writes the file. It never overwrites a file it cannot read, and does nothing when the folder is already listed.
+
+Two more things the command does that `npm run dev` does not:
+
+- **A project is shown without being listed** when the command is run in its folder and the project has `agent-atelier` among its dependencies, or an `atelier` field in its `package.json`. It appears after the listed ones, for that run.
+- **`--origin <id>=<address>`** shows a listed project at another address for that run, for example a worktree's preview on another port. Under `npm run dev` the same is done with `VITE_ORIGIN_<ID>` in `.env.local`.
 
 ## Using the canvas
 
@@ -86,7 +96,7 @@ Each project remembers its own position, zoom, selected screen and open page in 
 - **A preview's current page is not shown.** After you navigate inside a preview, its label still names the starting screen. Reload returns it there.
 - **Loaded previews stay loaded** until more than twelve are held, so in-preview navigation survives panning. Switching projects, or a project going offline, discards them.
 - **The branch list does not say which branch a preview shows.** Atelier cannot tell which folder a server on a given port was started from. A folder mark means "checked out there", which is the most a preview could be served from.
-- **The project list and the branch list need the dev server.** Both are answered by `npm run dev` itself. A built copy of Atelier has no server behind it and says the project list is not available. The packaged command in `docs/package-plan.md` removes this.
+- **The project list and the branch list need Atelier's own server.** `npm run dev` and the `agent-atelier` command both provide it. The built page opened any other way says the project list is not available.
 - **Each preview is a full page.** That is fine for a handful of screens; a project with dozens would need thumbnails, which do not exist yet.
 - **Text can shimmer while zooming**, and settles when the zoom stops. At 100% a preview is not scaled at all.
 
@@ -103,8 +113,9 @@ Each project remembers its own position, zoom, selected screen and open page in 
 | `src/status.ts`, `src/useStatuses.ts` | Deciding whether a project is live, stopped, unconnected or empty |
 | `src/camera.ts`, `src/layout.ts` | Camera maths, board layout and which frames stay loaded; no framework |
 | `src/storage.ts` | What is remembered per project in this browser |
-| `src/branches.ts`, `src/useBranches.ts` | Turning git's output into the branch list, and reading it from the dev server |
-| `server/` | The only code outside the browser. `projects.ts` reads the project list from the file on this machine; `branches.ts` runs git, read-only; `handler.ts` answers both at `/__atelier/projects` and `/__atelier/branches/<id>` for Atelier's own page only; `vite.ts` mounts that on the dev server |
+| `src/branches.ts`, `src/useBranches.ts` | Turning git's output into the branch list, and reading it from Atelier's server |
+| `server/` | The only code outside the browser. `projects.ts` reads the project list from the file on the machine, and appends to it for `add`; `branches.ts` runs git, read-only; `handler.ts` answers both at `/__atelier/projects` and `/__atelier/branches/<id>` for Atelier's own page only. `vite.ts` mounts that on the dev server. `cli.ts`, `command.ts` and `serve.ts` are the packaged command: its arguments, and a plain Node server for the built page |
+| `tsconfig.build.json` | Builds the command into `dist/server` and `dist/src`; `vite build` puts the page in `dist/app`. `npm run build` does both, and `npm pack` runs it first |
 | `src/components/` | Rail, sidebar and workspace, canvas, frame, status card, branch list |
 | `tests/` | Checks for the framework-free modules, run by Vitest |
 
@@ -120,4 +131,4 @@ npm run typecheck
 
 Annotations, an MCP server, collaboration, starting or stopping project servers, switching or creating branches, public publishing, and shared component libraries across projects.
 
-An installable package is no longer out of scope: Nicolas asked for it on 2026-10-02, with two projects connected. It follows `docs/package-plan.md`, whose first step, the project list read from a file, is done. Until the package exists the connector remains a documented contract.
+An installable package is no longer out of scope. It follows `docs/package-plan.md`: the project list read from a file and the `agent-atelier` command are done; the connector a project imports is next. Until then the connector remains a documented contract.

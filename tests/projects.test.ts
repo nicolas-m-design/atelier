@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import { createHandler } from "../server/handler";
 import { projectsFile, readProjects, type Read } from "../server/projects";
 import type { BranchReport } from "../src/branches";
-import { parseProject, parseProjectList, withOverrides } from "../src/projects";
+import { envOverrides, parseProject, parseProjectList, withOverrides } from "../src/projects";
 
 const FILE = "/home/someone/.config/agent-atelier/projects.json";
 
@@ -106,19 +106,27 @@ describe("project list in the page", () => {
   });
 
   it("points a project at another address, without the folder and command of the listed one", () => {
-    const others = [palier, { id: "design-agency", name: "Design agency", origin: null }];
-    expect(withOverrides(others, {})).toEqual(others);
-    expect(withOverrides(others, { VITE_ORIGIN_PALIER: "http://localhost:3101/", VITE_ORIGIN_DESIGN_AGENCY: "http://localhost:3300", VITE_ORIGIN_MARVIN: "http://localhost:1" })).toEqual([
+    const list = { file: FILE, problems: ["Entry 3: x."], projects: [palier, { id: "design-agency", name: "Design agency", origin: null }] };
+    expect(withOverrides(list, () => undefined)).toEqual(list);
+    const env = envOverrides({ VITE_ORIGIN_PALIER: "http://localhost:3101/", VITE_ORIGIN_DESIGN_AGENCY: "http://localhost:3300", VITE_ORIGIN_MARVIN: "http://localhost:1" });
+    expect(withOverrides(list, env)).toEqual({ ...list, projects: [
       { id: "palier", name: "Palier", origin: "http://localhost:3101" },
       { id: "design-agency", name: "Design agency", origin: "http://localhost:3300" },
-    ]);
+    ] });
+  });
+
+  it("keeps the listed address, and says so, when an override is not an address", () => {
+    const list = { file: FILE, problems: [], projects: [palier] };
+    const overridden = withOverrides(list, () => "localhost 3101");
+    expect(overridden.projects).toEqual([palier]);
+    expect(overridden.problems).toEqual(['The address override for "palier" is not an address such as http://localhost:3000; the listed one is used.']);
   });
 });
 
 describe("server endpoints", () => {
   const read = disk({ [FILE]: { projects: [{ repo: "/repos/palier", origin: "http://localhost:3100" }, { id: "loose", origin: null }] }, "/repos/palier/package.json": { name: "palier" } });
   const git = vi.fn(async (_repo: string): Promise<BranchReport> => ({ state: "listed", branches: [], detached: [] }));
-  const handle = createHandler({ file: FILE, env: { VITE_ORIGIN_PALIER: "http://localhost:3101" }, read, git });
+  const handle = createHandler({ file: FILE, overrides: (id) => id === "palier" ? "http://localhost:3101" : undefined, read, git });
   const ask = (url: string, request: { method?: string; site?: string } = {}) => handle({ method: "GET", site: "same-origin", url, ...request });
 
   it("leaves every other address to the page's own server", async () => {

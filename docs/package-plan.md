@@ -1,6 +1,6 @@
 # Plan: Atelier as an installable package
 
-> **Summary:** A plan, with its first step done, for turning Atelier into one npm package, `agent-atelier`, that a project adds as a development dependency, the way Agentation is installed. The package carries two things: the connector a project imports, and the workspace itself, started with one command. Written on 2026-10-02 at Nicolas's request. Step 1 is built; the rest is not, and publishing stays a separate, explicit decision.
+> **Summary:** A plan, with its first two steps done, for turning Atelier into one npm package, `agent-atelier`, that a project adds as a development dependency, the way Agentation is installed. The package carries two things: the connector a project imports, and the workspace itself, started with one command. Written on 2026-10-02 at Nicolas's request. Steps 1 and 2 are built; the rest is not, and publishing stays a separate, explicit decision.
 
 ## The name
 
@@ -50,9 +50,9 @@ Found by reading the code on `work/first-milestone`.
 | Obstacle | Where | Why it blocks a package |
 | --- | --- | --- |
 | ~~The project list is compiled into the page~~ | was `src/registry.ts` | **Done in step 1.** The list is read from a file on the machine when the page asks. |
-| Address overrides need Vite | `server/vite.ts` (`VITE_ORIGIN_<ID>`, from `.env.local`) | Since step 1 the server applies them, no longer the page, but it still gets them from Vite. A packaged command cannot; it takes an option instead (step 2). |
-| The endpoints are mounted only by Vite | `server/vite.ts` | Since step 1 the handler (`server/handler.ts`) is plain Node and Vite only mounts it, but `npm run dev` is still the only thing that does. A built copy says the project list is not available. |
-| The workspace is run from source | `package.json` (`private`, no `bin`, `exports` or `files`) | Nothing to install or execute. |
+| ~~Address overrides need Vite~~ | `server/command.ts` | **Done in step 2.** The command takes `--origin <id>=<address>`. `VITE_ORIGIN_<ID>` remains for `npm run dev`. |
+| ~~The endpoints are mounted only by Vite~~ | `server/serve.ts` | **Done in step 2.** The command mounts the same handler on a plain Node server, with the built page. |
+| ~~The workspace is run from source~~ | `package.json` (`bin`, `files`, `prepack`) | **Done in step 2.** `npm pack` builds a tarball that installs with no dependency and runs. `exports` waits for the connector (step 3). |
 | The connector is two hand-written files per project | Palier: `src/app/atelier.json/route.ts`, `src/components/workspace/EmbeddedPreview.tsx` (paths as on its branch `work/atelier-name-restored`). Marvin: its own route and manifest module | Each project repeats the CORS header, and neither validates its manifest with Atelier's own check (`parseManifest` in `src/manifest.ts`). |
 | No licence file | repository root | Required before anything is published. The built page includes Inter (SIL Open Font Licence) and Lucide icons (ISC), which need their notices. |
 
@@ -82,8 +82,8 @@ Each project keeps deriving its manifest from its own scenario data and keeps it
 - **Per project, in its own `package.json`:** `"atelier": { "origin": "http://localhost:3100", "start": "npm run dev" }`. The id defaults to the package name, which keeps `palier` and `marvin` and therefore the saved canvas positions.
 - **Per machine, in `~/.config/agent-atelier/projects.json`:** the list of projects. An entry is a folder, or an object that names the folder and may give `origin`, `start`, `id` and `name` itself. `agent-atelier add` appends the current folder.
 - **The entry wins over the `package.json` field.** This was added while building step 1: neither project has the field yet, and adding it means a change in a neighbouring repository. With complete entries the list works today, and an entry shrinks to a folder once its project describes itself.
-- **`npx agent-atelier` in a folder that is not listed** runs with that one project.
-- `--origin palier=http://localhost:3101` replaces the `VITE_ORIGIN_<ID>` override for a worktree's preview.
+- **`npx agent-atelier` in a folder that is not listed** shows that project after the listed ones, for that run, when the folder has `agent-atelier` among its dependencies or an `atelier` field. The plan first said "runs with that one project"; hiding the listed projects seemed worse than adding one, and a folder with neither sign is left out so that running the command anywhere does not invent a project.
+- `--origin <id>=<address>` replaces the `VITE_ORIGIN_<ID>` override for a worktree's preview, for the command. `--port` was added for a second copy; each address keeps its own canvas positions.
 
 Absolute paths then exist only in a file on the machine, never in the repository or the package.
 
@@ -102,7 +102,7 @@ Each step is one increment, committed on a work branch, with `docs/connector.md`
 | --- | --- | --- |
 | 0 | Settle the open decisions below. Delete the leftover `VITE_ORIGIN_PALIER` line (`palier-env-override`). Update the scope lines in `AGENTS.md` and the README, which excluded an installer and a connector package (done with step 1). | Nicolas has answered; Atelier shows Palier live on 3100. |
 | 1 | **Done, 2026-10-02.** Move the project list out of the page: runtime endpoint, `package.json` field, machine-level list. Extract the request handler from the Vite plugin. | `npm run dev` works as before with no project listed in `src/` or `server/`. Typecheck passes; 46 tests pass, 12 of them new. See `CHANGELOG.md` for what was and was not checked in a browser. |
-| 2 | Add the `agent-atelier` command and the package build. | `npm pack`, then the tarball run from an empty folder serves the workspace on 3200 with the branch list working. The tarball contains no `/Users/` path and no project name (checked with `npm pack --dry-run` and a search of `dist`). |
+| 2 | **Done, 2026-10-02.** Add the `agent-atelier` command and the package build. | `npm pack`, then the tarball installed in an empty folder, served the workspace on 3200 with both projects live and the branch list working. The tarball holds 21 files and no dependency; a search of it found no `/Users/` path and no project name. That meant moving machine-specific notes out of `README.md`, which npm always packs, into `docs/local-setup.md`. Typecheck passes; 62 tests pass, 16 of them new. |
 | 3 | Add the connector entry points. | Types resolve from a project on TypeScript 5.9 (Palier) as well as 7. `<AtelierFrame />` keeps its `"use client"` line in the built file. |
 | 4 | Adopt it in Palier, then Marvin, from the tarball. In Palier: a work branch in a worktree under `~/Worktrees/palier/`, replacing the route's header code and `EmbeddedPreview.tsx`. Read each project's `AGENTS.md` first, and the Next.js guide in its `node_modules/next/dist/docs/`. | Palier: typecheck, the same test result as before the change, production build lists `/atelier.json`; framed pages behave as its documents say. Marvin: its manifest test passes. Both show live in Atelier started with `npx agent-atelier`. |
 | 5 | Publish, only on Nicolas's explicit instruction. | See "Publishing". |
@@ -149,4 +149,4 @@ Before that:
 
 ## What was checked for this plan
 
-Read on 2026-10-02: this repository's source and documents; Palier's and Marvin's connector files; Agentation's home and install pages; the npm registry for the names above and for Agentation's package shape (React 18 or later as its only peer dependency, a separate `agentation-mcp` package for its server). When the plan was written nothing in it had been built or run. Step 1 has been since; steps 2 to 5 remain a proposal, not a tested result.
+Read on 2026-10-02: this repository's source and documents; Palier's and Marvin's connector files; Agentation's home and install pages; the npm registry for the names above and for Agentation's package shape (React 18 or later as its only peer dependency, a separate `agentation-mcp` package for its server). When the plan was written nothing in it had been built or run. Steps 1 and 2 have been since; steps 3 to 5 remain a proposal, not a tested result.

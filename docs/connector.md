@@ -95,7 +95,9 @@ An entry may be just the folder, as a string. A project can then describe itself
 
 This is outside the contract: Atelier reads only the manifest from a running project, and the list only tells it where to look.
 
-`VITE_ORIGIN_<ID>` in Atelier's `.env.local` points a project at a different address without editing the list, for example a worktree's preview on another port. Hyphens in the id become underscores. It works under `npm run dev` only, and the planned command replaces it with an option.
+To show a project at a different address without editing the list, for example a worktree's preview on another port: `--origin <id>=<address>` on the `agent-atelier` command, or `VITE_ORIGIN_<ID>` in Atelier's `.env.local` under `npm run dev`, where hyphens in the id become underscores.
+
+From the project's own folder, `npx agent-atelier add --origin http://localhost:3300 --start "npm run dev"` appends the entry instead of editing the file by hand. A project that has `agent-atelier` among its dependencies, or an `atelier` field, is also shown without being listed when the command is run in its folder.
 
 ## How Atelier reads a project's state
 

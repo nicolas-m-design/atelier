@@ -1,11 +1,11 @@
 /**
  * Atelier's own endpoints, free of any server framework: the project list and
- * each project's local branches. The dev server mounts this (`server/vite.ts`);
- * a packaged command can mount the same thing on a plain Node server.
+ * each project's local branches. The dev server mounts this (`server/vite.ts`),
+ * and so does the packaged command (`server/serve.ts`).
  */
 import type { IncomingMessage, ServerResponse } from "node:http";
 import { BRANCHES_PATH, type BranchReport } from "../src/branches.ts";
-import { PROJECTS_PATH, withOverrides, type ProjectList } from "../src/projects.ts";
+import { PROJECTS_PATH, withOverrides, type Overrides, type ProjectList } from "../src/projects.ts";
 import { answer, readBranches } from "./branches.ts";
 import { readProjects, type Read } from "./projects.ts";
 import { refusal, type Answer } from "./request.ts";
@@ -13,8 +13,10 @@ import { refusal, type Answer } from "./request.ts";
 export interface ServerOptions {
   /** The file the project list is read from. */
   file: string;
-  /** Where `VITE_ORIGIN_<ID>` address overrides are looked up. */
-  env?: Record<string, unknown>;
+  /** Another preview address for a project, by its id. */
+  overrides?: Overrides;
+  /** A folder shown as a project for this run although the list does not name it. */
+  extra?: string;
   read?: Read;
   git?: (repo: string) => Promise<BranchReport>;
 }
@@ -22,7 +24,7 @@ export interface ServerOptions {
 type Request = { method: string | undefined; url: string | undefined; site: string | undefined };
 
 /** Answers an address under `/__atelier/`, or returns null for any other, which is not Atelier's to answer. */
-export function createHandler({ file, env = {}, read, git = readBranches }: ServerOptions): (request: Request) => Promise<Answer<ProjectList | BranchReport> | null> {
+export function createHandler({ file, overrides = () => undefined, extra, read, git = readBranches }: ServerOptions): (request: Request) => Promise<Answer<ProjectList | BranchReport> | null> {
   // Requests that arrive while git is running share its answer.
   const running = new Map<string, Promise<BranchReport>>();
   const branches = (repo: string) => {
@@ -40,8 +42,8 @@ export function createHandler({ file, env = {}, read, git = readBranches }: Serv
     const refused = refusal({ method, site });
     if (refused) return refused;
     // The file is read on every request: it is small, and an edit shows on the next one.
-    const list = await readProjects(file, read);
-    if (path === PROJECTS_PATH) return { status: 200, body: { ...list, projects: withOverrides(list.projects, env) } };
+    const list = await readProjects(file, read, extra);
+    if (path === PROJECTS_PATH) return { status: 200, body: withOverrides(list, overrides) };
     // Branches are read in the listed folder, whatever address the preview is overridden to.
     return answer({ method, site, path: path.slice(BRANCHES_PATH.length) }, list.projects, branches);
   };

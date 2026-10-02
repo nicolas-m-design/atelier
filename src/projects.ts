@@ -34,7 +34,7 @@ const isText = (value: unknown): value is string => typeof value === "string" &&
 const ID = /^[a-z0-9][a-z0-9-]{0,63}$/;
 
 /** A preview address: a scheme, a host and a port, nothing after them. */
-function parseOrigin(value: unknown): string | null {
+export function parseOrigin(value: unknown): string | null {
   if (value === undefined || value === null) return null;
   let url: URL | null = null;
   try { if (typeof value === "string") url = new URL(value); } catch { /* reported below */ }
@@ -69,14 +69,29 @@ export function parseProjectList(input: unknown): ProjectList {
   };
 }
 
+/** Looks up another preview address for a project, by its id. Anything but a non-empty string means none. */
+export type Overrides = (id: string) => unknown;
+
+/** The dev server's lookup: `VITE_ORIGIN_<ID>` in `.env.local`, with hyphens in the id written as underscores. */
+export const envOverrides = (env: Record<string, unknown>): Overrides => (id) => env[`VITE_ORIGIN_${id.toUpperCase().replaceAll("-", "_")}`];
+
 /**
- * `VITE_ORIGIN_<ID>` in `.env.local` points a project at another address, such
- * as a worktree's preview. The start command and the folder belong to the
- * listed address, so an overridden project shows neither.
+ * Points a project at another address, such as a worktree's preview. The
+ * start command and the folder belong to the listed address, so an overridden
+ * project shows neither. An override that is not an address is reported and
+ * the listed one kept.
  */
-export function withOverrides(projects: readonly Project[], env: Record<string, unknown>): Project[] {
-  return projects.map((entry) => {
-    const override = env[`VITE_ORIGIN_${entry.id.toUpperCase().replaceAll("-", "_")}`];
-    return typeof override === "string" && override ? { id: entry.id, name: entry.name, origin: override.replace(/\/+$/, "") } : entry;
+export function withOverrides(list: ProjectList, override: Overrides): ProjectList {
+  const problems = [...list.problems];
+  const projects = list.projects.map((entry) => {
+    const address = override(entry.id);
+    if (typeof address !== "string" || !address) return entry;
+    try {
+      return { id: entry.id, name: entry.name, origin: parseOrigin(address) };
+    } catch {
+      problems.push(`The address override for "${entry.id}" is not an address such as http://localhost:3000; the listed one is used.`);
+      return entry;
+    }
   });
+  return { ...list, projects, problems };
 }

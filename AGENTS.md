@@ -28,5 +28,6 @@
 ## Finishing a session
 
 - Update `TODOS.md` and append to `CHANGELOG.md`: what changed, and what the next person would get wrong without knowing it.
-- Run `npm run typecheck` and `npm test`.
+- Run `npm run typecheck` and `npm test`. After a change to `server/`, the build or `package.json`, also run `npm pack` and try the command from the tarball: a test cannot tell whether the package installs and starts.
+- Keep `README.md` free of project names and local folders: npm packs it. Those belong in `docs/local-setup.md`.
 - Commit.
