@@ -117,6 +117,9 @@ export interface NewEntry {
   repo: string;
   origin?: string;
   start?: string;
+  /** Needed when the folder has no `package.json` to take a name from. */
+  id?: string;
+  name?: string;
 }
 
 /**
@@ -129,17 +132,19 @@ export async function addProject(file: string, entry: NewEntry, read: Read = rea
   if (problem) throw new Error(`${problem} Fix or remove ${file} first; nothing was written.`);
   if (data.projects.some((listed) => repoOf(listed) === entry.repo)) return null;
 
-  // Only these three are stored, whatever else the caller's object carries.
-  const { repo, origin, start } = entry;
+  // Only these are stored, whatever else the caller's object carries, and only those that were given.
+  const { repo, id, name, origin, start } = entry;
+  const given = Object.fromEntries(Object.entries({ id, name, origin, start }).filter(([, value]) => value !== undefined));
+  if (id === undefined && typeof (await declared(repo, read)).id !== "string") throw new Error(`${repo} has no package.json with a name to take an id from. Give it one with --id. Nothing was written.`);
   let project: Project;
-  try { project = await resolveEntry({ repo, origin, start }, read); } catch (error) {
+  try { project = await resolveEntry({ repo, ...given }, read); } catch (error) {
     throw new Error(`${repo} cannot be added: ${reason(error)}. Nothing was written.`);
   }
   const listed = await readProjects(file, read);
   if (listed.projects.some((other) => other.id === project.id)) throw new Error(`Another listed project already has the id "${project.id}". Nothing was written.`);
 
   // A bare folder is enough when the project describes itself; otherwise the entry carries what was given.
-  const stored = origin === undefined && start === undefined ? repo : { repo, ...(origin !== undefined && { origin }), ...(start !== undefined && { start }) };
+  const stored = Object.keys(given).length === 0 ? repo : { repo, ...given };
   await write(file, `${JSON.stringify({ ...data, projects: [...data.projects, stored] }, null, 2)}\n`);
   return project;
 }

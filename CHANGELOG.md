@@ -2,6 +2,17 @@
 
 > **Summary:** What changed in this repository, newest first, written for someone arriving with no context.
 
+## 2026-10-02 — `agent-atelier add` takes `--id` and `--name`; Yutugy is listed
+
+Nicolas ran the command in `yutugy-portfolio`, a project with no `package.json`. `add` takes a project's id from its package name, so it could not add that folder at all.
+
+- **`--id` and `--name` on `add`** (`server/command.ts`, `server/projects.ts`). Without a `package.json` and without `--id`, `add` now says to pass one. The entry stores only what was given.
+- **Outside this repository**: Yutugy was added to Nicolas's list with the packed command (`--id yutugy`, port 3000, its own start command). `add` rewrote the file with one field per line; the two earlier entries are unchanged in content. Nothing in Yutugy's folder was touched.
+
+**What a newcomer would get wrong.** Yutugy is listed, not connected: it does not serve `/atelier.json`, so it shows as "Not running" or "No manifest" and has no screens. It is not an npm project, so the connector package planned for step 3 will not apply to it; it would need a manifest written by hand and served by its own dev server. `npx agent-atelier` in a folder that has not installed the package asks the npm registry and fails, because nothing is published; `npx --package=<tarball> agent-atelier` runs it from the tarball.
+
+**Checks.** `npm run typecheck` passes; `npm test`: 63 pass (62 before; one new, one reworded). From a fresh tarball, in Yutugy's folder: `add` without `--id` refused with the new sentence and wrote nothing; with `--id` it added the entry. The dev server already running on port 3200 then listed three projects, and its rail showed "Yutugy. Not running · localhost:3000" in the in-app Chromium browser. Yutugy's own server was not started, so the "No manifest" state was not seen.
+
 ## 2026-10-02 — A launch entry starts Marvin from a session here
 
 Nicolas asked for Marvin to be started alongside Atelier. The desktop app starts servers from `.claude/launch.json` of the folder a session is opened on, so that file gained `marvin-dev`: `npm --prefix /Users/nico/Sites/marvin run dev`, port 3210. `docs/local-setup.md` says so.

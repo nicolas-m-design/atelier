@@ -27,9 +27,9 @@ describe("command line", () => {
   });
 
   it("adds the current folder, or the one named, with what was given", () => {
-    expect(parseCommand(["add"], "/work/app")).toEqual({ run: "add", repo: "/work/app", origin: undefined, start: undefined });
-    expect(parseCommand(["add", "../other", "--origin", "http://localhost:3000", "--start", "npm run dev"], "/work/app"))
-      .toEqual({ run: "add", repo: "/work/other", origin: "http://localhost:3000", start: "npm run dev" });
+    expect(parseCommand(["add"], "/work/app")).toEqual({ run: "add", repo: "/work/app", origin: undefined, start: undefined, id: undefined, name: undefined });
+    expect(parseCommand(["add", "../other", "--origin", "http://localhost:3000", "--start", "npm run dev", "--id", "other", "--name", "The other"], "/work/app"))
+      .toEqual({ run: "add", repo: "/work/other", origin: "http://localhost:3000", start: "npm run dev", id: "other", name: "The other" });
   });
 
   it("answers help and version before anything else", () => {
@@ -47,7 +47,9 @@ describe("command line", () => {
       [["--origin", "http://localhost:3101"], /names a project/],
       [["--origin", "palette=localhost 3101"], /not an address/],
       [["--origin", "palette=http://localhost:3101/preview"], /not an address/],
-      [["--start", "npm run dev"], /belongs to add/],
+      [["--start", "npm run dev"], /--start belongs to add/],
+      [["--id", "other"], /--id belongs to add/],
+      [["serve", "--name", "Other"], /--name belongs to add/],
       [["add", "a", "b"], /one folder/],
       [["add", "--port", "3300"], /belongs to serving/],
       [["add", "--origin", "nowhere"], /not an address/],
@@ -89,6 +91,18 @@ describe("adding a project", () => {
     expect(JSON.parse(text()!)).toEqual({ ...before, projects: [...before.projects, { repo: "/repos/plain", origin: "http://localhost:3001" }] });
   });
 
+  it("takes an id and a name for a folder without a package.json", async () => {
+    const { write, text } = saved();
+    await expect(addProject(FILE, { repo: "/repos/static", origin: "http://localhost:3000" }, disk(packages), write)).rejects.toThrow("/repos/static has no package.json with a name to take an id from. Give it one with --id. Nothing was written.");
+    await expect(addProject(FILE, { repo: "/repos/static", id: "Static Site" }, disk(packages), write)).rejects.toThrow(/lowercase letters, digits and hyphens/);
+    expect(write).not.toHaveBeenCalled();
+    const project = await addProject(FILE, { repo: "/repos/static", id: "static-site", name: "Static site", origin: "http://localhost:3000", start: "node dev.mjs" }, disk(packages), write);
+    expect(project).toEqual({ id: "static-site", name: "Static site", origin: "http://localhost:3000", repo: "/repos/static", start: { cwd: "/repos/static", command: "node dev.mjs" } });
+    expect(JSON.parse(text()!)).toEqual({ projects: [{ repo: "/repos/static", id: "static-site", name: "Static site", origin: "http://localhost:3000", start: "node dev.mjs" }] });
+    // What it stored reads back as the same project.
+    expect((await readProjects(FILE, disk({ ...packages, [FILE]: text()! }))).projects).toEqual([project]);
+  });
+
   it("does nothing when the folder is already listed, however it is written", async () => {
     for (const listed of ["/repos/plain", { repo: "/repos/plain", origin: "http://localhost:3001" }]) {
       const { write } = saved();
@@ -100,7 +114,7 @@ describe("adding a project", () => {
   it("never writes over a file it cannot use, nor an entry that would not work", async () => {
     const { write } = saved();
     await expect(addProject(FILE, { repo: "/repos/plain" }, disk({ ...packages, [FILE]: "{ not json" }), write)).rejects.toThrow(/not valid JSON.*nothing was written/);
-    await expect(addProject(FILE, { repo: "/repos/unnamed" }, disk(packages), write)).rejects.toThrow("/repos/unnamed cannot be added: it needs an id, or a repo whose package.json has a name. Nothing was written.");
+    await expect(addProject(FILE, { repo: "/repos/plain", origin: "ftp://files.example" }, disk(packages), write)).rejects.toThrow("/repos/plain cannot be added: the origin must be an address such as http://localhost:3000, with no path. Nothing was written.");
     await expect(addProject(FILE, { repo: "/repos/plain" }, disk({ ...packages, [FILE]: { projects: [{ id: "plain", origin: null }] } }), write)).rejects.toThrow(/already has the id "plain"/);
     expect(write).not.toHaveBeenCalled();
   });

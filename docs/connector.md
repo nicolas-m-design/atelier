@@ -98,7 +98,7 @@ This is outside the contract: Atelier reads only the manifest from a running pro
 
 To show a project at a different address without editing the list, for example a worktree's preview on another port: `--origin <id>=<address>` on the `agent-atelier` command, or `VITE_ORIGIN_<ID>` in Atelier's `.env.local` under `npm run dev`, where hyphens in the id become underscores.
 
-From the project's own folder, `npx agent-atelier add --origin http://localhost:3300 --start "npm run dev"` appends the entry instead of editing the file by hand. A project that has `agent-atelier` among its dependencies, or an `atelier` field, is also shown without being listed when the command is run in its folder.
+From the project's own folder, `npx agent-atelier add --origin http://localhost:3300 --start "npm run dev"` appends the entry instead of editing the file by hand; a project without a `package.json` also needs `--id`. A project that has `agent-atelier` among its dependencies, or an `atelier` field, is also shown without being listed when the command is run in its folder.
 
 ## How Atelier reads a project's state
 

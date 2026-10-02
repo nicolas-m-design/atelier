@@ -59,7 +59,7 @@ Edit the file by hand, or let the command append to it, from the project's folde
 npx agent-atelier add --origin http://localhost:3000 --start "npm run dev"
 ```
 
-`add` is the only thing in Atelier that writes the file. It never overwrites a file it cannot read, and does nothing when the folder is already listed.
+`add` is the only thing in Atelier that writes the file. It never overwrites a file it cannot read, and does nothing when the folder is already listed. A project without a `package.json` has no name to take an id from: give it one with `--id`, and `--name` if the id with a capital is not the name to show.
 
 Two more things the command does that `npm run dev` does not:
 

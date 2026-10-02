@@ -4,14 +4,17 @@
 
 ## The projects listed on Nicolas's machine
 
-`~/.config/agent-atelier/projects.json` lists two projects, as complete entries. It was created on 2026-10-02; before that the same two were a constant in the code.
+`~/.config/agent-atelier/projects.json` lists three projects, as complete entries. It was created on 2026-10-02 with the first two; before that those were a constant in the code. Yutugy was added the same day with `agent-atelier add`.
 
 | Project | Address Atelier expects | Start it with |
 | --- | --- | --- |
 | Palier | http://localhost:3100 | `npm run dev` in `/Users/nico/Sites/palier` |
 | Marvin | http://localhost:3210 | `npm run dev` in `/Users/nico/Sites/marvin` |
+| Yutugy | http://localhost:3000 | `node --env-file=.env.local dev.mjs` in `/Users/nico/Sites/yutugy-portfolio` |
 
-Neither project has an `atelier` field in its `package.json`, and neither has `agent-atelier` installed.
+No project has an `atelier` field in its `package.json`, and none has `agent-atelier` installed.
+
+Yutugy is listed but not connected: it has no `package.json` (its id, `yutugy`, is in the list), and it does not serve `/atelier.json`, so Atelier shows it as "No manifest" when it runs and has no screens to draw. Nothing in its folder was changed.
 
 ## Palier
 
