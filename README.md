@@ -12,7 +12,7 @@ The scenario canvas started inside Palier. Atelier is that canvas, moved out so 
 
 Atelier holds no product code. A project lists its screens in a small manifest it serves itself, and each screen is one of the project's own pages in an iframe, so it keeps its own styles, dependencies and state. The contract is in [docs/connector.md](docs/connector.md).
 
-Palier keeps its own built-in canvas as its standalone entry. Canvas improvements happen here from now on.
+Palier no longer keeps a canvas of its own: Nicolas had it removed on 2026-10-02, so Atelier is the only canvas for its screens. That removal is on Palier's branch `work/atelier-name-restored`; until it is in Palier's `main`, port 3100 still serves the old canvas at `/`.
 
 ## Run it
 

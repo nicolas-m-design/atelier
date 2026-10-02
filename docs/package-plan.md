@@ -21,7 +21,7 @@ npm install -D agent-atelier
 ```ts
 // src/app/atelier.json/route.ts — the manifest
 import { manifestResponse } from "agent-atelier";
-import { atelierManifest } from "@/components/canvas/atelier";
+import { atelierManifest } from "@/components/scenarios/atelier";
 
 export const GET = () => manifestResponse(atelierManifest());
 ```
@@ -53,7 +53,7 @@ Found by reading the code on `work/first-milestone`.
 | Address overrides are read at build time | `src/projects.ts` (`VITE_ORIGIN_<ID>`) | A built package cannot read `.env.local`. |
 | The branch endpoint exists only inside Vite | `server/branches.ts` (`configureServer`) | `npm run dev` is the only way to get it; a built copy says "Not available". |
 | The workspace is run from source | `package.json` (`private`, no `bin`, `exports` or `files`) | Nothing to install or execute. |
-| The connector is two hand-written files per project | Palier: `src/app/atelier.json/route.ts`, `src/components/canvas/EmbeddedPreview.tsx`. Marvin: its own route and manifest module | Each project repeats the CORS header, and neither validates its manifest with Atelier's own check (`parseManifest` in `src/manifest.ts`). |
+| The connector is two hand-written files per project | Palier: `src/app/atelier.json/route.ts`, `src/components/workspace/EmbeddedPreview.tsx` (paths as on its branch `work/atelier-name-restored`). Marvin: its own route and manifest module | Each project repeats the CORS header, and neither validates its manifest with Atelier's own check (`parseManifest` in `src/manifest.ts`). |
 | No licence file | repository root | Required before anything is published. The built page includes Inter (SIL Open Font Licence) and Lucide icons (ISC), which need their notices. |
 
 What already helps: `answer()` and `readBranches()` in `server/branches.ts` do not depend on Vite, the manifest check has no dependencies, and the built page is about 500 kB.
@@ -65,7 +65,7 @@ One package, no monorepo. Three parts, all built into `dist/`.
 ### 1. The connector (what a project imports)
 
 - **`agent-atelier`** (no framework): the manifest types, `parseManifest`, `defineManifest(manifest)` which checks and returns it, and `manifestResponse(manifest)` which returns a `Response` with the JSON and the open CORS header.
-- **`agent-atelier/react`**: `<AtelierFrame />`, the client component that sets `data-embedded` on the document when the page is framed. It is Palier's `EmbeddedPreview.tsx`, moved. The CSS that decides what to hide stays in each project.
+- **`agent-atelier/react`**: `<AtelierFrame />`, the client component that sets `data-embedded` on the document when the page is framed. It is Palier's `EmbeddedPreview.tsx`, moved; Palier now uses it for its UI library only, since its scenario pages keep their navigation bar when framed. The CSS that decides what to hide stays in each project.
 - React is an optional peer dependency (18 or later), needed only by `/react`. No other runtime dependency.
 - The contract version stays `1`. The package's own version number is separate from it.
 

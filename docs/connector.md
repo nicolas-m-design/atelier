@@ -1,6 +1,6 @@
 # Connecting a project to Atelier
 
-> **Summary:** The contract between Atelier and a project: one JSON manifest at `/atelier.json`, preview routes that behave well inside a frame, and optionally linked pages such as a UI library. Palier and Marvin both implement it. There is no package to install yet; a project implements these two things in its own code.
+> **Summary:** The contract between Atelier and a project: one JSON manifest at `/atelier.json`, preview routes that behave well inside a frame, and optionally linked pages such as a UI library. Palier and Marvin both implement it. There is no package to install yet; a project implements these two things in its own code. What is said about Palier describes its branch `work/atelier-name-restored`, where its built-in canvas is removed; until that branch is in Palier's `main`, port 3100 serves the earlier arrangement (`palier-docs-after-merge` in `TODOS.md`).
 
 ## What a project provides
 
@@ -52,12 +52,13 @@ Served with `Content-Type: application/json` and `Access-Control-Allow-Origin: *
 
 Strings are limited to 200 characters. Unknown fields are ignored. An invalid manifest is rejected as a whole, and Atelier says why.
 
-**Derive the manifest from the project's own scenario data** instead of writing a second list by hand. Palier builds its manifest from the same module its own canvas reads (`src/components/canvas/screens.ts` and `atelier.ts` there), and a test checks that the two agree. Marvin builds its manifest from its preview frame registry (`src/preview/frames.ts` and `manifest.ts` there), with the same kind of test.
+**Derive the manifest from the project's own scenario data** instead of writing a second list by hand. Palier builds its manifest from the one list of screens its entry redirect also reads (`src/components/scenarios/screens.ts` and `atelier.ts` there), and a test checks that the two agree. Marvin builds its manifest from its preview frame registry (`src/preview/frames.ts` and `manifest.ts` there), with the same kind of test.
 
 ## Preview routes
 
 - **State comes from the URL alone.** The same route must render the same screen on every load: fixture, snapshot time and selection are named in the path or query. A preview must not read saved user preferences (local storage, cookies), the device clock or anything another preview could change.
-- **Product only.** No canvas controls, scenario navigation, back-to-canvas links or prototype banners inside the page while it is framed. If the project shows such navigation on its standalone pages, hide it when framed. Palier does this with a small client check (`window.self !== window.top`) that sets `data-embedded` on the document, and one CSS rule.
+- **Product only.** No canvas controls, scenario navigation, back-to-canvas links or prototype banners inside the page while it is framed. If the project shows such navigation on its standalone pages, hide it when framed: a small client check (`window.self !== window.top`) that sets an attribute on the document, and one CSS rule, are enough. Palier's library does this (see "Linked pages").
+  - **One recorded exception.** Palier's scenario pages keep their top-edge navigation bar when framed, on Nicolas's decision of 2026-10-02 (`canvas-removal` in Palier's `docs/decisions.md`). The bar holds the screen's name and previous and next links, and stays out of sight until the pointer reaches the frame's top edge, so a preview at rest still shows the product only. It is an exception to this rule, not a change to it.
 - **Allow framing.** Do not send `X-Frame-Options` or a `frame-ancestors` policy that blocks `http://localhost:3200`.
 - **Fit the declared frame.** The page is shown in an iframe of exactly the declared width and height. It may scroll inside the frame.
 - **In-frame navigation is fine.** Product links work once a preview is entered. Atelier cannot see where a preview has navigated; its reload control returns the frame to the manifest route.
@@ -70,7 +71,7 @@ When a manifest has `links`, Atelier's sidebar opens with a page switcher: "Scre
 
 - **Not a preview.** A linked page has no fixed frame size and is always interactive. Its state is its own business; Atelier passes it nothing but its route.
 - **Allow framing**, as for preview routes.
-- **Keep the page's own navigation, hide the prototype's.** A library's section list belongs to the page and stays. A wordmark, a page switcher or a link back to the project's own canvas duplicates what Atelier already shows; hide those when framed. Palier does this with the same `data-embedded` check as its previews. Marvin's library has only its section list and a logotype, and hides nothing.
+- **Keep the page's own navigation, hide the prototype's.** A library's section list belongs to the page and stays. A wordmark, a page switcher or a link back to the project's own canvas duplicates what Atelier already shows; hide those when framed. Palier's library hides its wordmark and page switcher this way: the frame check sets `data-embedded` on the document (`src/components/workspace/EmbeddedPreview.tsx` there), and one CSS rule does the hiding. Marvin's library has only its section list and a logotype, and hides nothing.
 - **Declare `width` if the page has a minimum width.** Marvin's library shares its product's 1280 px minimum and declares it; Palier's adapts and does not.
 
 Atelier keeps the canvas mounted underneath an open page, so previews and position are unchanged on return.

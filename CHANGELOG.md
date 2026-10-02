@@ -2,6 +2,19 @@
 
 > **Summary:** What changed in this repository, newest first, written for someone arriving with no context.
 
+## 2026-10-02 — The documents follow the removal of Palier's built-in canvas
+
+Nicolas had Palier's own canvas removed, in Palier, and asked for the documents here to be corrected now instead of after that work is merged. Documents only; no code and no change to the contract's fields.
+
+- **`docs/connector.md`**: Palier's manifest is derived from `src/components/scenarios/screens.ts` and `atelier.ts`, the list its entry redirect also reads, no longer "its own canvas". Palier is no longer the example of hiding scenario navigation in a framed preview. Its scenario pages keep their top-edge bar when framed, recorded under "Product only" as one exception decided by Nicolas. The frame check (`data-embedded`) is now described where it is still used, in Palier's UI library.
+- **README**: Palier no longer keeps a canvas of its own.
+- **`docs/package-plan.md`**: Palier's connector paths.
+- **`TODOS.md`**: `palier-canvas-future` is answered (removed); `palier-docs-after-merge` is new.
+
+**What a newcomer would get wrong.** These documents describe Palier's branch `work/atelier-name-restored` (read at `c106169`), not its `main`. Port 3100 still serves the canvas at `/`, hides the bar inside frames and has the files under `src/components/canvas/` until that branch is merged; the connector guide's summary and the README each carry one sentence saying so, to be removed then. The "Product only" rule did not change: a new project must still hide its prototype navigation when framed, and Palier's bar is an exception because it is out of sight at rest. Atelier's own rule, that nothing Atelier draws appears inside a frame, is untouched, since the bar is Palier's.
+
+**Checks.** `npm test`: 34 pass. `npm run typecheck` reported three errors in `src/App.tsx`, all from another session's uncommitted work in this folder at the time (`src/projects.ts` changed, `server/projects.ts` and `server/request.ts` new); this commit holds documents only and leaves those files alone. Palier's branch was read, not run: the bar inside a frame was not looked at in a browser from this session.
+
 ## 2026-10-02 — The package is `agent-atelier`; a rename to Canvagent was made and undone
 
 Nicolas looked for a package name closer to AI. He first chose Canvagent, and Claude renamed everything here to it, moved the folder to `/Users/nico/Sites/canvagent`, moved the manifest to `/canvagent.json` and added a bridge that still read the old names (commits `9c99e9f`, `e3f6f50`). An hour later he chose **Agent Atelier** instead: "Atelier" for short, package and command `agent-atelier`, folder `atelier`.
