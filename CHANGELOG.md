@@ -2,6 +2,14 @@
 
 > **Summary:** What changed in this repository, newest first, written for someone arriving with no context.
 
+## 2026-10-02 — Palier's wording follows the new rule; its canvas removal is in its `main`
+
+Nicolas asked for Palier's decisions log to match the rule below. That was done in Palier, on its branch `work/contract-wording` (`d139596`), in a separate worktree: its `docs/decisions.md` and README no longer call the top-edge bar an exception. Here, only `TODOS.md` changed, to say so.
+
+**What a newcomer would get wrong.** That Palier branch is not merged, so Palier's `main` still says "a deliberate exception". Separately, Palier's canvas removal is now in its `main`, so the sentences in `docs/connector.md` and the README that say "until that branch is in Palier's `main`" are out of date; removing them is `palier-docs-after-merge` in `TODOS.md`, not done in this session. On a device without hover, Palier's bar is always visible, which "Product only at rest" does not allow inside a frame; it is noted in Palier as `framed-bar-touch`.
+
+**Checks.** None run: one document.
+
 ## 2026-10-02 — The preview rule becomes "Product only at rest"
 
 Nicolas asked for the contract's rule to allow navigation that is hidden at rest, instead of listing Palier's top-edge bar as an exception to it. `docs/connector.md` only; no code reads this rule, and the manifest is unchanged.
