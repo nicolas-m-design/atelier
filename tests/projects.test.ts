@@ -86,8 +86,8 @@ describe("project list file", () => {
       "Entry 3: the repo must be an absolute folder.",
       "Entry 4: it needs an id, or a repo whose package.json has a name.",
       "Entry 5: the id must be lowercase letters, digits and hyphens.",
-      "Entry 6: the origin must be an address such as http://localhost:3100, with no path.",
-      "Entry 7: the origin must be an address such as http://localhost:3100, with no path.",
+      "Entry 6: the origin must be an address such as http://localhost:3000, with no path.",
+      "Entry 7: the origin must be an address such as http://localhost:3000, with no path.",
       "Entry 8: the start command must be text, and needs a repo to run in.",
       "Entry 9: an entry must be a folder or an object.",
     ]);

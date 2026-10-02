@@ -38,7 +38,7 @@ function parseOrigin(value: unknown): string | null {
   if (value === undefined || value === null) return null;
   let url: URL | null = null;
   try { if (typeof value === "string") url = new URL(value); } catch { /* reported below */ }
-  if (!url || !/^https?:$/.test(url.protocol) || url.pathname !== "/" || url.search || url.hash) throw new Error("the origin must be an address such as http://localhost:3100, with no path");
+  if (!url || !/^https?:$/.test(url.protocol) || url.pathname !== "/" || url.search || url.hash) throw new Error("the origin must be an address such as http://localhost:3000, with no path");
   return url.origin;
 }
 
