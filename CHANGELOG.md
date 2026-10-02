@@ -2,6 +2,17 @@
 
 > **Summary:** What changed in this repository, newest first, written for someone arriving with no context.
 
+## 2026-10-02 — The preview rule becomes "Product only at rest"
+
+Nicolas asked for the contract's rule to allow navigation that is hidden at rest, instead of listing Palier's top-edge bar as an exception to it. `docs/connector.md` only; no code reads this rule, and the manifest is unchanged.
+
+- **The rule.** A framed preview that nothing is pointing at or focused in shows the product and nothing else. A project keeps to it either by hiding its prototype navigation when framed, as before, or by keeping navigation between its own screens out of sight until the pointer reaches it or the keyboard focuses it. Palier's scenario bar is the example of the second way.
+- **What is still not allowed in a framed preview:** anything visible at rest, such as a banner, and a link back to the project's own canvas.
+
+**What a newcomer would get wrong.** The entry below, "The documents follow the removal of Palier's built-in canvas", says the rule did not change and that Palier's bar is an exception; this entry replaces that. The guide says the bar cannot appear on a preview that is only shown or selected. That rests on `src/components/Frame.tsx`, which keeps a preview `inert` and without pointer events until it is entered; the bar itself was not looked at in a browser from this session. Palier's `docs/decisions.md` still words its bar as an exception to this contract, and was not edited from here.
+
+**Checks.** `npm run typecheck` and `npm test` (62 checks) pass.
+
 ## 2026-10-02 — The `agent-atelier` command and the package build (package plan, step 2)
 
 Nicolas asked for step 2 of `docs/package-plan.md`. Atelier could only be run from its source, through Vite. It can now be packed, installed in another folder and started there.

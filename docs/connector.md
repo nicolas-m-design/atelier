@@ -5,7 +5,7 @@
 ## What a project provides
 
 1. **A manifest** at `<origin>/atelier.json`, readable from another local origin.
-2. **Preview routes**: ordinary pages of the project's own app, one per screen, that render the product only and take their state from the URL.
+2. **Preview routes**: ordinary pages of the project's own app, one per screen, that show the product only while at rest and take their state from the URL.
 
 A project may also name **linked pages**, such as its UI library, which Atelier shows whole in place of the canvas.
 
@@ -57,8 +57,9 @@ Strings are limited to 200 characters. Unknown fields are ignored. An invalid ma
 ## Preview routes
 
 - **State comes from the URL alone.** The same route must render the same screen on every load: fixture, snapshot time and selection are named in the path or query. A preview must not read saved user preferences (local storage, cookies), the device clock or anything another preview could change.
-- **Product only.** No canvas controls, scenario navigation, back-to-canvas links or prototype banners inside the page while it is framed. If the project shows such navigation on its standalone pages, hide it when framed: a small client check (`window.self !== window.top`) that sets an attribute on the document, and one CSS rule, are enough. Palier's library does this (see "Linked pages").
-  - **One recorded exception.** Palier's scenario pages keep their top-edge navigation bar when framed, on Nicolas's decision of 2026-10-02 (`canvas-removal` in Palier's `docs/decisions.md`). The bar holds the screen's name and previous and next links, and stays out of sight until the pointer reaches the frame's top edge, so a preview at rest still shows the product only. It is an exception to this rule, not a change to it.
+- **Product only at rest.** A framed preview that nothing is pointing at or focused in shows the product and nothing else: no canvas controls, scenario navigation, back-to-canvas links or prototype banners in view. If the project shows such things on its standalone pages, it has two ways to keep to this:
+  - **Hide them when framed.** A small client check (`window.self !== window.top`) that sets an attribute on the document, and one CSS rule, are enough. Palier's library does this (see "Linked pages").
+  - **Keep navigation out of sight until it is asked for.** Navigation between the project's own screens may stay in a framed page if, at rest, it shows nothing and takes no room in the layout, and appears only when the pointer reaches it or the keyboard focuses it. Palier's scenario pages do this: a bar with the screen's name and previous and next links slides over the top of the page when the pointer reaches the frame's top edge. Atelier passes pointer and keyboard input to a preview only once it is entered, so the bar cannot appear on a preview that is merely shown or selected. Two limits: the area that reveals it scales with the frame, so it is hard to reach when the canvas is zoomed far out; and a link back to the project's own canvas, or anything visible at rest such as a banner, still has to be hidden.
 - **Allow framing.** Do not send `X-Frame-Options` or a `frame-ancestors` policy that blocks `http://localhost:3200`.
 - **Fit the declared frame.** The page is shown in an iframe of exactly the declared width and height. It may scroll inside the frame.
 - **In-frame navigation is fine.** Product links work once a preview is entered. Atelier cannot see where a preview has navigated; its reload control returns the frame to the manifest route.
