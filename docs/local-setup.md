@@ -19,14 +19,6 @@ Palier's connector is part of its `main` since 2026-10-02, so the server on 3100
 
 Palier no longer keeps a canvas of its own: Nicolas had it removed on 2026-10-02, so Atelier is the only canvas for its screens. That removal is on Palier's branch `work/atelier-name-restored`; until it is in Palier's `main`, port 3100 still serves the old canvas at `/`.
 
-## A leftover to delete
-
-If `.env.local` in this repository still holds the line below, delete it: it points Palier at 3101, where nothing answers, and Atelier under `npm run dev` then shows Palier as not running. The packaged command does not read `.env.local`.
-
-```
-VITE_ORIGIN_PALIER=http://localhost:3101
-```
-
 ## In the Claude desktop app
 
 The preview uses `.claude/launch.json` (`atelier-dev`), from a session opened on this folder. A session opened on another project's folder reads that project's launch file instead.

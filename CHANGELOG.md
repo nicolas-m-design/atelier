@@ -2,6 +2,14 @@
 
 > **Summary:** What changed in this repository, newest first, written for someone arriving with no context.
 
+## 2026-10-02 — The Palier override is deleted from `.env.local`
+
+Nicolas asked for the leftover `VITE_ORIGIN_PALIER=http://localhost:3101` line to be deleted and Atelier's dev server restarted. `.env.local` is not committed, so the change is on this machine only; the file keeps one comment and holds no address. The section "A leftover to delete" is gone from `docs/local-setup.md`, and `palier-env-override` is closed in `TODOS.md`.
+
+**What a newcomer would get wrong.** Earlier entries and handoff notes say Atelier looks for Palier on 3101 and shows it as not running; that ended here. An override is read when the dev server starts, so a change to `.env.local` needs a restart, not a page reload. Port 3100 was serving Palier's dev server at the time, so this was also the first time previews loaded from it instead of a production build; entering a preview was not tried against it (`palier-dev-server`).
+
+**Checks.** `npm run typecheck` and `npm test` pass. In the browser on port 3200: Palier shows "Live · localhost:3100", its five previews point at port 3100, and the three in view render. Marvin was not running.
+
 ## 2026-10-02 — Palier's wording follows the new rule; its canvas removal is in its `main`
 
 Nicolas asked for Palier's decisions log to match the rule below. That was done in Palier, on its branch `work/contract-wording` (`d139596`), in a separate worktree: its `docs/decisions.md` and README no longer call the top-edge bar an exception. Here, only `TODOS.md` changed, to say so.
