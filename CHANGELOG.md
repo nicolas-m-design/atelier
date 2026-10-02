@@ -2,6 +2,14 @@
 
 > **Summary:** What changed in this repository, newest first, written for someone arriving with no context.
 
+## 2026-10-02 — A launch entry starts Marvin from a session here
+
+Nicolas asked for Marvin to be started alongside Atelier. The desktop app starts servers from `.claude/launch.json` of the folder a session is opened on, so that file gained `marvin-dev`: `npm --prefix /Users/nico/Sites/marvin run dev`, port 3210. `docs/local-setup.md` says so.
+
+**What a newcomer would get wrong.** The entry holds a folder of Nicolas's machine in a committed file. That is outside `src/`, `server/` and the package, so the rule "No project in the code" and the tarball are untouched, but the entry does nothing on another machine. It starts Marvin's dev server and edits nothing there. Palier has no entry: its server on 3100 was already running, started elsewhere.
+
+**Checks.** `npm run typecheck` and `npm test` (62 checks) pass. In the browser on port 3200: Marvin shows "Live · localhost:3210", and the Overview previews in view render from port 3210.
+
 ## 2026-10-02 — The "until it is merged" sentences about Palier are removed
 
 Palier's canvas removal reached its `main` earlier in the day, and Nicolas asked for the sentences here that still said otherwise to be cleared. He also had Palier's reworded decision merged: Palier's `main` (`b38166e`) no longer calls its top-edge bar an exception to this contract.

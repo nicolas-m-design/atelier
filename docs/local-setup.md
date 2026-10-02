@@ -22,3 +22,5 @@ Palier no longer keeps a canvas of its own: Nicolas had it removed on 2026-10-02
 ## In the Claude desktop app
 
 The preview uses `.claude/launch.json` (`atelier-dev`), from a session opened on this folder. A session opened on another project's folder reads that project's launch file instead.
+
+The same file has `marvin-dev`, which runs Marvin's own `npm run dev` from `/Users/nico/Sites/marvin` on port 3210, so that a session here can start Marvin when Nicolas asks. It changes nothing in Marvin, and it names a folder that exists on this machine only.

@@ -4,6 +4,8 @@
 
 ## Handoff note
 
+*2026-10-02, Claude.* **`.claude/launch.json` has a second entry, `marvin-dev`, added when Nicolas asked for Marvin to be started from a session here.** It runs Marvin's own `npm run dev` in Marvin's folder on port 3210. With it running, Atelier shows Marvin live and its Overview previews render. The server belongs to the session that started it and stops with it.
+
 *2026-10-02, Claude.* **Palier's canvas removal and its reworded decision are both in Palier's `main`, and the documents here no longer say "until it is merged".** At Nicolas's instruction, Palier's branch `work/contract-wording` was merged (its `main` is at `b38166e`; the branch and its worktree are removed): its decisions log and README describe the top-edge bar as following "Product only at rest". Here, the sentence about Palier's branch is gone from the summary of `docs/connector.md`, from `docs/local-setup.md` and from `docs/package-plan.md`. Checked against port 3100 before removing them: `/` redirects to Palier's first screen, `/atelier.json` answers, and the served stylesheet hides only the library's navigation in a frame, not the scenario bar. The bar was not hovered inside an Atelier frame from this session; Palier's notes record that check after its merge. Notes below that say Palier's removal is on a branch describe the state before this.
 
 *2026-10-02, Claude.* **The `VITE_ORIGIN_PALIER` line is gone from `.env.local`, on Nicolas's instruction, and Atelier under `npm run dev` shows Palier live on port 3100.** The file now holds one comment and no address. Notes below that say the line is left for Nicolas, or that Palier shows on 3101, describe the state before this. Marvin was not running in this session and shows as not running.

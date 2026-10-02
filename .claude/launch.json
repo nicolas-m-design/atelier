@@ -6,6 +6,12 @@
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "dev"],
       "port": 3200
+    },
+    {
+      "name": "marvin-dev",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["--prefix", "/Users/nico/Sites/marvin", "run", "dev"],
+      "port": 3210
     }
   ]
 }
