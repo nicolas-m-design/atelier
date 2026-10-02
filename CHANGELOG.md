@@ -2,6 +2,14 @@
 
 > **Summary:** What changed in this repository, newest first, written for someone arriving with no context.
 
+## 2026-10-02 — A plan for an installable package
+
+Nicolas asked, from a Palier session, for a plan to make Atelier an `npm install`, as Agentation is. Claude wrote `docs/package-plan.md`: one package holding the connector a project imports and an `atelier` command that serves the workspace, with the project list read when it starts.
+
+**What a newcomer would get wrong.** It is a plan; no code changed. `AGENTS.md` and the README still list an installer and a connector package as out of scope, and the plan's first step is to change those lines once Nicolas has settled the name, the distribution and the licence. The name `atelier` is taken on npm. Publishing is a separate, explicit decision.
+
+**Checks.** None run: documents only.
+
 ## 2026-10-02 — Palier's connector is consolidated; the 3101 preview is gone
 
 Nicolas had every Palier branch merged into Palier's `main`, from a session working in Palier. The connector branch (`claude/atelier-connector`) is part of that, so Palier's own server on port 3100 now serves `/atelier.json`. The worktree at `/Users/nico/Sites/palier-atelier` was removed, and the preview served from it on port 3101 was stopped first.

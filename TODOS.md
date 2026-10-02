@@ -28,6 +28,7 @@ Checks run: `npm run typecheck` and `npm test` (34 checks) pass here. In the bro
 
 | Id | Task | Status | Notes |
 | --- | --- | --- | --- |
+| `npm-package` | Make Atelier installable as one npm package | planned; waiting on Nicolas's decisions | Plan in `docs/package-plan.md`: connector imports, an `atelier` command, and the project list read at start instead of compiled in. Name, distribution and licence are open. Nothing built. Publishing needs a separate instruction. |
 | `palier-env-override` | Delete the `VITE_ORIGIN_PALIER` line from `.env.local` | waiting on Nicolas | Left over from `palier-consolidation`. It points Palier at port 3101, which nothing serves now. Then check Palier in Atelier against port 3100. |
 | `dev-server-first-load` | Smooth the first load of a preview from a development server | noted | A frame can show unstyled for a moment while the project's dev server compiles its styles. Seen once with Marvin; it settles by itself. A production build does not do this. |
 | `palier-dev-server` | Check previews against Palier's dev server | open | Palier was verified against a production build only. Marvin's `next dev` works embedded, so Palier's should too; not exercised. |
