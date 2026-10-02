@@ -2,6 +2,16 @@
 
 > **Summary:** What changed in this repository, newest first, written for someone arriving with no context.
 
+## 2026-10-02 — Palier's connector is consolidated; the 3101 preview is gone
+
+Nicolas had every Palier branch merged into Palier's `main`, from a session working in Palier. The connector branch (`claude/atelier-connector`) is part of that, so Palier's own server on port 3100 now serves `/atelier.json`. The worktree at `/Users/nico/Sites/palier-atelier` was removed, and the preview served from it on port 3101 was stopped first.
+
+In this repository: the `palier-connector-preview` entry is removed from `.claude/launch.json`, and the README's interim instructions are replaced.
+
+**What a newcomer would get wrong.** `.env.local` may still point Palier at port 3101. That session could not edit the file, so the line `VITE_ORIGIN_PALIER=http://localhost:3101` is Nicolas's to delete; until then Atelier shows Palier as not running even while 3100 is up. Palier now has one branch, so the "Local branches" list shows one. The sample data in `tests/branches.test.ts` still names the old branches and worktree; it is fixed test input, not a reading of the real repository.
+
+**Checks.** `npm run typecheck` and `npm test` here. Atelier itself was not re-checked against port 3100 because of the leftover override.
+
 ## 2026-10-02 — Disable interface text selection
 
 Text in Atelier's sidebar, controls and canvas labels can no longer be selected accidentally. The document-level CSS includes Safari support and preserves selection in editable fields. The start-command text follows the same rule; its Copy button remains available.

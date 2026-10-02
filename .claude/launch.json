@@ -6,12 +6,6 @@
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "dev"],
       "port": 3200
-    },
-    {
-      "name": "palier-connector-preview",
-      "runtimeExecutable": "/Users/nico/Sites/palier-atelier/node_modules/.bin/next",
-      "runtimeArgs": ["start", "/Users/nico/Sites/palier-atelier", "--port", "3101"],
-      "port": 3101
     }
   ]
 }

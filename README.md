@@ -35,13 +35,11 @@ Start each project's own server yourself, in its own folder. Atelier never start
 | Palier | http://localhost:3100 | `npm run dev` in `/Users/nico/Sites/palier` |
 | Marvin | http://localhost:3210 | `npm run dev` in `/Users/nico/Sites/marvin` |
 
-**Until Palier's connector branch is consolidated**, the server on 3100 does not serve `/atelier.json`, and Atelier reports "No manifest" for it. The connector lives on the branch `claude/atelier-connector`, checked out at `/Users/nico/Sites/palier-atelier`. To use it, build and serve that worktree on port 3101 (`npm run build`, then `npx next start --port 3101` there, or the `palier-connector-preview` entry in `.claude/launch.json`) and keep this line in `.env.local`:
+Palier's connector is part of its `main` since 2026-10-02, so the server on 3100 serves `/atelier.json`. The separate worktree and its preview on port 3101 no longer exist. If `.env.local` still holds the line below, delete it: it points Palier at 3101, where nothing answers, and Atelier then shows Palier as not running.
 
 ```
 VITE_ORIGIN_PALIER=http://localhost:3101
 ```
-
-Remove the line, and the launch entry, once the canonical checkout serves the manifest.
 
 ## Using the canvas
 

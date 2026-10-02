@@ -4,6 +4,8 @@
 
 ## Handoff note
 
+*2026-10-02, Claude, from a Palier session.* Palier is consolidated: its connector is in Palier's `main`, which is now its only branch and only checkout. The worktree `/Users/nico/Sites/palier-atelier` and the preview on port 3101 are gone, and the `palier-connector-preview` launch entry is removed here. **One step is left for Nicolas:** delete the `VITE_ORIGIN_PALIER` line from `.env.local` (the session could not edit that file). Until then Atelier looks for Palier on 3101 and shows it as not running. Notes below that mention the worktree, 3101 or five Palier branches describe the state before this.
+
 *2026-10-02.* Text selection is disabled throughout Atelier's interface, with an exception for editable fields. Start commands still have their Copy button. This CSS belongs to Atelier's document and does not affect project iframe contents.
 
 *2026-10-01, Claude.* The first milestone is committed on `work/first-milestone` (`main` holds only the empty starting commit). Atelier runs on http://localhost:3200 with a project rail, scenario sidebar, canvas, per-project saved view, a select/interact split for previews, and live, not-running, no-manifest and empty project states.
@@ -26,7 +28,7 @@ Checks run: `npm run typecheck` and `npm test` (34 checks) pass here. In the bro
 
 | Id | Task | Status | Notes |
 | --- | --- | --- | --- |
-| `palier-consolidation` | Bring Palier's connector branch into its canonical line | waiting on Nicolas | Until then 3100 reports "No manifest". Afterwards delete `VITE_ORIGIN_PALIER` from `.env.local`, the `palier-connector-preview` launch entry, and the worktree. The branch touches `TODOS.md` and `CHANGELOG.md` in Palier, which the active session there also edits: expect small text conflicts. |
+| `palier-env-override` | Delete the `VITE_ORIGIN_PALIER` line from `.env.local` | waiting on Nicolas | Left over from `palier-consolidation`. It points Palier at port 3101, which nothing serves now. Then check Palier in Atelier against port 3100. |
 | `dev-server-first-load` | Smooth the first load of a preview from a development server | noted | A frame can show unstyled for a moment while the project's dev server compiles its styles. Seen once with Marvin; it settles by itself. A production build does not do this. |
 | `palier-dev-server` | Check previews against Palier's dev server | open | Palier was verified against a production build only. Marvin's `next dev` works embedded, so Palier's should too; not exercised. |
 | `page-keys` | Keyboard and focus when a linked page is open | noted | Keys pressed inside a linked page stay there, as with an entered preview. Atelier does not move focus into the page when it opens. |
@@ -47,5 +49,6 @@ Checks run: `npm run typecheck` and `npm test` (34 checks) pass here. In the bro
 | `marvin-library` | Add Marvin's UI library | done (2026-10-01) | Built in Marvin at `/ui` and listed in its manifest. Marvin's plan had deferred the library until a second surface existed, and Nicolas asked for it now. |
 | `marvin-connection` | Connect Marvin | done (2026-10-01) | Manifest route added in Marvin; registered at port 3210. Marvin's own documents had already withdrawn the plan to copy Palier's canvas, so no plan note was needed. |
 | `first-milestone` | Workspace shell, canvas, persistence, interaction mode, project states | done on `work/first-milestone` (2026-10-01) | Canvas mechanics ported from Palier's `ScenarioCanvas.tsx` at `5eda020`; board units changed to source pixels and frame sizes taken from the manifest. |
-| `palier-connector` | Palier serves a derived manifest and hides scenario navigation when framed | done on Palier branch `claude/atelier-connector` (2026-10-01); not merged | Tests there: 158 pass, plus the one suite that already failed before the change. |
+| `palier-consolidation` | Bring Palier's connector branch into its canonical line | done (2026-10-02), except the `.env.local` line (`palier-env-override`) | Merged into Palier's `main` on Nicolas's instruction; worktree, port 3101 preview and launch entry removed. |
+| `palier-connector` | Palier serves a derived manifest and hides scenario navigation when framed | done (2026-10-01); in Palier's `main` since 2026-10-02 | Tests there: 158 pass, plus the one suite that already failed before the change. |
 | `temporary-manifest` | Remove the hand-copied Palier manifest | done (2026-10-01) | Used only until the live manifest worked. |
