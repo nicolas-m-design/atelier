@@ -1,16 +1,16 @@
-# Canvagent
+# Atelier
 
-> **Summary:** A local workspace that shows several projects' prototype screens on one pannable, zoomable canvas, with a project switcher. Each project stays in its own repository and runs its own server; Canvagent embeds its screens as live previews. Palier and Marvin are both connected. Local only: nothing is published or deployed. Called Atelier until 2026-10-02.
+> **Summary:** A local workspace that shows several projects' prototype screens on one pannable, zoomable canvas, with a project switcher. Each project stays in its own repository and runs its own server; Atelier embeds its screens as live previews. Palier and Marvin are both connected. Local only: nothing is published or deployed. Its full name is Agent Atelier and its package name `agent-atelier`; these documents and the interface say Atelier.
 
 ## What it is
 
-The scenario canvas started inside Palier. Canvagent is that canvas, moved out so it can be improved once and used by every project:
+The scenario canvas started inside Palier. Atelier is that canvas, moved out so it can be improved once and used by every project:
 
 - a narrow **project rail** to switch projects, each with a status dot;
 - the selected project's **sidebar**: a switch between its screens and its linked pages, such as a UI library, then the list of screens, and at the foot the local branches of its repository;
 - the **canvas**, with each screen shown as a live preview from the project's own server.
 
-Canvagent holds no product code. A project lists its screens in a small manifest it serves itself, and each screen is one of the project's own pages in an iframe, so it keeps its own styles, dependencies and state. The contract is in [docs/connector.md](docs/connector.md).
+Atelier holds no product code. A project lists its screens in a small manifest it serves itself, and each screen is one of the project's own pages in an iframe, so it keeps its own styles, dependencies and state. The contract is in [docs/connector.md](docs/connector.md).
 
 Palier keeps its own built-in canvas as its standalone entry. Canvas improvements happen here from now on.
 
@@ -26,16 +26,16 @@ npm install
 npm run dev
 ```
 
-Canvagent runs at http://localhost:3200. The port is fixed, because saved canvas positions belong to that address; if 3200 is taken, the command fails instead of moving. In the Claude desktop app, the preview uses `.claude/launch.json` (`canvagent-dev`).
+Atelier runs at http://localhost:3200. The port is fixed, because saved canvas positions belong to that address; if 3200 is taken, the command fails instead of moving. In the Claude desktop app, the preview uses `.claude/launch.json` (`atelier-dev`).
 
-Start each project's own server yourself, in its own folder. Canvagent never starts or stops anything.
+Start each project's own server yourself, in its own folder. Atelier never starts or stops anything.
 
-| Project | Address Canvagent expects | Start it with |
+| Project | Address Atelier expects | Start it with |
 | --- | --- | --- |
 | Palier | http://localhost:3100 | `npm run dev` in `/Users/nico/Sites/palier` |
 | Marvin | http://localhost:3210 | `npm run dev` in `/Users/nico/Sites/marvin` |
 
-Palier's connector is part of its `main` since 2026-10-02, so the server on 3100 serves its manifest. The separate worktree and its preview on port 3101 no longer exist. If `.env.local` still holds the line below, delete it: it points Palier at 3101, where nothing answers, and Canvagent then shows Palier as not running.
+Palier's connector is part of its `main` since 2026-10-02, so the server on 3100 serves `/atelier.json`. The separate worktree and its preview on port 3101 no longer exist. If `.env.local` still holds the line below, delete it: it points Palier at 3101, where nothing answers, and Atelier then shows Palier as not running.
 
 ```
 VITE_ORIGIN_PALIER=http://localhost:3101
@@ -49,7 +49,7 @@ VITE_ORIGIN_PALIER=http://localhost:3101
 - **Pages:** when a project links a page such as its UI library, the top of the sidebar switches between "Screens" (the canvas) and that page. The page fills the workspace and is interactive straight away; reload and open-in-a-new-tab sit in the bar above it. The canvas keeps its position and previews meanwhile.
 - **Select a screen:** click it. Nothing inside the screen reacts. A selected screen shows three controls above its top-right corner: interact, reload, open in a new tab.
 - **Interact with a screen:** double-click it, or press Enter on a selected one. Its links, forms and scrolling now work; the rest of the canvas still pans and zooms.
-- **Leave a screen:** "Exit preview" above the screen or in the bar at the bottom, a click on the bare canvas, or Escape while the keyboard is in Canvagent.
+- **Leave a screen:** "Exit preview" above the screen or in the bar at the bottom, a click on the bare canvas, or Escape while the keyboard is in Atelier.
 
 - **Local branches:** the foot of the sidebar lists the branches of the project's repository: name, age of the last commit, its subject, and a folder mark on each branch that is checked out, with the folder's name. Hover a row for the commit hash and the full path. It is a list to read; nothing in it is a control. It is read when the list opens and when the window regains focus, and it does not depend on the project's server running.
 
@@ -60,18 +60,18 @@ Each project remembers its own position, zoom, selected screen and open page in 
 | Dot | Sidebar line | Meaning |
 | --- | --- | --- |
 | Green | Live | The project serves a valid manifest. Screens load when they come near the viewport. |
-| Grey | Not running | Nothing answers. The last known screens stay listed as placeholders; Canvagent reconnects by itself when the server is back. |
-| Amber | No manifest | A server answers without a usable `/canvagent.json`. |
+| Grey | Not running | Nothing answers. The last known screens stay listed as placeholders; Atelier reconnects by itself when the server is back. |
+| Amber | No manifest | A server answers without a usable `/atelier.json`. |
 | Hollow | No preview yet | Registered without an address. No current project is in this state. |
 
 ## Known limits
 
-- **Escape inside a preview stays in the preview.** Once a preview has the keyboard, Canvagent cannot see key presses. Use an Exit control or click the bare canvas.
+- **Escape inside a preview stays in the preview.** Once a preview has the keyboard, Atelier cannot see key presses. Use an Exit control or click the bare canvas.
 - **A pinch or Ctrl/Command + wheel over an entered preview goes to the preview, not the canvas**, and the browser may zoom the whole page instead. Pinch outside the preview, or exit first. (Wheel input was confirmed to stay inside an entered preview; the browser's page zoom itself was not exercised.)
 - **A preview's current page is not shown.** After you navigate inside a preview, its label still names the starting screen. Reload returns it there.
 - **Loaded previews stay loaded** until more than twelve are held, so in-preview navigation survives panning. Switching projects, or a project going offline, discards them.
-- **The branch list does not say which branch a preview shows.** Canvagent cannot tell which folder a server on a given port was started from. A folder mark means "checked out there", which is the most a preview could be served from.
-- **The branch list needs the dev server.** It is read by `npm run dev` itself; a built copy of Canvagent shows "Not available".
+- **The branch list does not say which branch a preview shows.** Atelier cannot tell which folder a server on a given port was started from. A folder mark means "checked out there", which is the most a preview could be served from.
+- **The branch list needs the dev server.** It is read by `npm run dev` itself; a built copy of Atelier shows "Not available".
 - **Each preview is a full page.** That is fine for a handful of screens; a project with dozens would need thumbnails, which do not exist yet.
 - **Text can shimmer while zooming**, and settles when the zoom stops. At 100% a preview is not scaled at all.
 
@@ -89,7 +89,7 @@ Each project remembers its own position, zoom, selected screen and open page in 
 | `src/camera.ts`, `src/layout.ts` | Camera maths, board layout and which frames stay loaded; no framework |
 | `src/storage.ts` | What is remembered per project in this browser |
 | `src/branches.ts`, `src/useBranches.ts` | Turning git's output into the branch list, and reading it from the dev server |
-| `server/branches.ts` | The only code outside the browser: the dev server's read-only answer at `/__canvagent/branches/<id>` |
+| `server/branches.ts` | The only code outside the browser: the dev server's read-only answer at `/__atelier/branches/<id>` |
 | `src/components/` | Rail, sidebar and workspace, canvas, frame, status card, branch list |
 | `tests/` | Checks for the framework-free modules, run by Vitest |
 

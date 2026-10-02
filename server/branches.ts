@@ -1,6 +1,6 @@
 /**
- * The one piece of Canvagent that runs outside the browser: the dev server
- * answers `/__canvagent/branches/<project id>` with that project's local
+ * The one piece of Atelier that runs outside the browser: the dev server
+ * answers `/__atelier/branches/<project id>` with that project's local
  * branches. It runs two git commands that only read, in the folder the
  * registry names, and nothing else. It exists only under `npm run dev`.
  */
@@ -42,13 +42,13 @@ export interface BranchRequest {
 }
 
 /**
- * Decides what a request gets. Only Canvagent's own page may ask: a framed
+ * Decides what a request gets. Only Atelier's own page may ask: a framed
  * preview is another origin, and is refused before git runs. The address
  * carries a registered id, never a folder.
  */
 export async function answer(request: BranchRequest, projects: readonly Project[], read: (repo: string) => Promise<BranchReport>): Promise<{ status: number; body: BranchReport | { error: string } }> {
   if (request.method !== "GET") return { status: 405, body: { error: "Only GET is answered." } };
-  if (request.site !== "same-origin") return { status: 403, body: { error: "Only Canvagent's own page may ask." } };
+  if (request.site !== "same-origin") return { status: 403, body: { error: "Only Atelier's own page may ask." } };
   const project = projects.find((entry) => request.path === `/${entry.id}`);
   if (!project) return { status: 404, body: { error: "No such project." } };
   if (!project.repo) return { status: 200, body: { state: "unregistered" } };
@@ -67,7 +67,7 @@ export function branches(projects: readonly Project[] = REGISTRY): Plugin {
     return report;
   };
   return {
-    name: "canvagent-branches",
+    name: "atelier-branches",
     configureServer(server) {
       server.middlewares.use(BRANCHES_PATH, (request, response) => {
         const site = request.headers["sec-fetch-site"];

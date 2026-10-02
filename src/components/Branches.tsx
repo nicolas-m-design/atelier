@@ -7,7 +7,7 @@ import { useBranches } from "../useBranches";
 
 /**
  * The local branches of a project's repository, at the foot of the sidebar.
- * A list to read, not to act on: Canvagent cannot tell which branch a preview
+ * A list to read, not to act on: Atelier cannot tell which branch a preview
  * is serving, and never checks one out.
  */
 export function Branches({ project, store }: { project: Project; store: Store }) {
@@ -19,13 +19,13 @@ export function Branches({ project, store }: { project: Project; store: Store })
 
   return (
     <section aria-label={`${project.name} local branches`} className="mt-auto shrink-0 border-t border-black/[0.07] px-3 py-2 text-[12px]">
-      <button type="button" onClick={toggle} aria-expanded={open} title="Branches in the project's repository. Canvagent cannot tell which one a preview is serving."
+      <button type="button" onClick={toggle} aria-expanded={open} title="Branches in the project's repository. Atelier cannot tell which one a preview is serving."
         className="flex w-full items-center gap-2 rounded-md px-2 py-2 text-left font-medium outline-offset-2 hover:bg-neutral-100 focus-visible:outline-2 focus-visible:outline-neutral-700">
         <Chevron size={12} className="shrink-0 text-neutral-400" aria-hidden />Local branches
         {open && failed && report && <span className="ml-auto text-[11px] font-normal text-neutral-400">Not refreshed</span>}
       </button>
       {open && (
-        !report ? <Note>{failed ? "Not available. The list needs Canvagent's own dev server (npm run dev)." : "Reading…"}</Note>
+        !report ? <Note>{failed ? "Not available. The list needs Atelier's own dev server (npm run dev)." : "Reading…"}</Note>
         : report.state === "unregistered" ? <Note>No folder is registered for {project.name}.</Note>
         : report.state === "not-a-repository" ? <Note>{project.name} is not a Git repository.</Note>
         : report.state === "failed" ? <Note>Git could not be read in {project.name}'s folder.</Note>

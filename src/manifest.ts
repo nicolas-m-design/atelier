@@ -1,17 +1,10 @@
 /**
- * The contract a project serves at `<origin>/canvagent.json` (docs/connector.md).
- * Canvagent trusts nothing in it: every field is checked before use.
+ * The contract a project serves at `<origin>/atelier.json` (docs/connector.md).
+ * Atelier trusts nothing in it: every field is checked before use.
  */
 
-export const MANIFEST_PATH = "/canvagent.json";
+export const MANIFEST_PATH = "/atelier.json";
 export const MANIFEST_VERSION = 1;
-/**
- * The address and version field from before the rename of 2026-10-02, when
- * this workspace was called Atelier. Still read, so a project connected
- * earlier keeps working until it serves the new ones.
- */
-export const LEGACY_MANIFEST_PATH = "/atelier.json";
-const LEGACY_VERSION_FIELD = "atelier";
 
 export interface ManifestScreen {
   id: string;
@@ -38,12 +31,12 @@ export interface ManifestLink {
   id: string;
   title: string;
   route: string;
-  /** The narrowest width the page is designed for. With less room, Canvagent scales it down. */
+  /** The narrowest width the page is designed for. With less room, Atelier scales it down. */
   width?: number;
 }
 
 export interface Manifest {
-  canvagent: typeof MANIFEST_VERSION;
+  atelier: typeof MANIFEST_VERSION;
   name: string;
   frame: { width: number; height: number };
   groups: ManifestGroup[];
@@ -66,7 +59,7 @@ function optionalText(value: unknown, field: string): string | undefined {
 /** Returns a checked manifest, or throws with the first problem found. */
 export function parseManifest(input: unknown): Manifest {
   if (!isRecord(input)) throw new Error("manifest must be an object");
-  if ((input.canvagent ?? input[LEGACY_VERSION_FIELD]) !== MANIFEST_VERSION) throw new Error(`unsupported manifest version (expected ${MANIFEST_VERSION})`);
+  if (input.atelier !== MANIFEST_VERSION) throw new Error(`unsupported manifest version (expected ${MANIFEST_VERSION})`);
   if (!isText(input.name)) throw new Error("name must be a short non-empty string");
   if (!isRecord(input.frame) || !isDimension(input.frame.width) || !isDimension(input.frame.height)) throw new Error("frame must give an integer width and height");
   if (!Array.isArray(input.groups)) throw new Error("groups must be a list");
@@ -99,7 +92,7 @@ export function parseManifest(input: unknown): Manifest {
   const links = (input.links === undefined ? [] : input.links);
   if (!Array.isArray(links)) throw new Error("links must be a list");
   return {
-    canvagent: MANIFEST_VERSION,
+    atelier: MANIFEST_VERSION,
     name: input.name,
     frame: { width: input.frame.width, height: input.frame.height },
     groups,

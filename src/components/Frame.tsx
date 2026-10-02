@@ -24,7 +24,7 @@ const scaled = (size: number, zoom: number, cap: number) => Math.min(size * zoom
 
 /**
  * One screen on the board. The preview is the project's own page in an iframe;
- * everything Canvagent adds (label, outline, controls) sits outside that iframe.
+ * everything Atelier adds (label, outline, controls) sits outside that iframe.
  */
 export function Frame({ screen, camera, src, mounted, reloads, selected, interactive, onSelect, onEnter, onExit }: Props) {
   const [own, setOwn] = useState(0);

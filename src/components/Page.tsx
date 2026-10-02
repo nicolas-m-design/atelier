@@ -18,7 +18,7 @@ interface Props {
 /**
  * One of a project's linked pages, such as its UI library, shown whole in place
  * of the canvas. Unlike a preview it is not a fixed frame: it fills the room
- * there is and is always interactive. Canvagent's controls stay in the bar above it.
+ * there is and is always interactive. Atelier's controls stay in the bar above it.
  */
 export function Page({ link, src, reloads, leading, children }: Props) {
   const area = useRef<HTMLDivElement>(null);

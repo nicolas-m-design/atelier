@@ -1,6 +1,6 @@
-# Canvagent — rules for working here
+# Atelier — rules for working here
 
-> **Summary:** The rules for this repository, for humans and AI agents alike. Canvagent is local presentation tooling shared by several projects; the main risks are changing a neighbouring project by accident and letting the tool grow into a platform.
+> **Summary:** The rules for this repository, for humans and AI agents alike. Atelier is local presentation tooling shared by several projects; the main risks are changing a neighbouring project by accident and letting the tool grow into a platform.
 
 ## Read first
 
@@ -10,10 +10,10 @@
 
 ## Boundaries
 
-- **Canvagent holds no product code.** A project's screens, styles and data stay in that project. Canvagent reads a manifest and frames the project's own pages.
+- **Atelier holds no product code.** A project's screens, styles and data stay in that project. Atelier reads a manifest and frames the project's own pages.
 - **Neighbouring projects are separate repositories with their own rules.** Read a project's `AGENTS.md` before touching it, work in a separate worktree there, and never edit its active checkout or replace its running server. Do not build Marvin's application from here.
-- **Presentation controls stay outside previews.** Nothing Canvagent draws may appear inside a frame or in a project's captures.
-- **Previews are deterministic.** A screen's state comes from its route. Canvagent's saved preferences must never reach a preview.
+- **Presentation controls stay outside previews.** Nothing Atelier draws may appear inside a frame or in a project's captures.
+- **Previews are deterministic.** A screen's state comes from its route. Atelier's saved preferences must never reach a preview.
 - **Keep it small.** No plugin system, installer, server management, annotations or collaboration without Nicolas asking for it. Change `docs/connector.md` and the code together, and only when a real project needs the change.
 
 ## Working rules

@@ -1,5 +1,5 @@
 /**
- * What Canvagent remembers in this browser: the open project, whether the branch
+ * What Atelier remembers in this browser: the open project, whether the branch
  * list is open, and each project's own canvas position, zoom, selection, open
  * page and last good manifest. Preview frames
  * never read this; their state comes from their route alone.
@@ -7,9 +7,7 @@
 import { isCamera, type Camera } from "./camera";
 import { parseManifest, type Manifest } from "./manifest";
 
-export const STORAGE_KEY = "canvagent:v1";
-/** The key from before the rename of 2026-10-02. Read once, when nothing is saved under the new key, so canvas positions survive. */
-export const LEGACY_STORAGE_KEY = "atelier:v1";
+export const STORAGE_KEY = "atelier:v1";
 
 export interface ProjectView {
   camera?: Camera;
@@ -70,7 +68,7 @@ export function createStore(storage: Pick<Storage, "getItem" | "setItem"> | null
   let timer: ReturnType<typeof setTimeout> | null = null;
 
   function read() {
-    try { return storage?.getItem(STORAGE_KEY) ?? storage?.getItem(LEGACY_STORAGE_KEY) ?? null; } catch { return null; }
+    try { return storage?.getItem(STORAGE_KEY) ?? null; } catch { return null; }
   }
   function flush() {
     if (timer) clearTimeout(timer);
