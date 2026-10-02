@@ -1,6 +1,6 @@
 # Connecting a project to Atelier
 
-> **Summary:** The contract between Atelier and a project: one JSON manifest at `/atelier.json`, preview routes that behave well inside a frame, and optionally linked pages such as a UI library. Palier and Marvin both implement it. There is no package to install yet; a project implements these two things in its own code. What is said about Palier describes its branch `work/atelier-name-restored`, where its built-in canvas is removed; until that branch is in Palier's `main`, port 3100 serves the earlier arrangement (`palier-docs-after-merge` in `TODOS.md`).
+> **Summary:** The contract between Atelier and a project: one JSON manifest at `/atelier.json`, preview routes that behave well inside a frame, and optionally linked pages such as a UI library. Palier and Marvin both implement it. There is no package to install yet; a project implements these two things in its own code.
 
 ## What a project provides
 

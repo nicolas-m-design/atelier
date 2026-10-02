@@ -17,7 +17,7 @@ Neither project has an `atelier` field in its `package.json`, and neither has `a
 
 Palier's connector is part of its `main` since 2026-10-02, so the server on 3100 serves `/atelier.json`. The separate worktree and its preview on port 3101 no longer exist.
 
-Palier no longer keeps a canvas of its own: Nicolas had it removed on 2026-10-02, so Atelier is the only canvas for its screens. That removal is on Palier's branch `work/atelier-name-restored`; until it is in Palier's `main`, port 3100 still serves the old canvas at `/`.
+Palier no longer keeps a canvas of its own: Nicolas had it removed on 2026-10-02, so Atelier is the only canvas for its screens. The removal is in Palier's `main`: port 3100 redirects `/` to Palier's first screen.
 
 ## In the Claude desktop app
 

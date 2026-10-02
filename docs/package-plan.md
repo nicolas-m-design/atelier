@@ -53,7 +53,7 @@ Found by reading the code on `work/first-milestone`.
 | ~~Address overrides need Vite~~ | `server/command.ts` | **Done in step 2.** The command takes `--origin <id>=<address>`. `VITE_ORIGIN_<ID>` remains for `npm run dev`. |
 | ~~The endpoints are mounted only by Vite~~ | `server/serve.ts` | **Done in step 2.** The command mounts the same handler on a plain Node server, with the built page. |
 | ~~The workspace is run from source~~ | `package.json` (`bin`, `files`, `prepack`) | **Done in step 2.** `npm pack` builds a tarball that installs with no dependency and runs. `exports` waits for the connector (step 3). |
-| The connector is two hand-written files per project | Palier: `src/app/atelier.json/route.ts`, `src/components/workspace/EmbeddedPreview.tsx` (paths as on its branch `work/atelier-name-restored`). Marvin: its own route and manifest module | Each project repeats the CORS header, and neither validates its manifest with Atelier's own check (`parseManifest` in `src/manifest.ts`). |
+| The connector is two hand-written files per project | Palier: `src/app/atelier.json/route.ts`, `src/components/workspace/EmbeddedPreview.tsx`. Marvin: its own route and manifest module | Each project repeats the CORS header, and neither validates its manifest with Atelier's own check (`parseManifest` in `src/manifest.ts`). |
 | No licence file | repository root | Required before anything is published. The built page includes Inter (SIL Open Font Licence) and Lucide icons (ISC), which need their notices. |
 
 What already helps: `answer()` and `readBranches()` in `server/branches.ts` do not depend on Vite, the manifest check has no dependencies, and the built page is about 500 kB.

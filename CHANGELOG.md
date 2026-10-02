@@ -2,6 +2,19 @@
 
 > **Summary:** What changed in this repository, newest first, written for someone arriving with no context.
 
+## 2026-10-02 — The "until it is merged" sentences about Palier are removed
+
+Palier's canvas removal reached its `main` earlier in the day, and Nicolas asked for the sentences here that still said otherwise to be cleared. He also had Palier's reworded decision merged: Palier's `main` (`b38166e`) no longer calls its top-edge bar an exception to this contract.
+
+- **`docs/connector.md`**: the summary no longer says that what it tells about Palier describes a branch.
+- **`docs/local-setup.md`**: Palier's removal is in its `main`; port 3100 redirects `/` to its first screen.
+- **`docs/package-plan.md`**: Palier's connector paths stand without the note about a branch.
+- **`TODOS.md`**: `palier-docs-after-merge` and `palier-manifest-name` are closed.
+
+**What a newcomer would get wrong.** The three entries below about Palier ("on a branch", "not merged", "out of date") describe the state when each was written. Nothing in the contract changed here. On a device without hover Palier's bar is always visible, which "Product only at rest" does not allow inside a frame; it is an open item in Palier (`framed-bar-touch`), not here.
+
+**Checks.** `npm run typecheck` and `npm test` pass. Against port 3100, with curl: `/` redirects to `/scenarios/photo-1/accueil`, `/atelier.json` answers 200, and the stylesheet's only `data-embedded` rule hides the library's navigation. The bar inside an Atelier frame was not hovered from this session.
+
 ## 2026-10-02 — The Palier override is deleted from `.env.local`
 
 Nicolas asked for the leftover `VITE_ORIGIN_PALIER=http://localhost:3101` line to be deleted and Atelier's dev server restarted. `.env.local` is not committed, so the change is on this machine only; the file keeps one comment and holds no address. The section "A leftover to delete" is gone from `docs/local-setup.md`, and `palier-env-override` is closed in `TODOS.md`.
