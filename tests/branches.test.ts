@@ -83,7 +83,7 @@ describe("branch endpoint", () => {
   const ask = (request: Partial<Parameters<typeof answer>[0]>, read = vi.fn(async (): Promise<BranchReport> => ({ state: "listed", branches: [], detached: [] }))) =>
     answer({ method: "GET", path: "/palier", site: "same-origin", ...request }, projects, read).then((result) => ({ ...result, read }));
 
-  it("reads the registered folder for Atelier's own page", async () => {
+  it("reads the registered folder for Canvagent's own page", async () => {
     const { status, body, read } = await ask({});
     expect(status).toBe(200);
     expect(body).toEqual({ state: "listed", branches: [], detached: [] });

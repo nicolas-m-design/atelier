@@ -15,7 +15,7 @@ export function App() {
 
   useEffect(() => { store.update((saved) => { saved.active = active; saved.sidebar = sidebar; }); }, [active, sidebar]);
   useEffect(() => {
-    document.title = `${project.name} · Atelier`;
+    document.title = `${project.name} · Canvagent`;
   }, [project.name]);
   // Positions are written a moment after each change; make sure the last one lands.
   useEffect(() => {

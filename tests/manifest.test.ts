@@ -4,7 +4,7 @@ import { parseManifest, screenIds } from "../src/manifest";
 import { checkProject } from "../src/status";
 
 const valid = {
-  atelier: 1,
+  canvagent: 1,
   name: "Example",
   frame: { width: 1280, height: 720 },
   groups: [
@@ -45,10 +45,17 @@ describe("manifest", () => {
   });
 
   it("rejects wrong versions, duplicate ids and bad dimensions", () => {
-    expect(() => parseManifest({ ...valid, atelier: 2 })).toThrow(/version/);
+    expect(() => parseManifest({ ...valid, canvagent: 2 })).toThrow(/version/);
     expect(() => parseManifest({ ...valid, frame: { width: 0, height: 720 } })).toThrow(/frame/);
     expect(() => parseManifest({ ...valid, groups: [valid.groups[0], { id: "z", title: "Z", screens: [{ id: "one", title: "Again", route: "/again" }] }] })).toThrow(/twice/);
     expect(() => parseManifest(null)).toThrow();
+  });
+
+  it("still reads the version field from before the rename, and returns the current one", () => {
+    const { canvagent: _version, ...rest } = valid;
+    expect(parseManifest({ ...rest, atelier: 1 }).canvagent).toBe(1);
+    expect(() => parseManifest({ ...rest, atelier: 2 })).toThrow(/version/);
+    expect(() => parseManifest(rest)).toThrow(/version/);
   });
 });
 
@@ -97,6 +104,18 @@ describe("project status", () => {
     expect(status.state).toBe("online");
   });
 
+  it("falls back to the address from before the rename when only that one is served", async () => {
+    const asked: string[] = [];
+    const status = await checkProject("http://localhost:1", async (url) => { asked.push(url); return url.endsWith("/atelier.json") ? json(valid) : json(null, false, 404); });
+    expect(status.state).toBe("online");
+    expect(asked).toEqual(["http://localhost:1/canvagent.json", "http://localhost:1/atelier.json"]);
+  });
+
+  it("names the current address when neither is served", async () => {
+    const status = await checkProject("http://localhost:1", async () => json(null, false, 404));
+    expect(status).toEqual({ state: "unconnected", reason: "/canvagent.json answered 404." });
+  });
+
   it("is offline when nothing answers either request", async () => {
     const status = await checkProject("http://localhost:1", async () => { throw new TypeError("Failed to fetch"); });
     expect(status).toEqual({ state: "offline" });
@@ -106,6 +125,6 @@ describe("project status", () => {
     const opaque = await checkProject("http://localhost:1", async (_url, init) => { if (init.mode === "no-cors") return json(null); throw new TypeError("blocked"); });
     expect(opaque.state).toBe("unconnected");
     expect((await checkProject("http://localhost:1", async () => json(null, false, 404))).state).toBe("unconnected");
-    expect((await checkProject("http://localhost:1", async () => json({ atelier: 1 }))).state).toBe("unconnected");
+    expect((await checkProject("http://localhost:1", async () => json({ canvagent: 1 }))).state).toBe("unconnected");
   });
 });

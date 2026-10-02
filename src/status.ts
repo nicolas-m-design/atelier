@@ -1,5 +1,5 @@
 /** Whether a project's preview server is reachable, judged by its manifest. */
-import { MANIFEST_PATH, parseManifest, type Manifest } from "./manifest";
+import { LEGACY_MANIFEST_PATH, MANIFEST_PATH, parseManifest, type Manifest } from "./manifest";
 
 export type Status =
   /** Registered without a preview address: nothing to load yet. */
@@ -14,7 +14,15 @@ export type Status =
 type Fetcher = (url: string, init: RequestInit) => Promise<Response>;
 
 export async function checkProject(origin: string, fetcher: Fetcher = fetch, timeout = 2500): Promise<Status> {
-  const url = origin + MANIFEST_PATH;
+  const status = await checkManifest(origin, MANIFEST_PATH, fetcher, timeout);
+  if (status.state !== "unconnected") return status;
+  // A project connected before the rename still serves the old address.
+  const legacy = await checkManifest(origin, LEGACY_MANIFEST_PATH, fetcher, timeout);
+  return legacy.state === "online" ? legacy : status;
+}
+
+async function checkManifest(origin: string, path: string, fetcher: Fetcher, timeout: number): Promise<Status> {
+  const url = origin + path;
   let response: Response;
   try {
     response = await fetcher(url, { cache: "no-store", signal: AbortSignal.timeout(timeout) });
@@ -23,15 +31,15 @@ export async function checkProject(origin: string, fetcher: Fetcher = fetch, tim
     // exactly like a stopped server. An opaque request tells the two apart.
     try {
       await fetcher(url, { mode: "no-cors", cache: "no-store", signal: AbortSignal.timeout(timeout) });
-      return { state: "unconnected", reason: `It answers, but ${MANIFEST_PATH} is missing or not readable from Atelier.` };
+      return { state: "unconnected", reason: `It answers, but ${path} is missing or not readable from Canvagent.` };
     } catch {
       return { state: "offline" };
     }
   }
-  if (!response.ok) return { state: "unconnected", reason: `${MANIFEST_PATH} answered ${response.status}.` };
+  if (!response.ok) return { state: "unconnected", reason: `${path} answered ${response.status}.` };
   try {
     return { state: "online", manifest: parseManifest(await response.json()) };
   } catch (error) {
-    return { state: "unconnected", reason: `${MANIFEST_PATH} is not a valid manifest: ${error instanceof Error ? error.message : "unreadable"}.` };
+    return { state: "unconnected", reason: `${path} is not a valid manifest: ${error instanceof Error ? error.message : "unreadable"}.` };
   }
 }

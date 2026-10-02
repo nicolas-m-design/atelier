@@ -1,4 +1,4 @@
-# Atelier — Claude entry point
+# Canvagent — Claude entry point
 
 > **Summary:** Loads the repository rules. Adds no policy of its own.
 

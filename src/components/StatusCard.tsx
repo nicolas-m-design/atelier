@@ -52,7 +52,7 @@ export function StatusCard({ project, status, hasBoard, onRetry }: { project: Pr
         {status.state === "unconnected" && <>
           <h2 className="text-[14px] font-semibold">{project.name} answers, but lists no screens</h2>
           <p className="mt-1.5 text-[13px] leading-relaxed text-pretty text-neutral-600">
-            A server is running at {host(project.origin!)}. {status.reason} The version being served may not include the Atelier connector yet; see docs/connector.md.
+            A server is running at {host(project.origin!)}. {status.reason} The version being served may not include the Canvagent connector yet; see docs/connector.md.
           </p>
         </>}
         {status.state === "empty" && <>

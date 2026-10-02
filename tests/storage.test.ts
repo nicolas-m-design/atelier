@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { createStore, parseSaved, STORAGE_KEY } from "../src/storage";
+import { createStore, LEGACY_STORAGE_KEY, parseSaved, STORAGE_KEY } from "../src/storage";
 
 function memory(initial?: string) {
   const data = new Map<string, string>(initial ? [[STORAGE_KEY, initial]] : []);
@@ -20,7 +20,7 @@ describe("saved state", () => {
       branches: false,
       projects: {
         palier: { camera: { x: 10, y: 20, zoom: 0.4 }, selected: "photo-1", page: "library" },
-        marvin: { camera: { x: 0, y: 0, zoom: 99 }, selected: 7, page: 3, manifest: { atelier: 1 } },
+        marvin: { camera: { x: 0, y: 0, zoom: 99 }, selected: 7, page: 3, manifest: { canvagent: 1 } },
         broken: "nope",
       },
     }));
@@ -45,6 +45,17 @@ describe("saved state", () => {
     expect(reloaded.projects.palier).toEqual({ camera: { x: 1, y: 2, zoom: 0.5 }, selected: "home" });
     expect(reloaded.projects.marvin).toEqual({ selected: null });
     vi.useRealTimers();
+  });
+
+  it("starts from what was saved before the rename, then writes under the current key", () => {
+    const storage = memory();
+    storage.setItem(LEGACY_STORAGE_KEY, JSON.stringify({ active: "palier", projects: { palier: { selected: "home" } } }));
+    const store = createStore(storage, 10_000);
+    expect(store.get().projects.palier).toEqual({ selected: "home" });
+    store.flush();
+    expect(parseSaved(storage.getItem(STORAGE_KEY)).active).toBe("palier");
+    storage.setItem(LEGACY_STORAGE_KEY, JSON.stringify({ active: "marvin" }));
+    expect(createStore(storage).get().active).toBe("palier");
   });
 
   it("flushes immediately on request and tolerates storage that throws", () => {

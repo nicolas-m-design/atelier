@@ -2,6 +2,21 @@
 
 > **Summary:** What changed in this repository, newest first, written for someone arriving with no context.
 
+## 2026-10-02 — Atelier is renamed Canvagent
+
+Nicolas chose the name Canvagent (canvas and agent) for the package, and asked for the plan, the folder and everything else to follow. Claude did it from a Palier session.
+
+- **Here.** The package is `canvagent` (`package.json`, `package-lock.json`). The page title, interface text and code comments say Canvagent. The dev-server endpoint is `/__canvagent/branches`, the Vite plugin `canvagent-branches`, the launch entry `canvagent-dev`. `README.md`, `AGENTS.md`, `CLAUDE.md`, `docs/connector.md` and `docs/package-plan.md` use the new name; the plan's install lines are now `npm install -D canvagent` and `npx canvagent`.
+- **The contract.** The manifest is served at `/canvagent.json`, with its version in a field named `canvagent`. The contract version is still `1`.
+- **A bridge to the old names.** Canvagent asks for `/canvagent.json` first and, when a server answers without it, for `/atelier.json`; it accepts either version field; and it starts from state saved under `atelier:v1` when nothing is saved under `canvagent:v1`. Four new tests cover this.
+- **The folder** is now `/Users/nico/Sites/canvagent`.
+- **Palier** follows on its own branch `work/canvagent-rename` (worktree `/Users/nico/Worktrees/palier/canvagent-rename`): route, version field, module and test renamed. Not merged; its preview still serves the old address.
+- **Marvin** is unchanged, at Nicolas's choice: it is not a Git repository, so the change could not be isolated.
+
+**What a newcomer would get wrong.** The bridge is temporary: `legacy-names` in `TODOS.md` says when to remove it, and a published package should not carry it. Each check of a project that still serves the old address costs two extra requests and logs a 404 and a CORS error in the browser console; that is the bridge working, not a fault. The GitHub repository is still `nicolas-m-design/atelier`. `tests/branches.test.ts` still names `claude/atelier-connector` and `palier-atelier`: fixed sample input, not the product name. Entries below keep the name Atelier, as written at the time. The name was checked against the npm registry only.
+
+**Checks.** `npm run typecheck` passes; `npm test`: 38 pass (34 before, plus the four bridge tests). In a browser against the running dev server, before the folder was renamed: the title reads "Palier · Canvagent", state is saved under `canvagent:v1`, the branch list loads from the new endpoint, and Marvin, which serves only `/atelier.json`, shows as live through the bridge. Palier showed as not running because `.env.local` still points it at port 3101 (`palier-env-override`), so Palier was not seen live. Carrying saved positions over from the old key is covered by a test and was not seen in Nicolas's own browser. Not re-run after the folder rename beyond typecheck and tests.
+
 ## 2026-10-02 — A plan for an installable package
 
 Nicolas asked, from a Palier session, for a plan to make Atelier an `npm install`, as Agentation is. Claude wrote `docs/package-plan.md`: one package holding the connector a project imports and an `atelier` command that serves the workspace, with the project list read when it starts.

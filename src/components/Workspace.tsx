@@ -59,7 +59,7 @@ export function Workspace({ project, status, store, sidebar, onSidebar, onRetry 
   const reloadAll = () => { setReloads((n) => n + 1); onRetry(); };
   const showSidebar = <button type="button" onClick={() => onSidebar(true)} aria-label="Show the sidebar" className="tool"><PanelLeftOpen size={17} aria-hidden /></button>;
   const pageItem = (active: boolean) => `flex min-h-10 w-full items-center gap-2.5 rounded-md px-2 text-left font-medium outline-offset-2 focus-visible:outline-2 focus-visible:outline-neutral-700 ${active ? "bg-neutral-200 text-neutral-900" : "text-neutral-600 hover:bg-neutral-100"}`;
-  // Escape leaves a preview whenever the keyboard is in Atelier. Keys pressed inside
+  // Escape leaves a preview whenever the keyboard is in Canvagent. Keys pressed inside
   // a preview stay in that page, which is why the Exit controls are always on screen.
   useEffect(() => {
     if (!entered) return;

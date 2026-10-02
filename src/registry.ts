@@ -1,5 +1,5 @@
 /**
- * The projects Atelier knows about, as plain data. The browser reads it
+ * The projects Canvagent knows about, as plain data. The browser reads it
  * through `projects.ts`; the dev server reads it directly to find a project's
  * repository (`server/branches.ts`), so nothing here may depend on either side.
  */
@@ -9,9 +9,9 @@ export interface Project {
   name: string;
   /** Where the project's preview server answers, or null while it has none. */
   origin: string | null;
-  /** How to start the preview by hand. Atelier shows this; it never runs it. */
+  /** How to start the preview by hand. Canvagent shows this; it never runs it. */
   start?: { cwd: string; command: string };
-  /** The project's main folder, where its local branches are read from. Atelier never writes there. */
+  /** The project's main folder, where its local branches are read from. Canvagent never writes there. */
   repo?: string;
 }
 

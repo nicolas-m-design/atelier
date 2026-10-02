@@ -1,11 +1,11 @@
 /**
- * A project's local branches, as the sidebar lists them. Atelier's dev server
+ * A project's local branches, as the sidebar lists them. Canvagent's dev server
  * runs git (`server/branches.ts`); everything here is plain text handling, so
  * it never touches a repository and can be checked without one.
  */
 
 /** Where the dev server answers, followed by `/<project id>`. */
-export const BRANCHES_PATH = "/__atelier/branches";
+export const BRANCHES_PATH = "/__canvagent/branches";
 
 /** One branch per line, fields separated by NUL: a commit subject may hold any other character. */
 export const REFS_FORMAT = "%(refname)%00%(objectname:short)%00%(committerdate:unix)%00%(contents:subject)";

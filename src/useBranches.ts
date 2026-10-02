@@ -3,7 +3,7 @@ import { BRANCHES_PATH, parseReport, type BranchReport } from "./branches";
 
 async function fetchBranches(id: string): Promise<BranchReport> {
   const response = await fetch(`${BRANCHES_PATH}/${encodeURIComponent(id)}`, { cache: "no-store", signal: AbortSignal.timeout(5000) });
-  // Without the dev server's endpoint, the address answers 200 with Atelier's own page.
+  // Without the dev server's endpoint, the address answers 200 with Canvagent's own page.
   if (!response.ok || !response.headers.get("content-type")?.includes("application/json")) throw new Error("no branch endpoint");
   return parseReport(await response.json());
 }
