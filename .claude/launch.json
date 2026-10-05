@@ -12,6 +12,12 @@
       "runtimeExecutable": "npm",
       "runtimeArgs": ["--prefix", "/Users/nico/Sites/marvin", "run", "dev"],
       "port": 3210
+    },
+    {
+      "name": "krux-dev",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["--prefix", "/Users/nico/Worktrees/krux/atelier-connector/web", "run", "dev", "--", "--port", "3220"],
+      "port": 3220
     }
   ]
 }

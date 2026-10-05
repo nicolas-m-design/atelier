@@ -4,13 +4,14 @@
 
 ## The projects listed on Nicolas's machine
 
-`~/.config/agent-atelier/projects.json` lists three projects, as complete entries. It was created on 2026-10-02 with the first two; before that those were a constant in the code. Yutugy was added the same day with `agent-atelier add`.
+`~/.config/agent-atelier/projects.json` lists four projects, as complete entries. It was created on 2026-10-02 with the first two; before that those were a constant in the code. Yutugy was added the same day with `agent-atelier add`, and Krux on 2026-10-05.
 
 | Project | Address Atelier expects | Start it with |
 | --- | --- | --- |
 | Palier | http://localhost:3100 | `npm run dev` in `/Users/nico/Sites/palier` |
 | Marvin | http://localhost:3210 | `npm run dev` in `/Users/nico/Sites/marvin` |
 | Yutugy | http://localhost:3000 | `node --env-file=.env.local dev.mjs` in `/Users/nico/Sites/yutugy-portfolio` |
+| Krux | http://localhost:3220 | `npm --prefix web run dev -- --port 3220` in a checkout of `/Users/nico/Sites/design-agency` that has the connector |
 
 No project has an `atelier` field in its `package.json`, and none has `agent-atelier` installed.
 
@@ -22,8 +23,20 @@ Palier's connector is part of its `main` since 2026-10-02, so the server on 3100
 
 Palier no longer keeps a canvas of its own: Nicolas had it removed on 2026-10-02, so Atelier is the only canvas for its screens. The removal is in Palier's `main`: port 3100 redirects `/` to Palier's first screen.
 
+## Krux
+
+Krux is the studio's website. Its repository is `/Users/nico/Sites/design-agency`, a folder not named after it; the app is in `web/` there, and its `main` is checked out at `/Users/nico/Worktrees/krux/main` for merging only.
+
+Its connector is on the branch `claude/atelier-connector-2026-10-05`, in the worktree `/Users/nico/Worktrees/krux/atelier-connector`, and is not in its `main`. Only a dev server started from a checkout with that branch serves `/atelier.json`; from any other, Krux shows as "No manifest". The manifest is served by the dev server only and is never part of the site's build.
+
+Krux has port 3220 to itself. Its dev server would otherwise take 3000, where Yutugy is listed.
+
+Its previews keep two things the contract rules out: a theme restored from the browser's storage, and a clock showing the current time.
+
 ## In the Claude desktop app
 
 The preview uses `.claude/launch.json` (`atelier-dev`), from a session opened on this folder. A session opened on another project's folder reads that project's launch file instead.
 
 The same file has `marvin-dev`, which runs Marvin's own `npm run dev` from `/Users/nico/Sites/marvin` on port 3210, so that a session here can start Marvin when Nicolas asks. It changes nothing in Marvin, and it names a folder that exists on this machine only.
+
+`krux-dev` does the same for Krux, from the worktree `/Users/nico/Worktrees/krux/atelier-connector` on port 3220. That folder goes away once Krux's branch is merged, and the entry has to name another checkout then.

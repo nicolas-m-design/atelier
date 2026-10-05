@@ -2,6 +2,24 @@
 
 > **Summary:** What changed in this repository, newest first, written for someone arriving with no context.
 
+## 2026-10-05 — Krux is listed and connected, from a branch of its repository
+
+Nicolas asked for Krux to be added. Krux is the studio's website, a Next static site whose repository is `/Users/nico/Sites/design-agency` (the folder is not named after it). No code changed here.
+
+- **On the machine:** `agent-atelier add` appended Krux to the list, at `http://localhost:3220`, with the start command `npm --prefix web run dev -- --port 3220`. Its id and name come from that repository's `package.json`.
+- **In Krux's repository**, on the branch `claude/atelier-connector-2026-10-05` in the worktree `/Users/nico/Worktrees/krux/atelier-connector`, pushed and not merged: its dev server serves `/atelier.json`, built from its page files, with each page at 1440 × 900 and 390 × 844. Inside a frame its annotation toolbar is not rendered and Next's dev indicator is hidden. The manifest exists under `next dev` only; a production build exports nothing new, so nothing reaches the public site.
+- **Here:** `.claude/launch.json` has `krux-dev`, which starts that worktree's dev server on port 3220. `docs/local-setup.md` and `TODOS.md` say what is above.
+
+**What a newcomer would get wrong.**
+
+- Krux shows its screens only when port 3220 is served from a checkout that has the connector. Until the branch is in Krux's `main`, that is the one worktree. Started from any other checkout, Krux shows as "No manifest".
+- Krux has its own port on purpose. Its dev server defaults to 3000, where Yutugy is listed; on 3000 Atelier would show Krux's screens under Yutugy's name.
+- Krux's previews are not fully fixed by their address: the site restores its saved theme from the browser and shows the current Zürich time. The contract asks for state from the URL alone. Changing that means changing code the public site ships, so it is left for Nicolas (`krux-preview-state`).
+- A development server can draw its own tools in the page. Next's indicator sat in the corner of every frame until Krux hid it when framed. "Product only at rest" covers those too.
+- Krux's rules differ from the other projects': its `main` checkout is for merging only, worktrees go in `~/Worktrees/krux/`, and work branches are pushed. Read its `AGENTS.md` and `AGENT_WORKFLOW.md` first.
+
+**Checks.** In Krux: TypeScript clean, its repository lint clean, and after `npm run build` the export has the same four routes and no manifest. In the browser on port 3200 (a server another session had started; it was read, not restarted): Krux shows "Live · localhost:3220" with two groups and six frames, all loaded, and no dev tool visible in a frame. Not exercised: entering a Krux preview, and Krux at a narrow Atelier window. `npm run typecheck` and `npm test` pass here.
+
 ## 2026-10-02 — `agent-atelier add` takes `--id` and `--name`; Yutugy is listed
 
 Nicolas ran the command in `yutugy-portfolio`, a project with no `package.json`. `add` takes a project's id from its package name, so it could not add that folder at all.
