@@ -11,9 +11,23 @@ npm run build:mac
 npm run test:mac
 ```
 
-Requires macOS with Xcode command-line tools and Node >=22.12. The build targets the current CPU architecture and macOS 14+, and ad-hoc signs `macos/build/Atelier.app`. Copy the app to Applications and launch it normally. It works outside this checkout; it contains the full `dist` tree, module metadata, helper and third-party notices. No release/signing account, updater or distribution setup is required for this local version. Quit before replacing a build.
+Requires macOS with Xcode command-line tools and Node >=22.12. The build targets the current CPU architecture and macOS 14+, and ad-hoc signs `macos/build/Atelier.app`. For the first installation, copy the app to Applications and launch it normally. It works outside this checkout; it contains the full `dist` tree, module metadata, helper and third-party notices. No release/signing account or distribution setup is required for this local version. Quit before manually replacing a build.
 
-The native host looks for Node at the stable Homebrew `node@22` or generic `node` paths, under `/opt/homebrew` then `/usr/local`. It does not run a shell or install anything. A missing or incompatible executable produces a native error. Advanced overrides, if needed:
+## Updating from the app
+
+Choose **Atelier → Update Atelier… → Update and Reopen**. The sheet shows which local source folder will be built. The build records its source folder in native-only bundle metadata; **Choose Source Folder…** can change it if the checkout moves (saved as `SourceDirectory` in the app's defaults). A missing source opens the folder picker.
+
+The updater builds the **current saved checkout**, including its active branch and uncommitted changes. It does not fetch, merge, install dependencies, publish or download releases. Node, npm, installed source dependencies and Xcode command-line tools are required. A release updater would be a separate future feature.
+
+Atelier stays open with a “Building update…” window subtitle and disabled update menu item. It builds with a bounded, clean environment, stages a copy beside the installed app, checks the bundle signature and identity, and only then asks the native host to quit. The existing WebKit flush and owned-helper shutdown complete before the replacement. The worker is copied to a temporary folder so rebuilding or replacing either bundle cannot remove its running script. No preview or HTTP endpoint can invoke an update.
+
+Build/verification failures keep the running app intact and show an error. Quitting during a build cancels its process group. Replacement or launch-command failure restores the previous app; a failure after quitting is reported when Atelier opens again. The updater does not kill another app or port owner. It cannot update an app running directly inside its own build output; install that first.
+
+Each successful update retains its previous bundle as `Previous.app` inside a hidden `.atelier-update-*` folder beside the installed app. These recovery copies are not automatically deleted. App preferences, WebKit data and the machine project list are never replaced. Verification covers signature integrity, bundle identity and the launch command; it does not guarantee the new app has no runtime regressions.
+
+The native shutdown follows Apple's [`applicationShouldTerminate`](https://developer.apple.com/documentation/appkit/nsapplicationdelegate/applicationshouldterminate(_:)) / [`reply(toApplicationShouldTerminate:)`](https://developer.apple.com/documentation/appkit/nsapplication/terminate(_:)) flow; build completion is observed through [`Process.terminationHandler`](https://developer.apple.com/documentation/foundation/process/terminationhandler).
+
+The native host looks for Node at the stable Homebrew `node@22` or generic `node` paths, under `/opt/homebrew` then `/usr/local`. Normal startup does not run a shell or install anything. An explicitly requested local update invokes the checkout's npm build script. A missing or incompatible executable produces a native error. Advanced overrides, if needed:
 
 ```sh
 defaults write local.agent-atelier.mac NodeExecutable -string /absolute/path/to/node

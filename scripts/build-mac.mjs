@@ -19,6 +19,9 @@ mkdirSync(join(contents, 'MacOS'), { recursive: true });
 mkdirSync(join(resources, 'macos'), { recursive: true });
 cpSync(join(root, 'dist'), join(resources, 'dist'), { recursive: true });
 cpSync(join(root, 'macos/helper.mjs'), join(resources, 'macos/helper.mjs'));
+cpSync(join(root, 'macos/update.mjs'), join(resources, 'macos/update.mjs'));
+// Personal local build only; this metadata is not part of the npm package.
+writeFileSync(join(resources, 'macos/source.json'), JSON.stringify({ path: root }));
 cpSync(join(root, 'macos/Info.plist'), join(contents, 'Info.plist'));
 const iconset = join(root, 'macos/build/Atelier.iconset');
 rmSync(iconset, { recursive: true, force: true });
@@ -36,6 +39,6 @@ writeFileSync(join(resources, 'package.json'), JSON.stringify({ name, version, t
 for (const [name, file] of [['Inter-OFL', '@fontsource-variable/inter/LICENSE'], ['Lucide-ISC', 'lucide-react/LICENSE'], ['React-MIT', 'react/LICENSE']]) {
   cpSync(join(root, 'node_modules', file), join(resources, `${name}.txt`));
 }
-run('xcrun', ['swiftc', '-parse-as-library', '-O', '-swift-version', '5', '-target', `${process.arch === 'arm64' ? 'arm64' : 'x86_64'}-apple-macos14.0`, '-framework', 'AppKit', '-framework', 'WebKit', 'macos/Atelier.swift', '-o', join(contents, 'MacOS/Atelier')]);
+run('xcrun', ['swiftc', '-parse-as-library', '-O', '-swift-version', '5', '-target', `${process.arch === 'arm64' ? 'arm64' : 'x86_64'}-apple-macos14.0`, '-framework', 'AppKit', '-framework', 'WebKit', 'macos/Atelier.swift', 'macos/LocalUpdate.swift', '-o', join(contents, 'MacOS/Atelier')]);
 run('codesign', ['--force', '--sign', '-', app]);
 console.log(`Built ${app}`);

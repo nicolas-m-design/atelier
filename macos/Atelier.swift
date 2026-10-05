@@ -22,6 +22,7 @@ final class Atelier: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNaviga
     private var failureShown = false
     private var reloadedAfterCrash = false
     private var titleObservation: NSKeyValueObservation?
+    private var localUpdate: LocalUpdate?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         buildMenus()
@@ -41,6 +42,7 @@ final class Atelier: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNaviga
         window.isReleasedWhenClosed = false
         window.delegate = self
         window.contentView = web
+        localUpdate = LocalUpdate(window: window)
         window.center()
         window.setFrameAutosaveName("AtelierWindow")
         if let screen = NSScreen.screens.first(where: { $0.visibleFrame.intersects(window.frame) }) ?? NSScreen.main {
@@ -58,12 +60,16 @@ final class Atelier: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNaviga
         window.makeKeyAndOrderFront(nil)
         NSApp.activate(ignoringOtherApps: true)
         startHelper()
+        localUpdate?.showPreviousFailure()
     }
 
     private func buildMenus() {
         let bar = NSMenu()
         let app = NSMenu()
         app.addItem(withTitle: "About Atelier", action: #selector(NSApplication.orderFrontStandardAboutPanel(_:)), keyEquivalent: "")
+        let update = app.addItem(withTitle: "Update Atelier…", action: #selector(updateAtelier(_:)), keyEquivalent: "")
+        update.target = self
+        app.autoenablesItems = false
         app.addItem(.separator())
         app.addItem(withTitle: "Hide Atelier", action: #selector(NSApplication.hide(_:)), keyEquivalent: "h")
         let hide = app.addItem(withTitle: "Hide Others", action: #selector(NSApplication.hideOtherApplications(_:)), keyEquivalent: "h")
@@ -84,6 +90,11 @@ final class Atelier: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNaviga
         for menu in [app, edit, win] { let item = NSMenuItem(); item.submenu = menu; bar.addItem(item) }
         NSApp.mainMenu = bar
         NSApp.windowsMenu = win
+    }
+
+    @objc private func updateAtelier(_ sender: NSMenuItem) {
+        guard let helper, helper.isRunning, let node = helper.executableURL else { return }
+        localUpdate?.start(menu: sender, node: node, helperPID: helper.processIdentifier)
     }
 
     private func startHelper() {
@@ -209,6 +220,7 @@ final class Atelier: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNaviga
     func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
         if quitting { return .terminateLater }
         quitting = true
+        localUpdate?.cancel()
         if loaded && isHome(web.url) {
             web.evaluateJavaScript("window.dispatchEvent(new Event('atelier:flush'))") { [weak self] _, _ in self?.stopHelper() }
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in self?.stopHelper() }
