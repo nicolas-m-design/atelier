@@ -2,6 +2,18 @@
 
 > **Summary:** What changed in this repository, newest first, written for someone arriving with no context.
 
+## 2026-10-05 — Mac app plan prepared for Claude Opus review
+
+Nicolas asked for a lightweight Mac app around the current UI, with performance and simplicity as the priorities and no marketing/product expansion. He confirmed that it is for his Mac only for now and must open without first starting Atelier in a terminal.
+
+- Added `docs/macos-app-plan.md`: source-based architecture assessment, current Apple guidance including WWDC26, three linked first-person builder reports, comparison of native WebKit/Tauri/Node/Electron options, window behavior, technical boundaries, proposed performance budgets, implementation gates and an Opus review request.
+- Recommended a small Swift/AppKit host with the existing React UI in WKWebView, pending a compatibility prototype. Registry and Git semantics need parity with the existing implementation; project servers remain independently operated.
+- Updated `TODOS.md` with the review handoff. No runtime code, package configuration, connector contract or neighbouring repository changed.
+
+**What a newcomer would get wrong.** This is a proposal, not a built app or a completed Opus review. WebKit compatibility and performance are unmeasured. A custom bundled asset origin must be proven against HTTP previews and the existing contract's `localhost:3200` framing requirement before the native services are built. The app's saved state would initially be separate from browser state. The npm connector plan is still separate.
+
+**Checks.** `npm run typecheck` passes; `npm test`: 63 tests pass across 6 files. Documentation-only work did not require another tarball test. Atelier was not answering on port 3200 during research, so no live UI verification is claimed.
+
 ## 2026-10-05 — Krux is listed and connected, from a branch of its repository
 
 Nicolas asked for Krux to be added. Krux is the studio's website, a Next static site whose repository is `/Users/nico/Sites/design-agency` (the folder is not named after it). No code changed here.
