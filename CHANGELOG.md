@@ -2,6 +2,14 @@
 
 > **Summary:** What changed in this repository, newest first, written for someone arriving with no context.
 
+## 2026-10-05 — Mac plan simplified after Opus review
+
+Nicolas relayed Claude Opus's "approve with changes" review. Revised `docs/macos-app-plan.md` to retain the existing Node backend as an owned helper, loaded through real HTTP localhost on a separate stable app port. Removed the native service port, script-message bridge, native state file and frontend transport fork. The sequence is now a shared Safari gesture fix/baseline followed by the minimal working app, with performance and accessibility checked within those increments.
+
+**What a newcomer would get wrong.** Opus's cookie/storage/Fetch Metadata observations came from its scratchpad probe; they were not independently reproduced here and do not prove all sign-in flows or bundled-app behavior. Physical Safari pinch, immediate-quit storage durability and helper cleanup still require testing. The bundle needs imported `dist/src` modules and ESM metadata as well as `dist/server`/`dist/app`. Finder launch cannot assume terminal PATH, and an occupied app port must never cause another server to be adopted or stopped. Installed Node and quit-on-close remain proposed decisions awaiting Nicolas. The initial plan's historical entry below is superseded, and this revision has not had a second Opus review.
+
+Only documentation changed; no app, gesture fix or neighbouring-project changes were made. `npm run typecheck` passes; `npm test`: all 63 tests pass across 6 files. `git diff --check` is clean. No tarball test was needed for this documentation-only revision.
+
 ## 2026-10-05 — Mac app plan prepared for Claude Opus review
 
 Nicolas asked for a lightweight Mac app around the current UI, with performance and simplicity as the priorities and no marketing/product expansion. He confirmed that it is for his Mac only for now and must open without first starting Atelier in a terminal.

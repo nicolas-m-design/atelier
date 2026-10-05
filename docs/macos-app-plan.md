@@ -1,35 +1,49 @@
 # Plan: Atelier as a small Mac app
 
-> **Status:** Proposal for Claude Opus review, written 2026-10-05. No Mac app has been implemented or benchmarked. Nicolas confirmed: his Mac only for now; Atelier must open without starting it in a terminal. The existing workspace is the UI. Performance, simplicity and a small footprint take priority over distribution features.
+> **Status:** Revised 2026-10-05 after Claude Opus returned **approve with changes**, as relayed by Nicolas. No Mac app is implemented. Confirmed: Nicolas's Mac only, independent launch, existing UI, small footprint and good performance. The installed-Node dependency and quit-on-close behavior are recommendations awaiting Nicolas's answers.
 
-## Recommendation
+## Revised recommendation
 
-Build a **Swift/AppKit window containing one `WKWebView` and Atelier's existing production React build**. Keep the canvas, project rail, sidebar and project-owned iframes. Implement only the small amount of native functionality needed to read the project registry, read Git branches, save workspace state and handle Mac window behavior.
+Build **one Swift/AppKit window with WKWebView, starting the existing Node server as its own child process**. Bundle the production web build and compiled server modules; use Node already installed on this Mac. Load the workspace at a fixed `http://localhost:<app-port>` origin separate from the browser development server on 3200.
 
-The intended installed app needs neither a running Atelier server nor Node at runtime. Node remains a build tool and remains available to the existing browser/CLI workflow. Project preview servers continue to be started separately: opening Atelier does not start, restart or stop them.
+This retains the existing React UI, HTTP endpoints, registry/Git rules and localStorage. Remove the proposed script-message bridge, native state file, frontend transport fork and native backend port. Swift owns the window and helper lifecycle. Project preview servers remain separately operated.
 
-This is a provisional architecture recommendation, not a claim that WebKit is already compatible or faster. **First prove the real workspace in a small WebKit prototype, before porting the server functions.** Use one bounded prototype to decide whether this direction is worth continuing. If the app needs extensive browser workarounds, reconsider the shell instead of turning this into a native framework project.
+The first working app is also the prototype. A custom scheme is deferred unless the installed Node dependency proves troublesome. No runtime is bundled. No marketing, accounts, onboarding, analytics, App Store/distribution work, updater, menu-bar companion, project-server management or UI rewrite.
 
-The recommendation is specific to a Mac-only tool with two small local read services. Tauri is a credible second choice, especially if its packaging and bridge remove more maintenance than they add. A full native UI rewrite has no justification in this brief.
+## What changed after review
 
-## What exists today
+The original proposal is preserved in commit `52e1b92`. Opus's review was pasted into this chat; its scratchpad probe and raw output are not checked into this repository or independently reproduced here. Attribute those findings accordingly.
 
-Inspected at `2f97fbc` on `work/first-milestone`; this planning document is on `codex/macos-app-plan`.
-
-| Area | Current implementation | Consequence for the app |
+| Finding | Evidence level | Change to the plan |
 | --- | --- | --- |
-| UI | React/Vite; `src/App.tsx`, `src/components/Workspace.tsx` | Reuse it. Do not create a second screen implementation. |
-| Registry | `server/projects.ts`, `src/projects.ts`; file under `~/.config/agent-atelier/projects.json` | Read the same file and preserve IDs, defaults, validation and errors. |
-| Branches | `server/branches.ts`, `src/branches.ts` | Two bounded, read-only Git commands, addressed by registered project ID. |
-| Local API | `server/handler.ts`, `server/request.ts`, `server/serve.ts` | Today the UI needs same-origin HTTP endpoints. A webview alone cannot replace them. |
-| Preview data | `src/status.ts`, `src/manifest.ts` | Fetch each project's `/atelier.json`; preview pages stay on their original origins. |
-| Preview cost | `src/components/Canvas.tsx` | Nearby-frame mounting already exists, with `MAX_LIVE_FRAMES = 12`. Preserve it. |
-| Project lifetime | `src/App.tsx` | Only the active project's workspace is mounted. A linked page keeps that project's canvas mounted underneath. |
-| Polling | `src/useStatuses.ts`, `src/useBranches.ts` | Status checks every 10 seconds when all are live, otherwise 3 seconds; hidden-document checks are already skipped. Branches refresh when expanded and on focus. |
-| Persistence | `src/storage.ts` | `atelier:v1`, validated on read, writes debounced by 250 ms. Browser storage is specific to its origin/profile. |
-| Package work | `docs/package-plan.md` | Steps 1–2 done; connector steps remain separate. The Mac app need not wait for connector publication. |
+| `atelier-app://app/` prevented localhost iframe cookies; a localhost top-level host worked in the probe, including its Lax-cookie case | Reported as verified by Opus on macOS 27.0 | Use real HTTP localhost for v1. Include cookies and sign-in in the bundled-app test. Do not extrapolate to all auth flows or project hosts. |
+| Script messages from an iframe reached the native handler | Reported as verified by Opus | Register no script-message handlers. The original frame checks were intended to reject those messages, but the bridge is unnecessary. |
+| HTTP same-origin fetch sent `Sec-Fetch-Site: same-origin`; cross-port fetch sent `same-site` | Reported as verified by Opus; existing server rejects anything except same-origin | Keep the existing HTTP boundary and retest it in the bundled app. Custom-scheme header behavior remains unknown. |
+| localStorage worked in the probe | Reported as verified by Opus | Keep the current store with a persistent WKWebView data store; test relaunch and immediate quit. No native state-file replacement. |
+| Canvas listens for modified wheel events but has no Safari gesture handlers | Source confirmed in `src/components/Canvas.tsx`; physical pinch not tested in the probe | Check and fix Safari pinch in the shared web UI first, then verify manually on this Mac. |
+| Any offline listed project selects the 3-second polling interval for all projects | Source confirmed in `src/useStatuses.ts` | Measure with the actual registry and its usual offline entries, not just an empty app. |
 
-The local machine reports Apple Silicon and macOS 27.0, with Xcode selected. Initial support and testing can target this machine; there is no need to promise Intel or older macOS support. Atelier was not answering on port 3200 during research. UI behavior was inspected in source; no live visual or performance result is claimed.
+The [Safari pinch issue](https://github.com/d3/d3-zoom/issues/229) is a 2021 report about `gesturestart/change/end`, not a new 2026 benchmark. [CVE-2024-35222](https://github.com/advisories/GHSA-57fm-592m-34r7) documents an iframe IPC origin-check bypass in older Tauri releases, fixed in 1.6.7 and 2.0.0-beta.20. It illustrates bridge risk; it does not establish that current Tauri is vulnerable or that our unimplemented frame-checked bridge was exploitable.
+
+Opus estimated less code for the Node helper option. Treat the line counts as estimates, not measurements. The concrete advantage is retaining the existing service implementation instead of maintaining its rules in two languages. The original plan proposed deriving shared parity fixtures; none exist as standalone shared files today, and no port means they are unnecessary.
+
+## Existing implementation to reuse
+
+Source assessed at `2f97fbc`; docs are on `codex/macos-app-plan`. This Mac was observed as Apple Silicon/macOS 27.0 with Xcode selected. Initial support targets this machine.
+
+| Area | Files and existing behavior |
+| --- | --- |
+| Window contents | `src/App.tsx`, `src/components/Workspace.tsx`: rail, sidebar, canvas and project-owned iframes |
+| Registry | `server/projects.ts`, `src/projects.ts`: machine registry, package defaults, validation and partial errors |
+| Branches | `server/branches.ts`: two read-only commands, 3-second timeout, output limit and no-lock setting |
+| HTTP service | `server/serve.ts`, `server/handler.ts`, `server/request.ts`: loopback-only listeners, Host validation, same-origin API checks |
+| Build/launch | `server/cli.ts`, `tsconfig.build.json`: CLI with `--port`; compiled server imports modules under `dist/src` as well as `dist/server` |
+| Preview cost | Canvas cap of 12 live frames; nearby-frame mounting; only active workspace mounted |
+| Linked pages | Canvas stays mounted under an open linked page; preserve this behavior |
+| Status | 10-second interval only when all configured origins are live, otherwise 3 seconds; timer skips checks when `document.hidden` |
+| State | `src/storage.ts`: validated `atelier:v1`, 250 ms debounce; `src/App.tsx` flushes on `pagehide` |
+
+The npm connector plan remains separate. No changes to neighbouring projects are authorized by this planning revision.
 
 ## Research that changes the plan
 
@@ -52,104 +66,87 @@ Three useful first-person builder reports from social media:
 
 These reports disagree in useful ways. They support a compatibility prototype and measurement, not a blanket “Tauri/native is fast, Electron is slow” conclusion. Social research here is limited to accessible Reddit posts by the builders; no claim of a wider social-media consensus.
 
-## Options considered
+## One window, existing UI
 
-| Option | Benefit for Atelier | Cost or limitation | Decision |
-| --- | --- | --- | --- |
-| Swift/AppKit + WKWebView + narrow native services | Existing UI, system browser engine, direct control of one Mac window, no runtime Node/server | Native bridge and parity with existing registry/Git semantics become our responsibility | Preferred, subject to the prototype and Opus review |
-| Tauri 2 + existing React + Rust services | Established asset loading, IPC, packaging and Mac integration | Adds Rust/Tauri tooling; Node services still need replacing or a sidecar; still WebKit on Mac | Alternative if it materially simplifies the actual implementation |
-| Swift shell + existing Node server | Maximum backend reuse; can launch without a terminal if the app owns the helper | Runtime discovery or bundled Node, process cleanup, listening port, startup handshake | Fallback if native service duplication proves disproportionate |
-| Electron + existing React/Node | Reuses most code and supplies a controlled Chromium version | Bundled runtime and larger install; still needs careful iframe isolation | Reconsider if a real WebKit blocker warrants it |
-| Full SwiftUI/AppKit workspace rewrite | Native workspace controls | Rebuilds working canvas behavior; previews still need a web engine | Excluded |
-| Browser “install as app” / URL wrapper | Very little work | Does not independently supply the registry/Git backend | Insufficient for the agreed launch behavior |
+Use standard native title-bar controls, resizing, minimize/fullscreen, tiling and normal window placement restoration. Keep the current workspace's visual design. Start near 1280 × 900 points, constrained to the display; verify a usable minimum against the current sidebar rather than adding a new responsive design.
 
-Do not implement these alternatives in parallel. Only investigate the next option when a named blocker rejects the preferred one. Tauri cannot fix a WebKit rendering bug merely by changing the shell.
+Recommended behavior: closing the only window, including Cmd-W, quits Atelier and stops its own helper. Cmd-Q does the same. Project preview servers keep running. There is no background mode or close/reopen state machine. This recommendation awaits Nicolas's answer.
 
-## The window and everyday behavior
+Supply ordinary app, Edit and Window menus and standard copy/paste behavior. Keep keyboard focus indicators and check VoiceOver during normal acceptance, not as a separate development phase. Do not add a native sidebar menu item or Mac-only copy variants. Existing new-tab links open in the default browser; ordinary in-frame navigation stays in the preview. Allow only explicitly supported URL schemes for external opening, never arbitrary command URLs.
 
-One resizable primary window, with the current interface filling its content area. Use a standard native title bar, traffic lights and the existing document title. Begin with a practical size around 1280 × 900 points, constrained to the available display, and validate a minimum around 900 × 600 against the current sidebar. These are prototype defaults, not new layout requirements.
+Enable `WKWebView.isInspectable` for this personal developer tool. Preserve the current select/interact behavior. Safari gesture support belongs to the shared canvas code; it must not hijack gestures inside entered project previews or apply zoom twice. Existing in-frame Escape/pinch limitations stay documented unless separately solved. No scripts are injected into project pages to change their behavior.
 
-- Preserve current colors, typography, project navigation and canvas controls. No new dashboard, welcome screen, duplicate native sidebar or decorative glass layer.
-- Restore window bounds within the displays currently connected. Support normal minimize, fullscreen, tiling, Cmd-H and Cmd-Q.
-- Cmd-W closes the window; the app may remain in the Dock with its webview released and no polling. Clicking the Dock icon reopens the single window with saved state. Cmd-Q ends all app-owned work. Closing never stops project servers.
-- Supply standard app, Edit and Window menus. Preserve copy/paste/select-all in editable content through the normal responder chain. Add a small View menu for existing actions only, such as reloading Atelier and showing/hiding the sidebar.
-- Route “open in a new tab” actions to the default browser and label them “Open in browser” in the Mac build. Ordinary project links continue navigating inside an entered preview. Handle explicit new-window links without creating more privileged Atelier windows.
-- Preserve keyboard focus and visible focus indicators. Check Tab, Enter, Escape, trackpad pan/pinch, mouse wheel, text selection in previews and VoiceOver. An app-level shortcut must not casually steal a project's typing or editing commands.
-- Keep current offline, empty and invalid-manifest states. A native launch/renderer failure needs a small recoverable message with Retry, not a blank white window.
+On web-content-process termination, attempt one reload, not an unbounded loop or a new crash-recovery screen. Startup failure or repeated failure can use a standard native alert with the useful reason. Keep existing project-offline/invalid-manifest UI.
 
-The connector's existing in-frame Escape/pinch limitations remain recorded limitations unless separately addressed. Native wrapping must not silently inject scripts into projects to “fix” them.
+## Helper and loading contract
 
-No accounts, onboarding, analytics, payments, marketing pages, App Store work, updater service, launch-at-login, menu-bar companion, collaboration, annotations or project-server management. Build a local `.app`; replace it manually when rebuilding.
+These details are part of the small working app, not a new server-management feature.
 
-## Proposed technical boundary
+1. **Bundle the complete build output.** Include `dist/app`, `dist/server` and imported `dist/src` modules, preserving relative paths and ES-module interpretation. Include the required package metadata (`type: module` and version) at the expected bundle-relative location. Verify the app outside the checkout; copying `dist/server` alone is insufficient. Keep third-party notices with the local build.
+2. **Find installed Node deterministically.** Use an explicit validated executable path or a short documented set of stable installation paths. Check compatibility with `package.json` (`>=22.12` currently). Do not depend on Finder inheriting the terminal's PATH, run a login shell, use `npx`, install Node automatically or embed a versioned Homebrew Cellar path. A missing/incompatible runtime produces a native alert explaining what to restore. A Homebrew stable path still fails if its formula is removed: that is the accepted tradeoff if Nicolas chooses this option.
+3. **Give the child an explicit environment and working directory.** Start the bundled entry point with argument arrays, a controlled cwd inside the bundled resources and the normal user home. Supply a usable Git PATH; Finder's environment must not accidentally disable branch reads. Avoid cwd-based project discovery and accidental `.env.local` overrides. Default to the existing registry; any nondefault `ATELIER_PROJECTS`/XDG location must be deliberately configured, not silently assumed to carry over from a shell.
+4. **Use a stable, separate origin.** Choose and document an unused app port during implementation; keep browser/Vite port 3200 unchanged. Always navigate to `http://localhost:<app-port>` rather than alternating host spellings. Keep loopback-only IPv4/IPv6 binding and Host checks. Never choose a random fallback port: it would create a different localStorage origin. If occupied, show a useful error and exit without attaching to or terminating the other process.
+5. **Wait for the owned server.** Show the native window promptly, but load the page only once the child confirms successful binding on its supported loopback listeners. A successful HTTP response alone does not prove ownership. Use bounded readiness tied to the spawned process (small dedicated ready signal if needed), watch early exit and continuously drain bounded stdout/stderr so pipes cannot stall the helper.
+6. **Clean up only owned work.** On normal close/quit terminate and reap the child; handle a stuck exit with a bounded fallback aimed only at owned processes. Test unexpected app termination too. If the child otherwise survives, add a parent-owned pipe/EOF lifecycle hook so it exits when the host disappears. No PID/port sweeps, launch agent or external process restarts. Test in-flight Git cleanup. Reopening the app must not fail because its previous helper was orphaned.
+7. **Keep the same HTTP privilege boundary.** Register no script-message handlers. Preserve GET-only/same-origin checks on the two local APIs and test rejection from cross-port previews, cross-site pages and requests missing Fetch Metadata. These checks protect browser requests, not against malicious programs already running as the user. Cancel navigation of the main frame away from Atelier's exact origin; also reject attempts by a preview to navigate the main frame, including to an API URL on that origin. Leave legitimate subframe routes alone. Test new-window handling and redirects explicitly.
 
-Add a small `macos/` app target and reuse the output of the current web build as bundle resources. Keep the browser and npm command working. Do not add a monorepo, plugin system or a general desktop abstraction.
+An app port other than 3200 is still a new framing origin under `docs/connector.md`. Opus reports Palier had no frame policy when checked; that is not evidence for every project. Inspect each actual preview's CSP/X-Frame-Options and validate the app origin before updating the connector contract alongside implementation. Any needed edits in connected projects follow their own rules and worktrees.
 
-**Loading the UI.** Prototype a private asset origin such as `atelier-app://app/` using Apple's [WKURLSchemeHandler](https://developer.apple.com/documentation/webkit/wkurlschemehandler). It is an asset-loading API, not proof that HTTP frames, fetch, storage or secure-context APIs will behave as they do on localhost. Register only that custom scheme, serve only bundled assets, reject traversal and cancel abandoned requests. Do not use private WebKit preferences or disable web security.
+Use a persistent, app-specific `WKWebsiteDataStore` and unchanged localStorage keys. Browser state and login cookies are not automatically imported from Safari or Chrome. Sharing the localhost host does not make all cookie/auth behavior safe or universal: test the actual routes, redirects and configured hosts. Keeping cookies functional does not resolve the connector's separate deterministic-state rule or automatically connect Yutugy.
 
-**This is the first gate:** load the actual built UI from the intended origin and test HTTP localhost manifests, project iframes, fonts, module assets, CSS, hot reload/WebSockets and linked pages. Inspect frame-ancestor/CORS restrictions and redirects. `docs/connector.md` currently promises framing from `http://localhost:3200`; a custom scheme is a contract change, even if today's pages happen to allow it. Record the exact new origin only after it is proven; update the contract with the implementation. Changes needed in connected repositories require their own worktrees and rules, not edits to active checkouts from here.
+Test immediate Cmd-Q and close after a camera move. If `pagehide` does not flush reliably, fix the shutdown flush narrowly; a bounded native-to-main-frame JavaScript call can be considered without adding a page-to-native handler or moving state to a native file. Prove durable storage after relaunch, not just completion of a JavaScript call.
 
-If the custom origin is incompatible, stop before building the native services. Review a loopback origin using the existing Node handler as the fallback; do not invent an HTTP server merely to preserve the preferred diagram. A fallback decision must specify the runtime, port collision behavior, authentication, persistence and owned-process lifecycle. Never attach a privileged bridge to an arbitrary process already answering on port 3200, and never kill it to obtain the port.
+Verify ATS in the **bundled** app; the unbundled probe is insufficient. Use only required local-network configuration, informed by [NSAllowsLocalNetworking](https://developer.apple.com/documentation/bundleresources/information-property-list/nsapptransportsecurity/nsallowslocalnetworking). Do not disable web security, bypass TLS validation or broaden arbitrary loads to make a test pass.
 
-**Reading local data.** Introduce two narrow frontend transport functions where `useProjects.ts` and `useBranches.ts` currently fetch Atelier's HTTP endpoints. Browser mode keeps those endpoints; Mac mode uses a typed native request/reply bridge. Everything above that boundary keeps the current TypeScript validation and rendering.
+## Two implementation increments
 
-- Native registry reading must match `server/projects.ts`: complete objects and folder entries, package metadata/defaults, duplicates, missing/invalid files and partial errors. Port these semantics against shared fixtures drawn from existing tests. Do not independently reinterpret the format.
-- Finder launch has no dependable shell working directory or login-shell environment. Default to the existing machine registry. Do not auto-discover a project from the app's working directory. CLI-only `--origin`, cwd discovery and Vite `.env.local` remain CLI/dev features; document that distinction. Any Mac registry override must be explicit and persisted, not dependent on shell startup files.
-- Native branch reading accepts a listed project ID, resolves its folder itself and runs the same two Git commands with argument arrays. Preserve the 3-second timeout, output bound, ceiling directory, no-lock setting and error states. Use the system Git explicitly on this Mac; missing Git yields the existing failure UI. Work runs off the main thread, concurrent reads for a repo are coalesced, and only owned subprocesses can be cancelled.
-- Prefer reusing pure TypeScript parsing where practical; if Swift duplicates parsing, require parity fixtures rather than a second evolving contract. Do not expose arbitrary file paths, shell strings or executable names as bridge operations.
+### 1. Safari baseline and shared gesture fix
 
-**Preview isolation.** Treat every framed project as untrusted relative to the native app. Native handlers verify the actual sending webview, main-frame status and exact bundled UI URL/origin; a JavaScript flag is not authentication. Apple exposes the sending frame through [WKScriptMessage.frameInfo](https://developer.apple.com/documentation/webkit/wkscriptmessage/frameinfo) and [WKFrameInfo](https://developer.apple.com/documentation/webkit/wkframeinfo). Reject subframe requests and top-level navigation away from bundled content. Validate message types, arguments and sizes; constrain native responses. Test that a hostile iframe cannot read the registry, run Git or overwrite saved state.
+Run today's workspace in Safari and Chrome using the same routes, frame count, zoom, viewport and display. Reuse a running server read-only or start an owned one without replacing anything already running. Reproduce physical trackpad pinch, add the necessary Safari gesture handling, then check pointer anchoring, scale limits, wheel behavior and entered-preview interaction in both engines. Synthetic events alone do not prove physical pinch works.
 
-Keep manifests and previews fetched from project origins, with browser framing/CORS rules intact. Use narrowly justified local networking configuration, guided by [NSAllowsLocalNetworking](https://developer.apple.com/documentation/bundleresources/information-property-list/nsapptransportsecurity/nsallowslocalnetworking); test it on the actual OS. ATS settings do not override CORS, CSP or mixed-content rules. Do not broadly enable arbitrary web loads as a shortcut.
+Record panning, idle behavior and memory with the actual registry, including offline entries. This establishes engine behavior before Swift. Commit the web fix as its own increment after the existing checks; it is not implemented by this document revision.
 
-**Saving state.** The app will not automatically share Safari/Chrome local storage. Default to its own state, keeping the `atelier:v1` schema and project IDs. For the custom-scheme build, use a bounded native state file under the app's Application Support folder, hydrated before the workspace mounts, and reuse `parseSaved` plus the existing debounce. Save atomically; flush on window close/quit with a bounded acknowledgement. This avoids making custom-scheme localStorage persistence a prerequisite. Window bounds belong in native preferences. Preview cookies/storage stay in WebKit's app-specific data store and never receive Atelier's preferences. Browser-state import is optional future work, not part of first launch.
+### 2. Build and validate the minimal app
 
-**Recovery.** Handle web-content-process termination and failed asset loads. Offer one retry path that restores validated Atelier state; avoid infinite reload loops. Do not promise to restore transient form edits inside a crashed preview. Use a local non-App-Store build appropriate to this Mac; test launching from Finder after moving the built app out of the repository. No dependency on Vite, the source folder or a terminal session.
+Implement the window/helper contract above. The prototype is the working app; do not build a separate disposable native service layer. Validate normal menus, focus, inspection, window restoration, external links, cookies, hot reload/WebSockets, localStorage across relaunch, immediate quit, minimize/hide/occlusion, sleep/wake, renderer reload and helper cleanup.
 
-## Performance: what to measure and what to preserve
+Use the comparison below during implementation. Fix demonstrated regressions before calling the increment complete. Provide a reproducible local release-build command and an ordinary `.app` launched from Finder outside the checkout with no terminal/Vite session. Replace it manually when rebuilding. No packaging pipeline or publishing step.
 
-The largest variable is the live project pages. WebKit has content/network processes; measuring just the small Swift host would be misleading. Compare the same projects, routes, viewport, zoom and number of mounted frames across the current browser and candidate app. Report app-related processes together, and project development servers separately.
+For each increment update `TODOS.md`/`CHANGELOG.md`, run `npm run typecheck` and `npm test`, and build/test native code once present. Server/build/package changes also require `npm pack` and a real tarball install/start check. Preserve browser/CLI behavior. Commit on a work branch; merging, pushing and publishing remain separate instructions.
 
-Proposed targets below are **engineering budgets for review, not measured results or framework promises**. Record the Mac/OS, release build, display refresh rate and warm/cold conditions. Adjust a budget only with a recorded reason.
+## Performance and acceptance within those increments
 
-| Check | Initial acceptance target |
+Use Safari to separate web-engine cost from wrapper cost, then compare the app. Keep Chrome as the existing-workflow comparison. Include Swift, Node and attributed WebKit content/network processes in app totals. Report project dev servers separately; do not claim a tiny Swift host represents total memory use.
+
+Proposed budgets are review targets, **not measured results**. Record Mac/OS, actual display model and resolution, window size, refresh mode and release-build settings. Run the primary motion comparison on the same display explicitly set to **60 Hz**; if that is unavailable, record its actual mode and compare frame times rather than claiming a measured 60 Hz result. Higher-refresh testing is optional and separately labelled.
+
+| Check | Acceptance / measurement |
 | --- | --- |
-| Startup | Usable shell within 1 second on warm launch and 2 seconds on cold launch; preview/server readiness measured separately. Record at least five launches of each kind. |
-| Canvas | Aim for a 60 fps frame budget during a repeatable pan/zoom path; inspect frame-time distributions and visible stalls with five and twelve representative frames. No repeatable shell-induced stalls over 100 ms. |
-| Idle | Empty app settles near zero CPU; target under 1% of one core averaged over a minute. Attribute live-project animation separately. |
-| Hidden/closed | No Atelier polling or Git refresh while hidden/minimized/closed. Verify WebKit visibility/occlusion behavior rather than assuming a browser tab's semantics. |
-| Memory | Record total footprint for zero, five and twelve frames. After 20 project switches and repeated open/close cycles, no monotonic retained growth; compare settled snapshots rather than demand immediate OS reclamation. |
-| Bundle | Aim below 30 MB for the local release `.app`, excluding system WebKit and build tools. Measure installed size; do not substitute compressed download size. |
+| Launch | Aim for usable shell within 1 s warm / 2 s cold; record five of each. Separate helper readiness and first-preview readiness so missing projects cannot distort the shell result. |
+| Pan/zoom | Same path with five and twelve live frames; target 16.7 ms frames in the 60 Hz test and investigate repeatable shell-induced stalls over 100 ms. Compare distributions, not only mean fps. |
+| Idle | Empty app plus actual registry with its usual stopped projects. Aim for near-zero empty-app CPU; investigate recurring work and report a one-minute average. Account for the existing all-project 3-second interval. |
+| Hidden/minimized/occluded | Verify actual visibility/focus events. No new background loops; stop unnecessary Atelier polling while unavailable to the user. Measure iframe activity separately and preserve transient preview state unless a measured change is explicitly justified. |
+| Memory | Zero/five/twelve frames; 20 project switches and repeated launches. No monotonic retained growth; compare settled footprints. Test 20–30 manifest entries to verify the live-frame cap. |
+| Footprint | **No bundled Node or browser runtime.** Report actual app size; remove the arbitrary 30 MB gate. Installed Node is an external dependency, not a zero-cost runtime. |
+| Lifecycle | Close/quit leaves no owned helper/listener/Git processes; forced host exit is checked; project servers remain running. |
 
-Preserve the existing 12-frame cap, active-project mounting, validation and debounced writes. Profile before changing them. Test 20–30 manifest entries to ensure the cap still bounds live frames. Keep project checks asynchronous so an offline server cannot delay the window. Keep branch work demand-driven. If hidden preview pages continue consuming substantial CPU, measure a deliberate suspension/unmount policy and document the loss of transient preview state before adopting it. Do not silently change linked-page/canvas retention or assume hidden iframes stop running.
+Use local Instruments/Web Inspector recordings and Activity Monitor for a coarse check; no analytics infrastructure. Accessibility and performance remain completion criteria, integrated into the work rather than separate phases. Preserve the 12-frame cap, active-workspace mounting, linked-page retention and debounced writes unless a measured problem justifies a focused change.
 
-Use Instruments Time Profiler/Allocations and Web Inspector, plus Activity Monitor for a coarse check. Keep results locally in a short table; no telemetry infrastructure. Thumbnails, a custom renderer and a canvas rewrite remain out unless a measured bottleneck requires a separate decision.
+## Deferred alternative: eliminate installed Node only if needed
 
-## Implementation increments after review
+If installed Node becomes a real maintenance problem, reconsider a `scheme://localhost/` handler serving bundled assets and the same two `/__atelier/` paths, without script-message handlers or a frontend transport fork. It still requires native registry/Git code and parity tests; it is not a free replacement.
 
-Each completed increment gets its own commit, a handoff update and the repository checks. These are ordered gates, not a promise to build every alternative.
+Before choosing it, prove custom-scheme Fetch Metadata and request isolation, persistent storage, auth/cookies and every actual preview. Opus's cookie probe is promising for its tested localhost case, not a portable guarantee. If equivalent isolation cannot be established, reject the scheme rather than weakening the API check. An origin change also requires an explicit workspace-state migration or accepted reset and a connector update.
 
-1. **Compatibility prototype.** One standard window and webview; test bundled assets and current project content using temporary fixture data where needed. Compare with the browser. Prove asset origin, frame policies, focus, gestures, clipboard and preview hot reload. Output: evidence and a go/no-go for the preferred architecture. Timebox to roughly one focused working day; unresolved engine/security/origin blockers go back to review.
-2. **Launch independently.** Add the chosen asset loading, project/branch transport, narrow native services and state persistence. Run shared parity fixtures. Output: double-clicking the app shows the same registry and branch information with no Atelier terminal/server running.
-3. **Finish native behavior.** Menus, external links, window restoration, close/reopen, fullscreen, accessibility and renderer recovery. Output: all everyday behaviors above work without new navigation UI.
-4. **Measure and fix demonstrated costs.** Run the performance matrix and hidden/sleep/wake checks; fix attributable regressions. Output: recorded results, remaining limits and an explicit pass/fail against agreed budgets.
-5. **Local build handoff.** Reproducible release-build command, ordinary local signing as required by the toolchain, app icon using the existing identity, and a local `.app` that runs outside the repository. Keep replacing it manually. Update the connector contract only for validated changes and explain Mac/browser differences.
+Tauri still uses WebKit on Mac and would not solve an engine issue. Electron remains a possible response to a demonstrated WebKit blocker, with a larger runtime tradeoff. Neither is part of the first implementation.
 
-For every relevant increment run `npm run typecheck` and `npm test`, plus native build/tests once present. Changes to `server/`, the build or `package.json` also require `npm pack` and installing/starting the command from the tarball, per `AGENTS.md`. Verify the browser workflow still works. Merge, push and publish remain separate instructions.
+## Decisions and next handoff
 
-Manual acceptance includes: no registered projects; missing/bad registry; stopped project; malformed manifest; missing repository/Git; linked page; twelve mounted previews; font/layout fidelity; native bridge rejection from an iframe; restart persistence; immediate close after a camera move; webview crash recovery; sleep/wake; unplugged external display; Finder launch with no terminal. Preview nondeterminism already recorded in `TODOS.md` is not fixed by packaging.
+Settled: personal Mac only; independent launch; current UI; project servers operated separately.
 
-## Review request for Claude Opus
+Pending Nicolas's answers:
 
-Review this document against the source, `AGENTS.md`, `docs/connector.md` and `docs/package-plan.md`. This is a plan review; do not implement, change neighbouring projects or expand the scope.
+- Use installed Node for v1? Recommendation: yes.
+- Quit when the only window closes? Recommendation: yes.
 
-1. Is direct AppKit/WKWebView truly the smallest maintainable solution here, once native registry/Git parity, IPC and state saving are counted? If Tauri or a Node helper is simpler overall, identify the concrete code/maintenance tradeoff.
-2. Can the proposed custom origin host the actual HTTP previews and existing connector policies without private APIs or security bypasses? Identify what must be proven and what would reject it.
-3. Are frame/origin validation, top-level navigation, native state writes and subprocess ownership sufficiently narrow? Identify any remaining privilege path from a preview.
-4. Are any existing behaviors lost, especially registry resolution, native focus, clipboard, project route navigation, hot reload, state flushing or close/reopen?
-5. Are performance measurements fair, including WebKit processes and loaded preview count? Challenge budgets that are unjustified; do not replace measurements with framework marketing.
-6. What can be deleted from this plan while still delivering a reliable, independently launching window around the current UI?
-
-Return **approve / approve with changes / reject**, with blocking findings first, file references where useful, and a corrected sequence if needed. Distinguish observed defects from things the prototype must establish. Do not add distribution, growth, accounts or product features.
-
-Nicolas's two scope decisions are settled. The architecture and budgets await review. No Claude Opus review has been run as part of writing this proposal.
+Next implementation handoff, after those decisions: follow the two increments above. Do not revive the native bridge/state-file/backend port without new evidence. The original Opus verdict applies to the first proposal; this revision incorporates that review but has not itself received a second Opus review. Remaining empirical questions are the real Safari gesture, packaged-app networking/cookies/WebSockets, visibility events, shutdown durability and helper lifecycle.
