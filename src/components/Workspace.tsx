@@ -127,7 +127,7 @@ export function Workspace({ project, status, store, sidebar, onSidebar, onRetry 
                 <span>Desktop minimum</span>
                 <select aria-label="Desktop minimum viewport" value={viewportMode}
                   title="Enlarge default desktop frames. Explicit screen sizes stay unchanged."
-                  className="h-[30px] rounded-[5px] bg-white text-[12px] font-medium tabular-nums text-neutral-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-700"
+                  className="h-[30px] rounded-[5px] bg-white text-[12px] font-medium tabular-nums text-neutral-900 outline-none focus-visible:bg-neutral-100"
                   onChange={(event) => { setInteractive(null); setViewportMode(event.target.value as ViewportMode); }}>
                   {Object.entries(DESKTOP_VIEWPORTS).map(([id, size]) => <option key={id} value={id}>{size.width} × {size.height}</option>)}
                   <option value="project">Project sizes</option>

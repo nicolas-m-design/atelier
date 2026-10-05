@@ -334,3 +334,8 @@ Added **Atelier → Update Atelier…**, with a native source-folder confirmatio
 The copied update worker survives replacing the app. Build failure and cancellation keep the installed bundle intact; filesystem/open-command errors roll back to the previous bundle and report on reopening. Updates retain previous bundles in hidden sibling recovery folders. The source checkout, installed dependencies and Xcode tools remain required, and current uncommitted changes are included. Updating an app running from its own build output is refused.
 
 Checks: typecheck and 70 web tests pass; 12 native/helper/update tests cover staged verification, rollback, source validation, quit timeout, aliased paths, build failure and process-group cancellation. Mac build/signature verification and installing/starting the npm tarball pass. Installed the feature and successfully exercised its native menu through a complete build, replacement and automatic relaunch. Live checks caught two repaired issues: macOS temporary-path aliasing and a main-queue termination deadlock. No neighboring project was edited or restarted. App left open; no merge or push.
+
+
+## 2026-10-06 — Remove viewport selector outline
+
+Removed the desktop viewport selector’s focus ring at Nicolas’s request. Keyboard focus gets a quiet background treatment instead. No change to frame outlines or other controls. Typecheck and all 70 tests pass; installed through Atelier’s native update flow.
