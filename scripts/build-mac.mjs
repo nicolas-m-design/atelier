@@ -20,6 +20,16 @@ mkdirSync(join(resources, 'macos'), { recursive: true });
 cpSync(join(root, 'dist'), join(resources, 'dist'), { recursive: true });
 cpSync(join(root, 'macos/helper.mjs'), join(resources, 'macos/helper.mjs'));
 cpSync(join(root, 'macos/Info.plist'), join(contents, 'Info.plist'));
+const iconset = join(root, 'macos/build/Atelier.iconset');
+rmSync(iconset, { recursive: true, force: true });
+mkdirSync(iconset, { recursive: true });
+for (const size of [16, 32, 128, 256, 512]) {
+  for (const scale of [1, 2]) {
+    const pixels = String(size * scale);
+    run('sips', ['-z', pixels, pixels, join(root, 'atelier-dark.png'), '--out', join(iconset, `icon_${size}x${size}${scale === 2 ? '@2x' : ''}.png`)]);
+  }
+}
+run('iconutil', ['-c', 'icns', iconset, '-o', join(resources, 'Atelier.icns')]);
 const { name, version } = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8'));
 writeFileSync(join(resources, 'package.json'), JSON.stringify({ name, version, type: 'module' }));
 // Include the notices for assets compiled into the page.

@@ -312,3 +312,8 @@ Added a parent-owned pipe for helper lifetime, shutdown cleanup for active Git c
 **Checks:** typecheck and all 67 unit tests pass; four helper integration tests cover readiness, access boundaries, occupied-port refusal, EOF/SIGTERM cleanup and reaping stuck Git commands. `npm pack` was installed in a temporary directory and its command served its page and registry. Signature verification passes. Native UI loaded live previews/branches, restored 32% zoom after immediate Cmd-Q, released its helper on Cmd-W, and reopened after a forced native-process exit with no orphan helper. Existing port 3200 remained available. Nicolas confirmed physical Safari pinch is smooth.
 
 **Limits:** native physical gesture feedback, cookies/sign-in, WebSocket hot reload, visibility/idle behavior and a controlled Safari/Chrome/native performance comparison remain acceptance work; no FPS or runtime-memory claim was measured. The installed app uses the machine registry but has preferences separate from the browser. No neighboring files or servers were changed; nothing merged or pushed.
+
+
+## 2026-10-06 — Mac app icon
+
+Replaced the generic Mac icon with the supplied `atelier-dark.png`. The build generates every standard ICNS size and registers `Atelier.icns` in Info.plist, preserving the original PNG. Updated the installed app and visually confirmed the artwork in About Atelier after reopening. Typecheck, all 67 tests, build/signature verification, and the installed tarball command pass.
