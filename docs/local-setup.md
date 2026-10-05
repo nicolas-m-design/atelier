@@ -11,7 +11,7 @@
 | Palier | http://localhost:3100 | `npm run dev` in `/Users/nico/Sites/palier` |
 | Marvin | http://localhost:3210 | `npm run dev` in `/Users/nico/Sites/marvin` |
 | Yutugy | http://localhost:3000 | `node --env-file=.env.local dev.mjs` in `/Users/nico/Sites/yutugy-portfolio` |
-| Krux | http://localhost:3220 | `npm --prefix web run dev -- --port 3220` in a checkout of `/Users/nico/Sites/design-agency` that has the connector |
+| Krux | http://localhost:3220 | `npm --prefix /Users/nico/Worktrees/krux/atelier-connector/web run dev -- --port 3220`, from any folder |
 
 No project has an `atelier` field in its `package.json`, and none has `agent-atelier` installed.
 
@@ -28,6 +28,8 @@ Palier no longer keeps a canvas of its own: Nicolas had it removed on 2026-10-02
 Krux is the studio's website. Its repository is `/Users/nico/Sites/design-agency`, a folder not named after it; the app is in `web/` there, and its `main` is checked out at `/Users/nico/Worktrees/krux/main` for merging only.
 
 Its connector is on the branch `claude/atelier-connector-2026-10-05`, in the worktree `/Users/nico/Worktrees/krux/atelier-connector`, and is not in its `main`. Only a dev server started from a checkout with that branch serves `/atelier.json`; from any other, Krux shows as "No manifest". The manifest is served by the dev server only and is never part of the site's build.
+
+For that reason its start command in the list names the worktree's folder in full. The first entry had `npm --prefix web run dev -- --port 3220`, to be run in the main folder; that folder is on an older branch, and the command run there on 2026-10-05 gave a server without the manifest.
 
 Krux has port 3220 to itself. Its dev server would otherwise take 3000, where Yutugy is listed.
 
