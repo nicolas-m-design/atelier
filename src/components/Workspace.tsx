@@ -9,7 +9,7 @@ import { Branches } from "./Branches";
 import { Canvas, type CanvasHandle } from "./Canvas";
 import { Page } from "./Page";
 import { STATUS_DOT, StatusCard, statusLine } from "./StatusCard";
-import { DEFAULT_VIEWPORT, DESKTOP_VIEWPORTS, usesDesktopBaseline, type ViewportMode } from "../viewports";
+import { DEFAULT_DEVICE, DEFAULT_VIEWPORT, DEFAULT_VIEWPORTS, DEVICE_VIEWPORTS, type Device, type ViewportMode } from "../viewports";
 
 interface Props {
   project: Project;
@@ -32,15 +32,24 @@ export function Workspace({ project, status, store, sidebar, onSidebar, onRetry 
   // While the project is stopped, keep listing what it last served.
   const [lastManifest, setLastManifest] = useState(view.manifest);
   const manifest = status.state === "online" ? status.manifest : lastManifest;
-  // Deliberately not saved: every project opens at the documented review baseline.
+  // Deliberately not saved: each project opens at the documented desktop preset.
+  const [device, setDevice] = useState<Device>(DEFAULT_DEVICE);
   const [viewportMode, setViewportMode] = useState<ViewportMode>(DEFAULT_VIEWPORT);
   const board = useMemo(() => manifest ? layoutBoard(manifest, viewportMode) : null, [manifest, viewportMode]);
-  const hasDesktop = manifest?.groups.some((group) => group.screens.some((screen) => usesDesktopBaseline(manifest, screen)));
   const [selected, setSelected] = useState<string | null>(view.selected ?? null);
   const [interactive, setInteractive] = useState<string | null>(null);
   const known = (id: string | null) => id !== null && Boolean(board?.screens.some((screen) => screen.id === id));
   const current = known(selected) ? selected : null;
   const entered = live && known(interactive) ? interactive : null;
+  const previousViewport = useRef(viewportMode);
+  useEffect(() => {
+    if (previousViewport.current === viewportMode) return;
+    previousViewport.current = viewportMode;
+    // Device changes can move the entire row offscreen when nothing is selected.
+    // Bring the selected screen (or the first one) into view at its new size.
+    const id = current ?? board?.screens[0]?.id;
+    if (id) canvas.current?.focusScreen(id);
+  }, [viewportMode, current, board]);
   // The canvas, or one of the pages the manifest links to. A saved page the project no longer lists falls back to the canvas.
   const [page, setPage] = useState<string | null>(view.page ?? null);
   const links = manifest?.links ?? [];
@@ -122,17 +131,32 @@ export function Workspace({ project, status, store, sidebar, onSidebar, onRetry 
         <div className="flex min-w-0 flex-1" inert={Boolean(open)}>
           <Canvas ref={canvas} label={`${project.name} canvas`} origin={project.origin} board={board ?? EMPTY_BOARD} live={live} reloads={reloads}
             initialCamera={view.camera} selected={current} interactive={entered}
-            viewportControl={hasDesktop ? (
-              <label className="pointer-events-auto flex h-10 items-center gap-2 rounded-lg border border-black/[0.08] bg-white px-3 text-[12px] text-neutral-700">
-                <span>Desktop minimum</span>
-                <select aria-label="Desktop minimum viewport" value={viewportMode}
-                  title="Enlarge default desktop frames. Explicit screen sizes stay unchanged."
-                  className="h-[30px] rounded-[5px] bg-white text-[12px] font-medium tabular-nums text-neutral-900 outline-none focus-visible:bg-neutral-100"
-                  onChange={(event) => { setInteractive(null); setViewportMode(event.target.value as ViewportMode); }}>
-                  {Object.entries(DESKTOP_VIEWPORTS).map(([id, size]) => <option key={id} value={id}>{size.width} × {size.height}</option>)}
-                  <option value="project">Project sizes</option>
-                </select>
-              </label>
+            viewportControl={board?.screens.length ? (
+              <div className="pointer-events-auto flex min-h-10 flex-wrap items-center justify-center gap-x-3 gap-y-1 rounded-lg border border-black/[0.08] bg-white px-3 py-1 text-[12px] text-neutral-700">
+                <label className="flex items-center gap-2">
+                  <span>Device</span>
+                  <select aria-label="Device" value={device}
+                    className="h-[30px] rounded-[5px] bg-white text-[12px] font-medium text-neutral-900 outline-none focus-visible:bg-neutral-100"
+                    onChange={(event) => {
+                      const next = event.target.value as Device;
+                      setInteractive(null); setDevice(next); setViewportMode(DEFAULT_VIEWPORTS[next]);
+                    }}>
+                    <option value="desktop">Desktop</option>
+                    <option value="tablet">Tablet</option>
+                    <option value="mobile">Mobile</option>
+                  </select>
+                </label>
+                <label className="flex items-center gap-2">
+                  <span>Size</span>
+                  <select aria-label="Viewport size" value={viewportMode}
+                    title="Resize all previews in CSS pixels. Project sizes restores the original dimensions."
+                    className="h-[30px] rounded-[5px] bg-white text-[12px] font-medium tabular-nums text-neutral-900 outline-none focus-visible:bg-neutral-100"
+                    onChange={(event) => { setInteractive(null); setViewportMode(event.target.value as ViewportMode); }}>
+                    {DEVICE_VIEWPORTS[device].map((size) => <option key={size.id} value={size.id}>{size.width} × {size.height}</option>)}
+                    <option value="project">Project sizes</option>
+                  </select>
+                </label>
+              </div>
             ) : null}
             onSelect={setSelected} onInteractive={changeInteractive} onCamera={saveCamera}>
             <StatusCard project={project} status={status} hasBoard={Boolean(board)} onRetry={onRetry} />

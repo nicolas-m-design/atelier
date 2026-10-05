@@ -339,3 +339,12 @@ Checks: typecheck and 70 web tests pass; 12 native/helper/update tests cover sta
 ## 2026-10-06 — Remove viewport selector outline
 
 Removed the desktop viewport selector’s focus ring at Nicolas’s request. Keyboard focus gets a quiet background treatment instead. No change to frame outlines or other controls. Typecheck and all 70 tests pass; installed through Atelier’s native update flow.
+
+
+## 2026-10-06 — Desktop, tablet and mobile viewport presets
+
+Added Device to the left of Size: Desktop has 1536 × 864, 1920 × 1080 and 2560 × 1440; Tablet has 800 × 1280 and 820 × 1180; Mobile has 360 × 800, 390 × 844 and 430 × 932. The small curated list uses current Statcounter usage and Apple layout specifications, with sources and selection limits documented in the connector. Both selectors retain the requested outline-free styling.
+
+A preset now sets every canvas frame to its exact CSS dimensions, replacing the desktop-minimum rule, including for screens with explicit source sizes. Project sizes restores those dimensions. Device switches choose a starting size and any size change focuses the selected or first screen. Routes and mounted iframes are retained; choices are transient. This changes viewport dimensions only, not user agent, touch or pixel density, and a connected project must supply its own responsive layout.
+
+Checks: typecheck and all 71 tests pass, covering mixed source dimensions, all eight presets, non-overlapping frames and source restoration. Live UI checks against the installed app verified all eight iframe dimensions and restoration to the project’s original size. Updated via Atelier’s native menu and visually verified Device/Size in the reopened app. No neighboring project changes, merge or push.

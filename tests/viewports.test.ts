@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { layoutBoard } from "../src/layout";
 import { parseManifest } from "../src/manifest";
-import { DEFAULT_VIEWPORT } from "../src/viewports";
+import { DEFAULT_VIEWPORT, DEFAULT_VIEWPORTS, DEVICE_VIEWPORTS } from "../src/viewports";
 
 const source = {
   atelier: 1, name: "Example", frame: { width: 1280, height: 720 },
@@ -13,30 +13,39 @@ const source = {
   ] }],
 };
 
-describe("desktop presentation", () => {
-  it("gives inherited desktop frames room without changing exact review sizes or the source", () => {
+const dimensions = (board: ReturnType<typeof layoutBoard>) => board.screens.map(({ rect: { width, height } }) => [width, height]);
+
+describe("device viewports", () => {
+  it("opens at the full desktop preset without changing source dimensions", () => {
     const manifest = parseManifest(source);
     const before = structuredClone(manifest);
-    const board = layoutBoard(manifest, DEFAULT_VIEWPORT);
-    expect(board.screens.map(({ rect: { width, height } }) => [width, height])).toEqual([
-      [1440, 900], [390, 844], [1280, 720], [1100, 720],
-    ]);
+    expect(dimensions(layoutBoard(manifest, DEFAULT_VIEWPORT))).toEqual(Array(4).fill([1920, 1080]));
     expect(manifest).toEqual(before);
-    for (let i = 1; i < board.screens.length; i++) {
-      expect(board.screens[i]!.rect.x).toBeGreaterThan(board.screens[i - 1]!.rect.x + board.screens[i - 1]!.rect.width);
+  });
+
+  it("applies every preset exactly to mixed screens and keeps frames from overlapping", () => {
+    const manifest = parseManifest(source);
+    for (const preset of Object.values(DEVICE_VIEWPORTS).flat()) {
+      const board = layoutBoard(manifest, preset.id);
+      expect(dimensions(board)).toEqual(Array(4).fill([preset.width, preset.height]));
+      for (let i = 1; i < board.screens.length; i++) {
+        expect(board.screens[i]!.rect.x).toBeGreaterThan(board.screens[i - 1]!.rect.x + board.screens[i - 1]!.rect.width);
+      }
     }
   });
 
-  it("can return to project sizes and compare desktop baselines", () => {
+  it("restores all original mixed and partially overridden dimensions with Project sizes", () => {
     const manifest = parseManifest(source);
-    expect(layoutBoard(manifest, "project").screens[0]!.rect).toMatchObject({ width: 1280, height: 720 });
-    expect(layoutBoard(manifest, "desktop").screens[0]!.rect).toMatchObject({ width: 1600, height: 1000 });
-    expect(layoutBoard(manifest, "wide").screens[0]!.rect).toMatchObject({ width: 1920, height: 1080 });
+    layoutBoard(manifest, "mobile-compact");
+    expect(dimensions(layoutBoard(manifest, "project"))).toEqual([[1280, 720], [390, 844], [1280, 720], [1100, 720]]);
   });
 
-  it("does not shrink large desktops or enlarge phone, narrow or portrait defaults", () => {
-    for (const frame of [{ width: 2560, height: 1440 }, { width: 390, height: 844 }, { width: 960, height: 720 }, { width: 1024, height: 1366 }]) {
-      expect(layoutBoard(parseManifest({ ...source, frame }), DEFAULT_VIEWPORT).screens[0]!.rect).toMatchObject(frame);
+  it("keeps at most three numeric presets per device and a valid default on device switches", () => {
+    for (const device of ["desktop", "tablet", "mobile"] as const) {
+      const presets = DEVICE_VIEWPORTS[device];
+      expect(presets.length).toBeGreaterThan(0);
+      expect(presets.length).toBeLessThanOrEqual(3);
+      expect(presets.some(({ id }) => id === DEFAULT_VIEWPORTS[device])).toBe(true);
     }
   });
 });
