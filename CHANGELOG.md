@@ -2,6 +2,12 @@
 
 > **Summary:** What changed in this repository, newest first, written for someone arriving with no context.
 
+## 2026-10-05 — Safari canvas gesture handling
+
+Nicolas authorized implementation with installed Node and quit-on-close. `src/canvasInput.ts` now handles WebKit's cumulative gesture scale through the existing camera math, while retaining modified-wheel zoom and normal pan. It suppresses accompanying wheel input during a gesture and removes handlers on cleanup. Preview iframe input remains separate.
+
+Typecheck and all 67 tests pass, including four new input tests. The current workspace renders in Safari. Physical pinch remains a manual check; synthetic event tests do not establish trackpad feel. No build, package or server code changed in this increment.
+
 ## 2026-10-05 — Mac plan simplified after Opus review
 
 Nicolas relayed Claude Opus's "approve with changes" review. Revised `docs/macos-app-plan.md` to retain the existing Node backend as an owned helper, loaded through real HTTP localhost on a separate stable app port. Removed the native service port, script-message bridge, native state file and frontend transport fork. The sequence is now a shared Safari gesture fix/baseline followed by the minimal working app, with performance and accessibility checked within those increments.

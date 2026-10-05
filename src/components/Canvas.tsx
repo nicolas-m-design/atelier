@@ -3,6 +3,7 @@ import { LogOut, Maximize, Minus, Plus } from "lucide-react";
 import { centerOn, clampZoom, distanceFromCenter, isNear, MAX_ZOOM, MIN_ZOOM, project, zoomAt, type Camera, type Point, type Size } from "../camera";
 import { retainFrames, TYPE, type Board } from "../layout";
 import { Frame } from "./Frame";
+import { bindCanvasInput } from "../canvasInput";
 
 /** Live previews held at once. Palier has five; the cap is for larger projects. */
 const MAX_LIVE_FRAMES = 12;
@@ -40,6 +41,8 @@ const sameSet = (a: ReadonlySet<string>, b: ReadonlySet<string>) => a.size === b
 export function Canvas({ ref, label, origin, board, live, reloads, initialCamera, selected, interactive, onSelect, onInteractive, onCamera, children }: Props) {
   const viewport = useRef<HTMLDivElement>(null);
   const [camera, setCamera] = useState<Camera>(initialCamera ?? { x: 56, y: 60, zoom: OVERVIEW_ZOOM.max });
+  const latestCamera = useRef(camera);
+  latestCamera.current = camera;
   /** False until the camera is either restored or given its opening view. */
   const placed = useRef(Boolean(initialCamera));
   const [size, setSize] = useState<Size | null>(null);
@@ -90,20 +93,8 @@ export function Canvas({ ref, label, origin, board, live, reloads, initialCamera
     if (!el) return;
     const observer = new ResizeObserver(() => setSize({ width: el.clientWidth, height: el.clientHeight }));
     observer.observe(el);
-    // Native wheel handler must be non-passive to keep gestures on the canvas.
-    const wheel = (event: WheelEvent) => {
-      event.preventDefault();
-      const unit = event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? el.clientHeight : 1;
-      if (event.ctrlKey || event.metaKey) {
-        const bounds = el.getBoundingClientRect();
-        const at = { x: event.clientX - bounds.left, y: event.clientY - bounds.top };
-        setCamera((c) => zoomAt(c, c.zoom * Math.exp(-event.deltaY * unit * 0.01), at));
-      } else {
-        setCamera((c) => ({ ...c, x: c.x - (event.shiftKey ? event.deltaY : event.deltaX) * unit, y: c.y - (event.shiftKey ? 0 : event.deltaY) * unit }));
-      }
-    };
-    el.addEventListener("wheel", wheel, { passive: false });
-    return () => { observer.disconnect(); el.removeEventListener("wheel", wheel); };
+    const unbind = bindCanvasInput(el, () => latestCamera.current, setCamera);
+    return () => { observer.disconnect(); unbind(); };
   }, []);
 
   // The opening view, once: the first row at overview size. A restored camera is left alone.

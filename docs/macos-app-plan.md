@@ -1,6 +1,6 @@
 # Plan: Atelier as a small Mac app
 
-> **Status:** Revised 2026-10-05 after Claude Opus returned **approve with changes**, as relayed by Nicolas. No Mac app is implemented. Confirmed: Nicolas's Mac only, independent launch, existing UI, small footprint and good performance. The installed-Node dependency and quit-on-close behavior are recommendations awaiting Nicolas's answers.
+> **Status:** Revised 2026-10-05 after Claude Opus returned **approve with changes**, as relayed by Nicolas. No Mac app is implemented. Confirmed: Nicolas's Mac only, independent launch, existing UI, small footprint and good performance. Nicolas approved installed Node and quit-on-close with “ok go”; implementation is authorized.
 
 ## Revised recommendation
 
@@ -70,7 +70,7 @@ These reports disagree in useful ways. They support a compatibility prototype an
 
 Use standard native title-bar controls, resizing, minimize/fullscreen, tiling and normal window placement restoration. Keep the current workspace's visual design. Start near 1280 × 900 points, constrained to the display; verify a usable minimum against the current sidebar rather than adding a new responsive design.
 
-Recommended behavior: closing the only window, including Cmd-W, quits Atelier and stops its own helper. Cmd-Q does the same. Project preview servers keep running. There is no background mode or close/reopen state machine. This recommendation awaits Nicolas's answer.
+Recommended behavior: closing the only window, including Cmd-W, quits Atelier and stops its own helper. Cmd-Q does the same. Project preview servers keep running. There is no background mode or close/reopen state machine. Nicolas approved this behavior.
 
 Supply ordinary app, Edit and Window menus and standard copy/paste behavior. Keep keyboard focus indicators and check VoiceOver during normal acceptance, not as a separate development phase. Do not add a native sidebar menu item or Mac-only copy variants. Existing new-tab links open in the default browser; ordinary in-frame navigation stays in the preview. Allow only explicitly supported URL schemes for external opening, never arbitrary command URLs.
 
@@ -144,9 +144,6 @@ Tauri still uses WebKit on Mac and would not solve an engine issue. Electron rem
 
 Settled: personal Mac only; independent launch; current UI; project servers operated separately.
 
-Pending Nicolas's answers:
-
-- Use installed Node for v1? Recommendation: yes.
-- Quit when the only window closes? Recommendation: yes.
+Approved by Nicolas: installed Node for v1; closing the only window quits Atelier.
 
 Next implementation handoff, after those decisions: follow the two increments above. Do not revive the native bridge/state-file/backend port without new evidence. The original Opus verdict applies to the first proposal; this revision incorporates that review but has not itself received a second Opus review. Remaining empirical questions are the real Safari gesture, packaged-app networking/cookies/WebSockets, visibility events, shutdown durability and helper lifecycle.
