@@ -38,7 +38,10 @@ export function Frame({ screen, camera, src, mounted, reloads, selected, interac
       <div className="absolute right-0 bottom-full left-0 flex items-end justify-between gap-3" style={{ marginBottom: TYPE.labelGap * zoom }}>
         <div className="min-w-0">
           <h3 className="truncate font-medium text-neutral-800" style={{ fontSize: titleSize, lineHeight: 1.4 }}>{screen.title}</h3>
-          {screen.caption && <p className="truncate text-neutral-600" style={{ marginTop: TYPE.screenCaption.gap * zoom, fontSize: captionSize, lineHeight: 1.45 }}>{screen.caption}</p>}
+          <p className="truncate text-neutral-600" style={{ marginTop: TYPE.screenCaption.gap * zoom, fontSize: captionSize, lineHeight: 1.45 }}>
+            {screen.caption && <>{screen.caption}<span aria-hidden> · </span></>}
+            <span className="tabular-nums" title="Preview viewport in CSS pixels">{screen.rect.width} × {screen.rect.height}</span>
+          </p>
         </div>
         {src && (selected || interactive) && (
           <div className="pointer-events-auto flex shrink-0 items-center gap-0.5 rounded-lg border border-black/[0.08] bg-white p-0.5 shadow-[0_2px_8px_#00000008]">

@@ -39,18 +39,28 @@ Served with `Content-Type: application/json` and `Access-Control-Allow-Origin: *
 | --- | --- | --- |
 | `atelier` | yes | Contract version. Must be `1`. |
 | `name` | yes | The project's display name. |
-| `frame.width`, `frame.height` | yes | Default frame size in CSS pixels (integers, 240 to 4096). |
+| `frame.width`, `frame.height` | yes | Source default frame size in CSS pixels (integers, 240 to 4096). Inherited desktop frames may be enlarged by Atelier's desktop minimum; see below. |
 | `groups[].id`, `groups[].title` | yes | One canvas row per group. Groups without screens are not drawn. |
 | `groups[].label`, `groups[].description` | no | A short ordinal such as "01", and one line under the title. |
 | `screens[].id` | yes | Unique across the whole manifest. Atelier stores the selected screen by this id, so keep it stable. |
 | `screens[].title` | yes | Shown above the frame and in the sidebar. |
 | `screens[].caption` | no | A short line under the title: a persona, a state, a fixture name. |
 | `screens[].route` | yes | A path on the project's own origin, starting with one `/`. Full URLs are rejected. |
-| `screens[].width`, `screens[].height` | no | Override the default frame size for one screen. |
+| `screens[].width`, `screens[].height` | no | Exact review dimensions for one screen. Setting either opts that screen out of the desktop minimum; an omitted dimension still inherits from `frame`. |
 | `links[].id`, `links[].title`, `links[].route` | no | Other project pages, such as a UI library. See "Linked pages" below. Atelier stores the open page by its id; the id `library` gets a library icon. |
 | `links[].width` | no | The narrowest width the page is designed for, in CSS pixels (integer, 240 to 4096). With less room Atelier lays the page out at this width and scales it down. Leave it out for a page that adapts to any width. |
 
 Strings are limited to 200 characters. Unknown fields are ignored. An invalid manifest is rejected as a whole, and Atelier says why.
+
+### Desktop presentation sizes
+
+Atelier starts each project with a **1440 × 900 CSS pixel desktop minimum**. It applies only to screens inheriting both dimensions from a landscape default at least 1024 px wide. Each dimension is enlarged independently to that minimum; larger source dimensions are never reduced. This is a presentation convention, not detection of a physical device or a guarantee that a layout is responsive.
+
+The **Desktop minimum** control also offers 1600 × 1000 and 1920 × 1080. **Project sizes** restores every declared dimension exactly. The choice lasts for the current project view and is not saved. Every frame's caption shows its effective dimensions; canvas zoom changes only how large it looks on the board. Resizing retains the iframe and its route, so the page handles the change like a browser resize.
+
+Explicit per-screen sizes always win, including compact desktop checks, phones and tablets. For a landscape tablet or any exact-size review, declare both dimensions on that screen. Narrow and portrait defaults are left as declared. Linked pages retain their separate sizing behavior.
+
+New desktop connectors should declare `frame: { width: 1440, height: 900 }` so their source agrees with the initial presentation. Keep small-width regression checks as explicitly sized screens (for example 1280 × 720), rather than making a constrained review size the default for every preview. Captures should use the effective dimensions shown beside the frame.
 
 **Derive the manifest from the project's own scenario data** instead of writing a second list by hand. Palier builds its manifest from the one list of screens its entry redirect also reads (`src/components/scenarios/screens.ts` and `atelier.ts` there), and a test checks that the two agree. Marvin builds its manifest from its preview frame registry (`src/preview/frames.ts` and `manifest.ts` there), with the same kind of test.
 
@@ -61,7 +71,7 @@ Strings are limited to 200 characters. Unknown fields are ignored. An invalid ma
   - **Hide them when framed.** A small client check (`window.self !== window.top`) that sets an attribute on the document, and one CSS rule, are enough. Palier's library does this (see "Linked pages").
   - **Keep navigation out of sight until it is asked for.** Navigation between the project's own screens may stay in a framed page if, at rest, it shows nothing and takes no room in the layout, and appears only when the pointer reaches it or the keyboard focuses it. Palier's scenario pages do this: a bar with the screen's name and previous and next links slides over the top of the page when the pointer reaches the frame's top edge. Atelier passes pointer and keyboard input to a preview only once it is entered, so the bar cannot appear on a preview that is merely shown or selected. Two limits: the area that reveals it scales with the frame, so it is hard to reach when the canvas is zoomed far out; and a link back to the project's own canvas, or anything visible at rest such as a banner, still has to be hidden.
 - **Allow framing.** Do not send `X-Frame-Options` or a `frame-ancestors` policy that blocks `http://localhost:3200` (browser) or `http://localhost:3201` (Mac app). If using an explicit CORS allowlist instead of `*`, include both origins there too.
-- **Fit the declared frame.** The page is shown in an iframe of exactly the declared width and height. It may scroll inside the frame.
+- **Fit the frame.** The page is shown in an iframe at the effective CSS dimensions described above. It may scroll inside the frame and should respond to viewport resizing. Explicitly sized review screens use their declared dimensions exactly.
 - **In-frame navigation is fine.** Product links work once a preview is entered. Atelier cannot see where a preview has navigated; its reload control returns the frame to the manifest route.
 
 Captures for a portfolio are taken from the project's own route in a browser window of the right size, not from Atelier.

@@ -9,6 +9,7 @@ import { Branches } from "./Branches";
 import { Canvas, type CanvasHandle } from "./Canvas";
 import { Page } from "./Page";
 import { STATUS_DOT, StatusCard, statusLine } from "./StatusCard";
+import { DEFAULT_VIEWPORT, DESKTOP_VIEWPORTS, usesDesktopBaseline, type ViewportMode } from "../viewports";
 
 interface Props {
   project: Project;
@@ -31,7 +32,10 @@ export function Workspace({ project, status, store, sidebar, onSidebar, onRetry 
   // While the project is stopped, keep listing what it last served.
   const [lastManifest, setLastManifest] = useState(view.manifest);
   const manifest = status.state === "online" ? status.manifest : lastManifest;
-  const board = useMemo(() => manifest ? layoutBoard(manifest) : null, [manifest]);
+  // Deliberately not saved: every project opens at the documented review baseline.
+  const [viewportMode, setViewportMode] = useState<ViewportMode>(DEFAULT_VIEWPORT);
+  const board = useMemo(() => manifest ? layoutBoard(manifest, viewportMode) : null, [manifest, viewportMode]);
+  const hasDesktop = manifest?.groups.some((group) => group.screens.some((screen) => usesDesktopBaseline(manifest, screen)));
   const [selected, setSelected] = useState<string | null>(view.selected ?? null);
   const [interactive, setInteractive] = useState<string | null>(null);
   const known = (id: string | null) => id !== null && Boolean(board?.screens.some((screen) => screen.id === id));
@@ -118,6 +122,18 @@ export function Workspace({ project, status, store, sidebar, onSidebar, onRetry 
         <div className="flex min-w-0 flex-1" inert={Boolean(open)}>
           <Canvas ref={canvas} label={`${project.name} canvas`} origin={project.origin} board={board ?? EMPTY_BOARD} live={live} reloads={reloads}
             initialCamera={view.camera} selected={current} interactive={entered}
+            viewportControl={hasDesktop ? (
+              <label className="pointer-events-auto flex h-10 items-center gap-2 rounded-lg border border-black/[0.08] bg-white px-3 text-[12px] text-neutral-700">
+                <span>Desktop minimum</span>
+                <select aria-label="Desktop minimum viewport" value={viewportMode}
+                  title="Enlarge default desktop frames. Explicit screen sizes stay unchanged."
+                  className="h-[30px] rounded-[5px] bg-white text-[12px] font-medium tabular-nums text-neutral-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-700"
+                  onChange={(event) => { setInteractive(null); setViewportMode(event.target.value as ViewportMode); }}>
+                  {Object.entries(DESKTOP_VIEWPORTS).map(([id, size]) => <option key={id} value={id}>{size.width} × {size.height}</option>)}
+                  <option value="project">Project sizes</option>
+                </select>
+              </label>
+            ) : null}
             onSelect={setSelected} onInteractive={changeInteractive} onCamera={saveCamera}>
             <StatusCard project={project} status={status} hasBoard={Boolean(board)} onRetry={onRetry} />
           </Canvas>

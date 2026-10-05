@@ -317,3 +317,11 @@ Added a parent-owned pipe for helper lifetime, shutdown cleanup for active Git c
 ## 2026-10-06 — Mac app icon
 
 Replaced the generic Mac icon with the supplied `atelier-dark.png`. The build generates every standard ICNS size and registers `Atelier.icns` in Info.plist, preserving the original PNG. Updated the installed app and visually confirmed the artwork in About Atelier after reopening. Typecheck, all 67 tests, build/signature verification, and the installed tarball command pass.
+
+## 2026-10-06 — Shared desktop viewport baseline
+
+Palier's inherited 1280 × 720 frames were too constrained for the intended presentation. Atelier now starts every project with a 1440 × 900 desktop minimum, offers two larger minima and exact Project sizes, and displays each frame's effective CSS dimensions outside its preview. Resizing reflows the iframe and board and keeps a selected frame in view. The choice is local to the mounted workspace and is not persisted or injected into preview URLs or storage.
+
+The rule applies to inherited landscape defaults at least 1024 px wide; larger source dimensions never shrink. Explicit screen sizes, narrow/portrait defaults and linked pages remain authoritative. For an exact compact desktop or landscape tablet review, declare per-screen dimensions. The connector documents both the presentation convention and a 1440 × 900 source default for future desktop integrations. No neighboring repository or server was modified.
+
+Checks: all 70 tests and typecheck pass. Browser inspection verified live Palier iframe dimensions at 1440 × 900 and the original 1280 × 720; larger preset labels and selection reframing were checked after Palier's server independently stopped. Tests cover all minima, mixed desktop/mobile/exact screens, non-overlap, source preservation and larger/narrow/portrait defaults. Mac build and signature verification pass. Installing the rebuilt app awaits quitting the existing copy, which was not started by this session. No merge or push.

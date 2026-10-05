@@ -5,6 +5,7 @@
  */
 import type { Rect } from "./camera";
 import type { Manifest, ManifestGroup, ManifestScreen } from "./manifest";
+import { frameSize, type ViewportMode } from "./viewports";
 
 /** Text sizes in board pixels; the canvas multiplies them by the zoom. */
 export const TYPE = {
@@ -32,13 +33,12 @@ export interface BoardGroup extends Omit<ManifestGroup, "screens"> {
 }
 export interface Board { groups: BoardGroup[]; screens: BoardScreen[]; width: number; height: number }
 
-export function layoutBoard(manifest: Manifest): Board {
+export function layoutBoard(manifest: Manifest, viewport: ViewportMode = "project"): Board {
   let y = 0;
   const groups = manifest.groups.filter((group) => group.screens.length > 0).map((group): BoardGroup => {
     let x = 0;
     const screens = group.screens.map((screen): BoardScreen => {
-      const width = screen.width ?? manifest.frame.width;
-      const height = screen.height ?? manifest.frame.height;
+      const { width, height } = frameSize(manifest, screen, viewport);
       const placed = { ...screen, group: group.id, rect: { x, y: y + FRAME_TOP, width, height } };
       x += width + COLUMN_GAP;
       return placed;

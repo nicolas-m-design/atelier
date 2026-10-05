@@ -33,12 +33,13 @@ interface Props {
   onSelect(id: string | null): void;
   onInteractive(id: string | null): void;
   onCamera(camera: Camera): void;
+  viewportControl?: ReactNode;
   children?: ReactNode;
 }
 
 const sameSet = (a: ReadonlySet<string>, b: ReadonlySet<string>) => a.size === b.size && [...a].every((id) => b.has(id));
 
-export function Canvas({ ref, label, origin, board, live, reloads, initialCamera, selected, interactive, onSelect, onInteractive, onCamera, children }: Props) {
+export function Canvas({ ref, label, origin, board, live, reloads, initialCamera, selected, interactive, onSelect, onInteractive, onCamera, viewportControl, children }: Props) {
   const viewport = useRef<HTMLDivElement>(null);
   const [camera, setCamera] = useState<Camera>(initialCamera ?? { x: 56, y: 60, zoom: OVERVIEW_ZOOM.max });
   const latestCamera = useRef(camera);
@@ -51,6 +52,24 @@ export function Canvas({ ref, label, origin, board, live, reloads, initialCamera
   const drag = useRef<{ id: number; x: number; y: number; camera: Camera; moved: boolean } | null>(null);
   const suppressClick = useRef(false);
   const interacting = board.screens.find((screen) => screen.id === interactive);
+  const selectedRect = board.screens.find((screen) => screen.id === selected)?.rect;
+  const previousSelection = useRef({ id: selected, rect: selectedRect });
+
+  // A viewport change moves subsequent frames too. Keep the selected screen in
+  // view, but do not disturb the camera on ordinary manifest polls or selection.
+  useEffect(() => {
+    const previous = previousSelection.current;
+    previousSelection.current = { id: selected, rect: selectedRect };
+    if (previous.id !== selected || !previous.rect || !selectedRect) return;
+    if (previous.rect.x === selectedRect.x && previous.rect.y === selectedRect.y
+      && previous.rect.width === selectedRect.width && previous.rect.height === selectedRect.height) return;
+    const el = viewport.current;
+    if (!el) return;
+    setCamera((camera) => centerOn(
+      { ...selectedRect, y: selectedRect.y - LABEL_HEIGHT, height: selectedRect.height + LABEL_HEIGHT },
+      { width: el.clientWidth, height: el.clientHeight }, { width: 96, height: 140 }, camera.zoom,
+    ));
+  }, [selected, selectedRect]);
 
   const measure = (): Size | null => viewport.current && { width: viewport.current.clientWidth, height: viewport.current.clientHeight };
 
@@ -196,6 +215,7 @@ export function Canvas({ ref, label, origin, board, live, reloads, initialCamera
       {children}
       {board.screens.length > 0 && (
         <div className="pointer-events-none absolute right-0 bottom-5 left-0 flex flex-wrap items-center justify-center gap-3 px-5">
+          {viewportControl}
           {interacting && (
             <div role="status" className="pointer-events-auto flex h-[38px] items-center gap-3 rounded-lg bg-neutral-900 pr-1 pl-3 text-[12px] text-white shadow-[0_2px_8px_#00000026]">
               <span className="max-w-[40ch] truncate">Interacting with <span className="font-medium">{interacting.title}</span></span>
