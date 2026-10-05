@@ -18,7 +18,9 @@
     "prepack": "npm run build",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "build:mac": "node scripts/build-mac.mjs",
+    "test:mac": "node --test macos/helper.test.mjs"
   },
   "devDependencies": {
     "@fontsource-variable/inter": "^5.3.0",

@@ -299,3 +299,16 @@ Nicolas asked for Palier's prototype canvas to be extracted into a shared local 
 **An error during setup, and its repair.** The first dependency install ran before `package.json` existed here (an earlier step in the same command had failed), so npm installed into `/Users/nico/Sites`, which has its own `package.json` listing `@base-ui/react`. The added packages were removed again. Two differences from before remain there: `react`, `react-dom` and `scheduler` were updated to 19.3.0 / 0.28.0 within the range `@base-ui/react` accepts (their earlier versions were not recorded), and `@types/react` with `csstype` stayed installed as an optional peer. The lockfile there was rewritten accordingly.
 
 Nothing was merged, pushed, published or deployed.
+
+
+## 2026-10-05 — First personal Mac app
+
+Built one AppKit window around the existing UI in WKWebView, following the revised Opus review and Nicolas's “ok go”. The app starts the bundled existing HTTP server with installed Node on localhost:3201. It has standard window/menu behavior, persistent WebKit storage, inspectability, bounded startup/failure handling and one renderer reload. No native message handlers, backend port or native state file.
+
+Added a parent-owned pipe for helper lifetime, shutdown cleanup for active Git children, and a bounded web-store flush on quit. App occlusion/hide/minimize events supplement browser visibility so repeated status polling can pause. Initial status and branch loads still run while covered. Closing or Cmd-W quits; browser development and project servers stay separate. The connector now documents both 3200 and 3201 for framing/CORS allowlists.
+
+`npm run build:mac` builds and ad-hoc signs a local app with all required compiled modules and asset notices. Installed and launched outside the checkout at `/Users/nico/Applications/Atelier.app`; the bundle contains 701,007 bytes, excluding installed runtimes. Rebuilds do not automatically replace this installed copy.
+
+**Checks:** typecheck and all 67 unit tests pass; four helper integration tests cover readiness, access boundaries, occupied-port refusal, EOF/SIGTERM cleanup and reaping stuck Git commands. `npm pack` was installed in a temporary directory and its command served its page and registry. Signature verification passes. Native UI loaded live previews/branches, restored 32% zoom after immediate Cmd-Q, released its helper on Cmd-W, and reopened after a forced native-process exit with no orphan helper. Existing port 3200 remained available. Nicolas confirmed physical Safari pinch is smooth.
+
+**Limits:** native physical gesture feedback, cookies/sign-in, WebSocket hot reload, visibility/idle behavior and a controlled Safari/Chrome/native performance comparison remain acceptance work; no FPS or runtime-memory claim was measured. The installed app uses the machine registry but has preferences separate from the browser. No neighboring files or servers were changed; nothing merged or pushed.

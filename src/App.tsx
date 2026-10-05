@@ -31,7 +31,8 @@ function Projects({ projects }: { projects: readonly Project[] }) {
   useEffect(() => {
     const flush = () => store.flush();
     window.addEventListener("pagehide", flush);
-    return () => window.removeEventListener("pagehide", flush);
+    window.addEventListener("atelier:flush", flush);
+    return () => { window.removeEventListener("pagehide", flush); window.removeEventListener("atelier:flush", flush); };
   }, []);
 
   return (

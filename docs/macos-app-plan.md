@@ -1,6 +1,6 @@
 # Plan: Atelier as a small Mac app
 
-> **Status:** Revised 2026-10-05 after Claude Opus returned **approve with changes**, as relayed by Nicolas. No Mac app is implemented. Confirmed: Nicolas's Mac only, independent launch, existing UI, small footprint and good performance. Nicolas approved installed Node and quit-on-close with “ok go”; implementation is authorized.
+> **Status:** Revised 2026-10-05 after Claude Opus returned **approve with changes**, as relayed by Nicolas. The first local app is implemented on `codex/macos-app`; see `macos/README.md` for build and verification notes. Confirmed: Nicolas's Mac only, independent launch, existing UI, small footprint and good performance. Nicolas approved installed Node and quit-on-close with “ok go”; implementation is authorized.
 
 ## Revised recommendation
 
@@ -146,4 +146,4 @@ Settled: personal Mac only; independent launch; current UI; project servers oper
 
 Approved by Nicolas: installed Node for v1; closing the only window quits Atelier.
 
-Next implementation handoff, after those decisions: follow the two increments above. Do not revive the native bridge/state-file/backend port without new evidence. The original Opus verdict applies to the first proposal; this revision incorporates that review but has not itself received a second Opus review. Remaining empirical questions are the real Safari gesture, packaged-app networking/cookies/WebSockets, visibility events, shutdown durability and helper lifecycle.
+Next implementation handoff, after those decisions: follow the two increments above. Do not revive the native bridge/state-file/backend port without new evidence. The original Opus verdict applies to the first proposal; this revision incorporates that review but has not itself received a second Opus review. Nicolas confirmed smooth physical Safari pinch. The app loads real previews, restores its view after quit, and has helper lifecycle integration tests. Cookies/sign-in, WebSocket hot reload and a controlled performance comparison still need acceptance checks; do not treat Opus’s scratchpad findings as bundled-app measurements.

@@ -3,21 +3,33 @@
  * (`server/handler.ts`). It runs two git commands that only read, in the
  * folder the project list names, and nothing else.
  */
-import { execFile } from "node:child_process";
+import { execFile, type ChildProcess } from "node:child_process";
 import { dirname } from "node:path";
 import { REFS_FORMAT, listBranches, parseRefs, parseWorktrees, type BranchReport } from "../src/branches.ts";
 import type { Project } from "../src/projects.ts";
 import { refusal, type Answer, type EndpointRequest } from "./request.ts";
 
+const running = new Set<ChildProcess>();
+
+/** Used only when the owning Mac helper exits. Never touches another server's processes. */
+export async function cancelBranchReads(): Promise<void> {
+  await Promise.all([...running].map(child => new Promise<void>(resolve => {
+    const force = setTimeout(() => child.kill("SIGKILL"), 500);
+    child.once("close", () => { clearTimeout(force); resolve(); });
+    child.kill("SIGTERM");
+  })));
+}
+
 /** Runs git in a folder and returns what it printed. */
 export type Git = (repo: string, args: string[]) => Promise<string>;
 
 const git: Git = (repo, args) => new Promise((resolve, reject) => {
-  execFile("git", args, {
+  const child = execFile("git", args, {
     cwd: repo, timeout: 3000, maxBuffer: 1024 * 1024,
     // Stay inside the named folder (never a repository above it), take no locks, and keep git's messages in English.
     env: { ...process.env, GIT_CEILING_DIRECTORIES: dirname(repo), GIT_OPTIONAL_LOCKS: "0", LC_ALL: "C" },
-  }, (error, stdout, stderr) => { if (error) reject(new Error(stderr || error.message)); else resolve(stdout); });
+  }, (error, stdout, stderr) => { running.delete(child); if (error) reject(new Error(stderr || error.message)); else resolve(stdout); });
+  running.add(child);
 });
 
 export async function readBranches(repo: string, run: Git = git): Promise<BranchReport> {

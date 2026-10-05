@@ -2,6 +2,12 @@
 
 > **Summary:** A local workspace that shows several projects' prototype screens on one pannable, zoomable canvas, with a project switcher. Each project stays in its own repository and runs its own server; Atelier embeds its screens as live previews. Local only: nothing is published or deployed. Its full name is Agent Atelier and its package name `agent-atelier`; these documents and the interface say Atelier. What is specific to the machine it is developed on is in [docs/local-setup.md](docs/local-setup.md).
 
+## Personal Mac app
+
+On a Mac with Xcode and Node 22.12 or newer installed, run `npm run build:mac`. Copy `macos/build/Atelier.app` into Applications and open it normally. The app bundles the built UI and server, uses installed Node, and starts without a terminal. Rebuild and replace the app to update it.
+
+It uses `http://localhost:3201`, leaving port 3200 for browser development. Closing the window or quitting stops its helper; project preview servers are still started separately. The project list is shared with the command, while canvas preferences live in the app's own WebKit storage. See [Mac build details](macos/README.md) in the source repository.
+
 ## What it is
 
 Atelier started as the canvas inside one project, and was moved out so it can be improved once and used by every project:

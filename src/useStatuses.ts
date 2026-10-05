@@ -1,3 +1,4 @@
+import { canRefresh, observeVisibility } from "./lifecycle";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { Project } from "./projects";
 import { checkProject, type Status } from "./status";
@@ -29,12 +30,14 @@ export function useStatuses(projects: readonly Project[]): { statuses: Record<st
   const settled = projects.every((project) => !project.origin || statuses[project.id]?.state === "online");
   useEffect(() => {
     recheck();
-    const timer = setInterval(() => { if (!document.hidden) recheck(); }, settled ? ONLINE_INTERVAL : WAITING_INTERVAL);
-    const wake = () => { if (!document.hidden) recheck(); };
+    const timer = setInterval(() => { if (canRefresh()) recheck(); }, settled ? ONLINE_INTERVAL : WAITING_INTERVAL);
+    const wake = () => { if (canRefresh()) recheck(); };
+    const unobserve = observeVisibility(wake);
     window.addEventListener("focus", wake);
     document.addEventListener("visibilitychange", wake);
     return () => {
       clearInterval(timer);
+      unobserve();
       window.removeEventListener("focus", wake);
       document.removeEventListener("visibilitychange", wake);
     };
