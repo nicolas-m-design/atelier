@@ -1,6 +1,8 @@
 # Review prompt for Claude Code Opus 5.5
 
-Paste the following into Claude Code Opus 5.5 with Atelier as the working directory. This asks for an independent review and recommendation, not implementation.
+> **Historical prompt, reviewed 2026-10-07.** Claude returned **proceed with changes**. The [revised plan](branch-preview-plan.md) incorporates Nicolas's relayed review; implementation awaits his instruction. The prompt below is preserved as sent and describes the superseded worktree design. It is not the current implementation specification.
+
+This requested an independent review and recommendation, not implementation.
 
 ```text
 Review the proposed branch-preview feature in /Users/nico/Sites/atelier.

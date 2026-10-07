@@ -380,3 +380,12 @@ What the review changes, and why:
 - Krux's `main` contains the connector's manifest route; three of its branches checked do not, which makes them a real case of "not connected".
 
 Checks: typecheck, all 71 tests and the 12 Mac helper and updater tests pass. Neighbouring repositories were read only (their rules first, then branch, lockfile and configuration listings). No runtime, registry, installed app or project server was changed, started or stopped. No merge or push.
+
+
+## 2026-10-07 — Incorporate the branch-preview review
+
+Revised `docs/branch-preview-plan.md` after Nicolas relayed Claude's “proceed with changes” verdict. Archive exports replace linked worktrees; an EOF guardian owns every step; readiness checks all listeners against the run's process group with `lsof` before server-side manifest validation. The plan uses system-assigned ports, a required `{port}` argument, required-file recipe checks, one revisioned server state and run-keyed inner workspaces with Device/Size above them. Removed mutation tokens, per-commit views, environment files, port ranges, submodule/LFS detection and non-macOS support from v1.
+
+The first increment is strictly `server/previews.ts`, the guardian and process-level fixture tests, followed by a cold start on the project Nicolas names. Implementation remains unauthorized. The first project, committed-only snapshots and single-managed-preview policy await his decision. The original review prompt is labelled historical; Claude's reported probes have not been reproduced by Codex. No runtime, connector, local configuration, installed app or neighbouring project/server changed.
+
+Checks for this documentation revision: `npm run typecheck`, all 71 tests and `git diff --check` pass. No merge or push.

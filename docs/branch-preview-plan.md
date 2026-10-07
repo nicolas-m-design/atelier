@@ -1,10 +1,10 @@
 # Plan: switch between branch previews
 
-> **Status: proposal for Claude Code Opus 5.5 review, 2026-10-07.** Nicolas requested a code review, plan and review prompt, and clarified that Atelier should **prepare and start branch previews**, including branches that are not running. No feature implementation, project configuration or neighbouring repository change is included here. Code reviewed at `e0917b594f8311ca26d463527afb625518ca2586`.
+> **Status: revised after Claude Code Opus 5.5 review, 2026-10-07 — proceed with changes; implementation awaits Nicolas.** Nicolas confirmed that Atelier should **prepare and start branch previews**, including branches that are not running. This document incorporates the review he relayed. It does not authorize implementation or name the first real project. The original runtime baseline is `e0917b594f8311ca26d463527afb625518ca2586`; Claude recorded the review in `d1fd57c` after reviewing `786b8d1` (documentation-only changes).
 
 ## Recommendation
 
-Make a branch selectable in Atelier and prepare its preview in an isolated, Atelier-owned worktree. Resolve the selected local branch to a full commit ID, create a detached checkout of that commit, run the project's explicitly configured preparation and start commands, and switch the canvas once the candidate is ready. Keep the current preview available during preparation and on failure.
+Make a branch selectable in Atelier and prepare its preview from an Atelier-owned **archive export**. Resolve the selected local branch to a full commit ID, export it with `git archive <commit>`, run the project's explicitly configured preparation and start commands under a guardian, and switch the canvas once the candidate is ready. Keep the current preview available during preparation and on failure. V1 targets macOS only.
 
 This adds a narrowly scoped preview runner to the existing Node backend. Nicolas's clarification asks for that capability; the repository's restriction on unsolicited server management should not be interpreted as blocking this plan. It does not authorize implementing it in this planning session. At implementation, update the relevant repository rules and documentation to distinguish owned previews from existing project servers.
 
@@ -25,7 +25,7 @@ Use committed snapshots for this release. Display **branch + short commit**, wit
 | Native process ownership exists only for Atelier's helper and Git reads. | `macos/helper.mjs`; `server/branches.ts`, `cancelBranchReads`; `server/cli.ts`; `server/vite.ts`. | Extend one shared lifecycle implementation to all three hosts. Native wrapper behavior alone will not clean up CLI/Vite previews. |
 | The branch list is capped at 200 refs. | `server/branches.ts`, `--count=200`. | Avoid silent incompleteness: show a truncation indicator or bounded pagination. Remote-only refs stay out of v1. |
 
-These are implementation constraints for the requested feature, not claims that the existing read-only feature is broken. The current baseline passes typecheck and all 71 tests. No live branch runner or native lifecycle prototype has been tested in this review.
+These are implementation constraints for the requested feature, not claims that the existing read-only feature is broken. The original baseline passed typecheck and all 71 tests. Claude reports disposable process-group, guardian, listener-ownership, Git and Vite probes in `CHANGELOG.md`, plus passing web and Mac tests. Those findings inform this revision; Codex has not reproduced the probes and there is no implemented branch runner yet.
 
 ## User experience
 
@@ -44,67 +44,77 @@ No diff viewer, Git editing UI, branch creation, merging, fetching, pushing, sid
 
 ### 1. An explicit local recipe
 
-Extend the machine registry with an optional `preview` configuration for a project. Keep executable recipes machine-local for v1; do not take them from the selected branch's `package.json` or its manifest automatically. The existing `start` string stays a copyable manual command.
+Extend the machine registry with optional `preview` configuration. Keep it machine-local; do not automatically adopt commands from a selected branch or its manifest. The existing `start` string remains a manual command. The recipe has exactly these responsibilities:
 
-The recipe needs a project-relative application directory (for monorepos), explicit preparation steps, a start executable and argument list, and an agreed port/host input. Use structured executable/argument arrays with no implicit shell, and a single literal port placeholder or environment variable. Resolve tools predictably under Finder as well as a terminal. Paths and arguments from the browser are never executable configuration. Validate the application directory stays inside the owned worktree, including symlink resolution.
+| Field | Meaning |
+| --- | --- |
+| `dir` | Application directory relative to the export root; all steps run here. Validate containment, including symlinks. |
+| `requires` | Files that must exist inside that directory before any command runs, such as `package.json` and the package manager's lockfile. Missing files fail the run. |
+| `prepare` | Ordered executable/argument arrays, such as a lockfile-respecting dependency install. No implicit shell or package-manager guessing. |
+| `start` | Executable/argument array containing the required literal `{port}` placeholder. Replace it with the system-assigned port; configure an explicit loopback host and strict port binding. |
+| `env` | Explicit process environment entries for this recipe. No environment-file loading or automatic `.env*` copying in v1; keep values out of browser responses and diagnostics. |
 
-Configure one real connected project first after reading its own rules. Do not guess npm versus pnpm, install a package manager, discover arbitrary scripts to execute, or assume every project has `package.json`. Check it exists in the correct directory before npm. Preparation may run a configured lockfile-respecting install automatically: opting the project into managed previews makes that behavior concrete. Package scripts and lifecycle hooks still execute project code; argument arrays are not a sandbox. Missing lockfiles, unsupported runtimes or unavailable private dependencies should fail with a useful explanation.
+Resolve executables predictably under Finder and the terminal. Commands and paths never come from mutation request bodies. Check all `requires` before preparation; also require a `package.json` in the effective working directory before any npm invocation. The review reports `/Users/nico/package.json` exists, so a missing package inside an export beneath the home directory can redirect npm into the parent. Do not rely on npm failing because this snapshot has no package. The separate correction to the repository's older parent-folder wording remains recorded in `TODOS.md`.
 
-Use a separate dependency directory inside each snapshot. Never symlink another checkout's `node_modules`, mutate its lockfile or build into its output directory. Initially accept cold installs and ordinary package-manager caches; cross-worktree dependency caches can wait for measured need.
+Dependencies and generated output stay inside the disposable export; do not share another checkout's `node_modules` or build output. Configured installs may use their ordinary package-manager cache. No automatic package-manager installation, service/database orchestration, credential copying or dependency-cache framework. Package scripts still execute project code: this is not a security sandbox.
 
-Environment support must be explicit: use configured local environment-file references or a named allowlist of variables, supplied at process launch where the project's tool supports it. Keep secret values out of the registry response, API output and logs. Do not automatically copy `.env*`, databases, uploads, credentials or ignored files from the working checkout. Prefer deterministic local fixture data; the recipe must define any required isolated mutable state. Unsupported environment loading should be reported, not improvised. Do not add general database/container/service orchestration.
+For the first real project, inspect its rules and startup script before specifying the recipe. Claude found that Palier's `dev` script fixes the Working preview's port; blindly invoking it would defeat `{port}`. Palier is Claude's recommendation only, not Nicolas's selection.
 
-### 2. Owned snapshots
+### 2. Disposable archive exports
 
-The backend maps a registered project ID to its canonical repository, validates the requested exact local ref and resolves its full commit ID before creation. Generate opaque run IDs and safe directory names; branch names are labels, never path fragments. Use argument arrays, strip inherited Git routing variables and verify repository identity. Ignore a ref's display hash as an execution input.
+Map the registered project ID to its canonical repository, validate the exact local branch ref and resolve its full commit ID. Generate an opaque run ID; branch labels never become paths. Run `git archive <commit>` and extract into:
 
-Create a detached worktree at that commit under `~/Worktrees/<repo>/atelier-<run-id>`. Do not switch, stash, reset or clean an existing checkout; do not reuse another agent's worktree. Handle branches already checked out elsewhere by using the detached snapshot. Git documents detached worktrees for testing without disturbing existing development; linked worktrees still share repository metadata, so this is isolation of files, not a security sandbox. See [Git's worktree documentation](https://git-scm.com/docs/git-worktree).
+`~/.cache/agent-atelier/previews/<atelier port>/<run id>/`
 
-No automatic fetching or local branch movement. An unborn repository, invalid/deleted ref or missing repository returns a specific failure before preparation. Initially fail explicitly on unsupported submodule/LFS requirements instead of downloading or initializing them unexpectedly; record which project actually needs expanded support.
+The namespace uses **Atelier's** port, not the ephemeral preview port. No `.git` directory or linked-worktree registration is created. Archive extraction must stay inside the newly created owned directory, including handling paths and symlinks safely. Use argument arrays, clear inherited Git routing variables and verify repository identity. No fetching, branch movement, checkout, stash, reset, clean or worktree creation/removal.
 
-### 3. One coordinator and a bounded launch lifecycle
+This replaces the original worktree proposal. Claude's probes found shared repository config/hooks, worktree-list noise and removal failures after a tool modified a tracked file. An export is disposable even when preparation rewrites a source file. It contains committed exported content, not another checkout's dirty state or ignored files. Tools requiring Git metadata may be incompatible; report their preparation failure rather than quietly attaching the real repository. Submodule/LFS detection and support are out of v1.
 
-Add a small framework-independent coordinator in `server/` used by Vite, the installed command and the Mac helper. Proposed state flow:
+After the guardian has stopped, delete only the verified owned export. There is no Git-cleanliness gate and no `--force` worktree removal. These directories are caches, not editing workspaces. Leftover cleanup must be limited to this cache namespace, validate ownership/containment and avoid live runs of any instance; establish that behavior in process-level tests. Do not record PIDs or use stale process IDs to clean up. Do not scan or delete neighbouring worktrees.
 
-`resolving → preparing → starting → ready`, with `failed` and `cancelled` terminal outcomes and explicit owned-resource cleanup.
+### 3. Guardian and coordinator
 
-Start with **one selected managed server per Atelier backend instance**, plus one temporary candidate during a switch. After successful promotion stop the prior owned server and release its snapshot. Switching to Working preview stops the owned server once the UI has left it. There is no background pool per project. Separate app/CLI instances have unique runs and never adopt each other's processes or worktrees. Multiple browser tabs on one backend share the managed selection; all tabs must observe its revision so none continues presenting a server the coordinator has replaced.
+Add `server/previews.ts` and a small guardian. Each run executes every step under its guardian, which owns its process group and watches a private stdin pipe from the coordinator. **Closing stdin makes the guardian kill its own process group**, including preparation and server descendants. The coordinator must retain exclusive ownership of the pipe's write end; a child inheriting it would prevent EOF after coordinator death.
 
-Each operation has a run ID and generation. Deduplicate identical requests; a newer selection cancels the superseded candidate and waits for bounded cleanup before starting another. Cancel affects the candidate only. A disconnect alone must not create duplicate jobs on retry. Resolve operations from authoritative coordinator state after a browser reload. Preparation/startup deadlines and bounded output prevent indefinite waiting or memory growth.
+The guardian must survive long enough to perform bounded termination/escalation of its children. Normal cancellation/disposal closes the pipe; coordinator `SIGKILL` also closes it. Do not signal a recorded PID after restart. Continuously drain bounded output and bound preparation/startup times. A plain detached child group is insufficient: Claude's probe showed it survives its parent's death, whereas the guardian ended it within 300 ms in that probe. That is reported evidence, not an acceptance measurement for future code.
 
-Allocate from a configured local port range and require a strict bind with no fallback to another port. Never terminate the process occupying a port. Handle collisions by bounded allocation/retry, not a port-kill command. Bind previews only to loopback through the recipe.
+Expose an idempotent dispose operation on the coordinator. Vite integration must dispose on **`httpServer` close**, including restart: Claude observed that restart can create a second handler in the same process, so process exit alone is insufficient. CLI and Mac hosts use the same coordinator/guardian mechanism; the existing native helper ownership pipe remains in place. App quit/update and helper death must also end all managed runs without touching external servers.
 
-Readiness must bind the answering server to the owned run. A free-port check followed by a valid manifest is insufficient because of the bind race or an unrelated listener. Before committing the design, prove one minimal method on the first project: a startup handshake tied to the spawned process and actual bound port, or a run nonce echoed through a narrowly scoped dev-only readiness response. If a connector addition is necessary, change its implementation and `docs/connector.md` together in the proper project worktree; do not inject Atelier controls into previews. Static production-build provenance is a separate case and is out of v1.
+State flow: `resolving → preparing → starting → ready`, with `failed` and `cancelled` outcomes and bounded cleanup. Deduplicate identical requests. A new selection cancels the superseded candidate before launching another; Cancel affects the candidate only. Keep one active managed server plus one temporary candidate per backend, subject to Nicolas confirming the single-managed-preview policy. On promotion, retire the previous owned run. Separate Atelier ports have separate cache namespaces; multiple tabs on one backend share its state.
 
-After owned-server readiness, validate the manifest using the existing parser and verify browser CORS/framing from both Atelier origins. Keep the old preview active if either step fails. Direct iframe origins preserve normal dev-server assets and WebSockets; no reverse proxy is proposed.
+### 4. System-assigned port and readiness
 
-### 4. Mutation boundary and process cleanup
+Ask the system for an available local port, then pass the assigned number via the required `{port}` in `start` argv. If allocation uses a temporary listener that is closed before the child binds, that leaves a race: readiness must detect it. Require strict binding without silent fallback, bounded allocation retries, and loopback listeners. Never stop a port's existing occupant.
 
-Keep the current read APIs read-only. Add start/cancel/stop operations using POST with bounded JSON bodies, exact schema validation and server-resolved IDs. Require the exact allowed Host/Origin, same-origin Fetch Metadata, and a per-instance mutation token obtainable only by Atelier's page. Reject cross-port preview requests, missing headers, arbitrary commands/paths/ports and unexpected methods before any filesystem or process action. Apply equivalent protection through Vite and the packaged server. Do not add a native script-message bridge. This protects against browser-origin attacks, not a malicious program already running as the user.
+Use macOS `lsof` with machine-readable `-Fpgn` output, filtered for TCP listeners on the assigned port. Require at least one listener and verify that **every** listener belongs to the run's live process group, including IPv4/IPv6 and bound addresses. Fail closed on unavailable/incomplete ownership data, a foreign listener or a non-loopback bind. Do not mistake “one matching listener” for “all listeners match.” Keep the guardian/run alive while validating; reject stale or exited runs.
 
-Own process groups, not merely the npm wrapper PID. Continuously drain bounded output; cancel setup, start and server descendants on replacement, stop, CLI/Vite shutdown, native close, helper EOF and app update. Use TERM then bounded KILL only for verified owned groups. Cover forced native-host exit using the helper's existing ownership pipe. Abrupt helper death needs an explicit design/probe: a child guardian or equivalent must prevent orphaned servers; do not assume Node exit automatically kills descendants.
+Only then fetch `/atelier.json` from the selected origin **on the server**, with a timeout and bounded response, and validate it using the existing manifest parser. A failed ownership check, missing/invalid manifest or exited run cannot promote. Check ownership remains valid through readiness/promotion, and test the bind-race/foreign-listener case. The active run carries this validated manifest. No readiness nonce, connector addition or new preview endpoint is proposed.
 
-Keep an ownership record for directories created by each run. Never adopt or kill a PID from a stale record after restart; process IDs can be reused. Recovery may report an interrupted run and verify its resources, but must not sweep ports or unrelated worktrees.
+Direct iframe origins preserve the project's dev-server assets and WebSockets. Later browser/native acceptance must still verify real framing and CORS behavior on 3200 and 3201; a server-side fetch does not prove either. This remains the existing connector contract.
 
-Remove snapshots only after their processes have stopped, ownership is verified, and tracked/untracked work is absent. Never force-remove a worktree. Generated ignored dependency/build files need a narrow, documented cleanup policy; unexpected files or commits preserve the folder and produce a recoverable message. Detached snapshots start from existing commits, so removal must not require pushing or moving the selected branch; protect any commits created inside the snapshot. Lock cleanup against concurrent launch/removal. Do not add broad Git pruning.
+### 5. One authoritative state and target identity
 
-### 5. Separate preview identity from project identity
+Maintain **one server state with a monotonically increasing revision**. It contains the active run and candidate/failure state. The active run includes project ID, run ID, branch label, full commit, origin and validated manifest. Publish/promote that tuple atomically. All tabs consume the same revision; do not derive “active” independently from localStorage or whichever status request last finished.
 
-Use a stable project ID for the rail and repository lookup; use a distinct preview target for rendering and storage. At minimum the runtime target contains project ID, source kind, branch label if known, full commit, run ID, origin and coordinator revision. A branch name, checkout path and origin are not interchangeable identities.
+Tag status results by target and request generation. Discard delayed results from a retired target. Keep ordinary Working preview status checks separate from managed-run state; a failed managed run never borrows the Working preview manifest.
 
-Status responses and manifest caches must carry the target identity and generation. Abort/invalidate old checks at selection change; delayed results must never overwrite the new target. Remount the canvas/linked-page content on a successful target change, while lifting Device/Size above that boundary. Frame-local reload counters alone do not isolate target state.
+Key the **inner workspace by run ID**, resetting canvas, linked-page and iframe lifetime on promotion. Keep Device/Size above that boundary so comparison retains them within one project. Preserve an outgoing selected screen/page ID only if it exists in the new manifest; otherwise focus the first screen or show Screens. Frame-local reload counters alone cannot isolate runs.
 
-Retain the old `atelier:v1` project view only for Working preview. Add a versioned, bounded set of managed views keyed by project and full commit (reuse across runs at the same commit); do not key them by ephemeral port. Keep screen/page selection only when valid in the destination manifest. Preserve a target's camera when returning to it, otherwise focus the shared selected screen or first screen. No automatic restart or dependency installation merely because localStorage names a branch: restoration shows a stopped selection with Start preview unless the coordinator still owns a live run.
+Drop per-commit saved views from v1. Existing `atelier:v1` persistence continues for Working preview only; managed views are transient and must not overwrite it. A browser reload may reconnect to the coordinator's live run, but saved browser state never starts an install or server. Branch movement produces an explicit Update preview choice; it does not mutate the running snapshot.
 
-An origin change resets iframe browsing context but does not guarantee isolated cookies: localhost cookies are not separated by port. Project previews must continue taking deterministic state from their route. Validate any real auth/fixture requirements without promising full browser-profile isolation.
+One preview port is not a separate browser profile. Project routes retain responsibility for deterministic preview state; do not promise cookie/auth isolation between localhost ports.
 
-## Implementation increments after review
+### 6. Later API boundary
 
-1. **Prove launch and teardown on one project.** Use an owned temporary fixture repository for automated tests and one real connected project under its rules for acceptance. Settle the recipe, readiness proof, environment needs, process-tree death and snapshot cleanup. This is the first working part of the shared runner, not a disposable second backend. Prove a cold branch with no server starts without changing any existing checkout or server.
-2. **Connect selection to the canvas.** Add coordinator APIs, branch selection, cancellation/progress/failure UI, atomic target promotion, branch-aware status and saved state, and multiple-tab synchronization. Cover a missing connector and slow/out-of-order results before calling switching complete.
-3. **Finish all hosts and handoff.** Exercise Vite, the installed tarball and the bundled Mac app, including quit/update during install/start. Update connector documentation only for actual contract changes, plus local setup and ownership rules. Commit each finished increment; no merge, push or publication without instruction.
+The first increment has **no API or UI**. When wiring them later, keep read endpoints GET-only and add narrow POST operations with bounded JSON and exact schema validation. Require the exact allowed Host and Origin plus same-origin Fetch Metadata in shared code, before any action; reject missing headers, cross-port preview requests and arbitrary command/path/port input. No mutation token in v1. No native script-message bridge. These defend the browser boundary, not a hostile program running as the user.
 
-Increment 1 must settle readiness and child lifetime before the UI depends on the runner. Do not declare the feature complete after only a registry schema or clickable branch list.
+## Implementation sequence — waiting for Nicolas
+
+1. **Runner and guardian only.** Add `server/previews.ts`, the guardian and process-level tests using a disposable fixture repository. Cover cold start, `kill -9` of the coordinator, foreign listeners, missing manifest and leftover cleanup, along with cancellation, required-file checks and tracked-file rewrites inside the export. Then perform one real cold start on **the project Nicolas names**, after reading its rules. No API or UI in this increment. No implementation until Nicolas authorizes it.
+2. **Lifecycle and selection integration.** Wire disposal into Vite's `httpServer` close and the CLI/Mac lifecycle; exercise Vite restart. Add revisioned APIs, branch selection, progress/cancel/failure handling and atomic promotion. Key the inner workspace by run ID, lift Device/Size and tag status results. Verify multiple tabs and stale replies. No per-commit persistence.
+3. **Complete macOS-host acceptance.** Exercise Vite, the installed tarball and bundled Mac app, including quit/update during preparation/start. Check real iframe/HMR behavior and document the recipe and disposable cache policy. Commit finished increments, update handoff/changelog and run the required package/native checks when those files change. No merge, push or publication without instruction.
+
+Keep v1 macOS-only. Explicitly excluded: mutation token, per-commit views, environment files, configured port range, submodule/LFS detection, non-macOS support, connector changes, Git editing, comparisons, warm-server pools and general service orchestration.
 
 ## Acceptance evidence
 
@@ -116,14 +126,12 @@ Increment 1 must settle readiness and child lifetime before the UI depends on th
 | Repeated clicks, cancel, project switch, out-of-order replies, two tabs | No duplicate launches, stale promotion or manifest mixing; authoritative selection reaches both tabs. |
 | Branch advances, is renamed/deleted, or has no commit | Snapshot remains accurately labelled; update is explicit; unavailable choices fail predictably. |
 | Unexpected helper death, Cmd-Q/Cmd-W, app update, CLI/Vite exit | No owned server/install descendants survive; existing external servers remain available. Use real child/grandchild integration tests. |
-| Host/origin/token/body validation | Negative browser/API tests perform no Git write, install or spawn; preserve existing GET protection. |
-| Clean versus modified/unknown snapshot at cleanup | Remove only verified owned disposable content; preserve user work and never force/prune unrelated metadata. |
+| Host/origin/body validation | Negative browser/API tests perform no Git write, install or spawn; preserve existing GET protection. |
+| Modified export and interrupted-run cleanup | Tool-rewritten source files do not block disposal; remove only owned disposable cache content, never a live sibling run or an external directory. No recorded PIDs. |
 | Packaging and real browser/native behavior | Typecheck, unit/integration tests, required native tests/build, `npm pack` plus install/start from tarball. Verify real iframe/HMR and CORS/framing on 3200 and 3201; do not equate a 200 response with visual acceptance. |
 
-## What Claude should challenge
+## Pending decisions and review record
 
-The main tradeoff is snapshot reliability versus seeing uncommitted work. The proposed explicit Working preview entry covers the latter without copying dirty trees. Challenge that UX before building a second live-worktree mode.
+Claude recommends proceeding with the changes incorporated above. Nicolas still needs to authorize implementation, name the first real project, confirm committed-only managed snapshots, and confirm one managed preview at a time across projects (plus a temporary candidate during a switch). The existing Working preview remains the route to uncommitted work. Do not treat Claude's recommendation of Palier as a selection or its verdict as implementation approval.
 
-The unresolved engineering choices are the smallest reliable readiness proof for the first project, abrupt-helper-death cleanup, and its exact preparation/environment recipe. Also challenge the single-server shared-tab policy and whether retaining per-commit camera state earns its complexity. Recommend a simpler alternative where it preserves automatic preparation, correct provenance and the repository boundaries.
-
-Review prompt: [claude-branch-preview-review.md](claude-branch-preview-review.md). No Claude review has occurred yet.
+The original [review prompt](claude-branch-preview-review.md) is retained as historical context; it describes the superseded worktree proposal. Claude's probe findings are recorded in the 2026-10-07 review entry in `CHANGELOG.md`. The full review was returned in Claude's session; this revision incorporates the essential changes Nicolas relayed and has not received a second review.
