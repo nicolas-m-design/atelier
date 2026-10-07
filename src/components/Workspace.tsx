@@ -9,6 +9,7 @@ import { Canvas, type CanvasHandle } from "./Canvas";
 import { AppUpdate } from "./AppUpdate";
 import { Page } from "./Page";
 import { STATUS_DOT, StatusCard, statusLine } from "./StatusCard";
+import type { PreviewProps } from "./PreviewControls";
 import { DEFAULT_VIEWPORTS, DEVICE_VIEWPORTS, type Device, type ViewportMode } from "../viewports";
 
 interface Props {
@@ -24,6 +25,8 @@ interface Props {
   onDevice(value: Device): void;
   onViewport(value: ViewportMode): void;
   previewControls: ReactNode;
+  /** Set when a stopped project can be started as a branch preview from its card. */
+  branchStart: PreviewProps | null;
   sourceLabel: string;
   onSelection(selected: string | null, page: string | null): void;
 }
@@ -33,7 +36,7 @@ interface Props {
  * Mounted per project, so its camera, selection and previews never leak into
  * another project's.
  */
-export function Workspace({ project, status, store, sidebar, onSidebar, onRetry, focusInitialSelection, device, viewportMode, onDevice: setDevice, onViewport: setViewportMode, previewControls, sourceLabel, onSelection }: Props) {
+export function Workspace({ project, status, store, sidebar, onSidebar, onRetry, focusInitialSelection, device, viewportMode, onDevice: setDevice, onViewport: setViewportMode, previewControls, branchStart, sourceLabel, onSelection }: Props) {
   const canvas = useRef<CanvasHandle>(null);
   const [view] = useState(() => store.get().projects[project.id] ?? {});
   const live = status.state === "online";
@@ -166,12 +169,12 @@ export function Workspace({ project, status, store, sidebar, onSidebar, onRetry,
               </div>
             ) : null}
             onSelect={setSelected} onInteractive={changeInteractive} onCamera={saveCamera}>
-            <StatusCard project={project} status={status} hasBoard={Boolean(board)} onRetry={onRetry} />
+            <StatusCard project={project} status={status} hasBoard={Boolean(board)} onRetry={onRetry} branchStart={branchStart} />
           </Canvas>
         </div>
         {open && (
           <Page key={open.id} link={open} reloads={reloads} src={live && project.origin ? project.origin + open.route : null} leading={sidebar ? null : <div className="flex items-center gap-2">{showSidebar}<span className="max-w-64 truncate text-ui-control text-muted">{sourceLabel}</span></div>}>
-            <StatusCard project={project} status={status} hasBoard={false} onRetry={onRetry} />
+            <StatusCard project={project} status={status} hasBoard={false} onRetry={onRetry} branchStart={branchStart} />
           </Page>
         )}
       </div>

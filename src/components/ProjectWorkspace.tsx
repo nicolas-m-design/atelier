@@ -6,7 +6,7 @@ import type { PreviewSession } from "../usePreviews";
 import { useBranches } from "../useBranches";
 import { DEFAULT_DEVICE, DEFAULT_VIEWPORT, type Device, type ViewportMode } from "../viewports";
 import { Workspace } from "./Workspace";
-import { PreviewControls } from "./PreviewControls";
+import { PreviewControls, type PreviewProps } from "./PreviewControls";
 
 interface Props { project: Project; status: Status; store: Store; sidebar: boolean; onSidebar(open: boolean): void; onRetry(): void; session: PreviewSession }
 /** Device/Size and the draft branch choice outlive each inner workspace/run. */
@@ -33,8 +33,9 @@ export function ProjectWorkspace({ project, status, store, session, ...props }: 
   const effectiveProject = run ? { ...project, origin: run.origin, start: undefined } : project;
   const effectiveStatus: Status = run ? { state: "online", manifest: run.manifest } : status;
   const sourceLabel = run ? `${run.branch} · ${run.commit.slice(0, 7)}` : "Working preview";
+  const preview: PreviewProps = { project, session, report, branchesFailed: failed, choice, onChoice: setChoice, workingLive: status.state === "online" };
   return <Workspace key={run?.id ?? `working:${project.origin}`} {...props} project={effectiveProject} status={effectiveStatus} store={targetStore}
     focusInitialSelection={!!run} device={device} viewportMode={viewportMode} onDevice={setDevice} onViewport={setViewportMode} sourceLabel={sourceLabel}
     onSelection={(selected, page) => { selection.current = { selected, page }; }}
-    previewControls={<PreviewControls project={project} session={session} report={report} branchesFailed={failed} choice={choice} onChoice={setChoice} workingLive={status.state === "online"} />} />;
+    previewControls={<PreviewControls {...preview} />} branchStart={project.canPreview && session.state?.supported !== false ? preview : null} />;
 }

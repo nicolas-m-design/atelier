@@ -455,3 +455,20 @@ Selected page and screen rows now share a lighter `#eeeeee` fill instead of neut
 ## 2026-10-07 — Main integration authorized
 
 Nicolas requested commit, push and merge of the current work. `origin/main` was the initial repository commit and is an ancestor of `codex/design-polish`, so the integration includes its accumulated implementation history through the design polish and softer selection fill. The separate graphical-sidebar branch/worktree is excluded. Existing historical “no merge or push” entries remain accurate for their sessions. This integration does not publish the package or update the installed app.
+
+
+## 2026-10-07 — Start a branch from the “not running” card
+
+Nicolas asked for a branch choice on the “not running” card in place of the copyable start command, consistent with branch previews. For a project whose entry has a `preview` recipe, the card now holds the branch selector, **Start preview**, Cancel while preparing, and the progress, note and failure lines. Once the run is ready the card gives way to the canvas, as with a start from the sidebar. A project without a recipe keeps its command, unchanged.
+
+The card adds no state and no endpoint. It reads the same draft choice as the sidebar (`ProjectWorkspace`), posts the same start and cancel actions, and derives its notes from one function shared with `PreviewControls`, so the two cannot disagree. The sidebar's notes are now rendered from that list; their text and order are the same.
+
+**What a newcomer would get wrong.**
+
+- The picker depends on the recipe, not on the folder having branches. Marvin (no Git repository, no recipe) and Krux (branches, no recipe) still show the command. Palier is the only entry with a recipe on this machine.
+- Start preview runs the branch's last commit from an export. The command it replaces ran the working copy, uncommitted changes included; the card's sentence says “its last commit” for that reason.
+- An empty choice is “Choose a branch” on the card and “Working preview” in the sidebar. It is one value; do not give the card its own.
+- Start and Cancel are two buttons on purpose. A first version swapped one for the other in the same place, where the second click of a double-click cancelled the run just started.
+- The card is already a `role="status"` region, so its lines carry no live-region or alert role of their own; the sidebar keeps the alert.
+
+Checks: typecheck and all 88 tests. In the browser, against a disposable fixture repository with three branches and a scratch project list on port 3296 (`ATELIER_PROJECTS`, through a launch entry removed afterwards): choosing on the card updates the sidebar; start goes through Preparing to live; Stop returns to the card with the choice kept; a branch missing a required file shows its reason on the card with the sidebar hidden; Cancel returns to a startable card and the server reports no candidate; the layout holds at 900 × 600 with a long branch name; a second entry without a recipe shows the command as before. The fixture server and its export were gone after the dev server stopped. Not seen: Palier's own card, because its server on 3100 was running and was left alone; the installed Mac app, which needs its updater. No `server/`, build or `package.json` change, so no `npm pack`. No merge or push.

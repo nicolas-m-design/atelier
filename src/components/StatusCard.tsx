@@ -3,6 +3,7 @@ import { Check, Copy, RefreshCw } from "lucide-react";
 import { MANIFEST_PATH } from "../manifest";
 import type { Project } from "../projects";
 import type { Status } from "../status";
+import { BranchStart, type PreviewProps } from "./PreviewControls";
 
 const host = (origin: string) => origin.replace(/^https?:\/\//, "");
 
@@ -26,10 +27,13 @@ export const STATUS_DOT: Record<Status["state"], string> = {
 };
 
 /** Explains why a project shows no live previews, and what to do about it. */
-export function StatusCard({ project, status, hasBoard, onRetry }: { project: Project; status: Status; hasBoard: boolean; onRetry(): void }) {
+export function StatusCard({ project, status, hasBoard, onRetry, branchStart }: { project: Project; status: Status; hasBoard: boolean; onRetry(): void; branchStart?: PreviewProps | null }) {
   const [copied, setCopied] = useState(false);
   if (status.state === "online" || status.state === "checking") return null;
   const command = project.start ? `cd ${project.start.cwd} && ${project.start.command}` : null;
+  // A project with a branch recipe is started from here; the others still show their command.
+  const picking = status.state === "offline" && branchStart;
+  const retry = <button type="button" onClick={onRetry} className="flex h-8 items-center gap-2 rounded-lg border border-black/10 px-3 text-ui-control font-semibold hover:bg-neutral-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-700"><RefreshCw size={13} aria-hidden />Check again</button>;
 
   return (
     <div className={`pointer-events-none absolute inset-x-0 flex justify-center px-5 ${hasBoard ? "top-5" : "top-1/2 -translate-y-1/2"}`}>
@@ -37,9 +41,9 @@ export function StatusCard({ project, status, hasBoard, onRetry }: { project: Pr
         {status.state === "offline" && <>
           <h2 className="text-ui-subtitle font-semibold">{project.name} is not running</h2>
           <p className="mt-2 text-ui-body text-pretty text-muted">
-            Nothing answers at {host(project.origin!)}. Start its preview and this page reconnects by itself.{hasBoard && " The screens below are the last ones it listed."}
+            Nothing answers at {host(project.origin!)}. {picking ? "Choose a branch to preview its last commit, or start the project yourself and this page reconnects by itself." : "Start its preview and this page reconnects by itself."}{hasBoard && " The screens below are the last ones it listed."}
           </p>
-          {command && (
+          {picking ? <BranchStart {...picking}>{retry}</BranchStart> : command && (
             <div className="mt-3 flex items-center gap-2 rounded-lg bg-neutral-100 py-1.5 pr-1.5 pl-3">
               <code className="min-w-0 flex-1 overflow-x-auto text-ui-control whitespace-nowrap text-foreground">{command}</code>
               <button type="button" className="tool" aria-label="Copy the start command" title="Copy"
@@ -61,9 +65,7 @@ export function StatusCard({ project, status, hasBoard, onRetry }: { project: Pr
             This project is listed without a preview address. Once its app serves <code className="text-ui-control">{MANIFEST_PATH}</code> (docs/connector.md), give its entry in the project list an <code className="text-ui-control">origin</code>, reload this page, and its screens appear here.
           </p>
         </>}
-        {status.state !== "empty" && (
-          <button type="button" onClick={onRetry} className="mt-4 flex h-8 items-center gap-2 rounded-lg border border-black/10 px-3 text-ui-control font-semibold hover:bg-neutral-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-700"><RefreshCw size={13} aria-hidden />Check again</button>
-        )}
+        {status.state !== "empty" && !picking && <div className="mt-4 flex">{retry}</div>}
       </section>
     </div>
   );

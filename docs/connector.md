@@ -124,7 +124,7 @@ From the project's own folder, `npx agent-atelier add --origin http://localhost:
 | What Atelier finds | State | What it shows |
 | --- | --- | --- |
 | No `origin` listed | Empty | "No preview yet" and how to connect. |
-| Nothing answers at the origin | Not running | The last manifest it saw, placeholder frames, and the start command when one is listed. It rechecks every 3 seconds and when the window regains focus. |
+| Nothing answers at the origin | Not running | The last manifest it saw, placeholder frames, and a way to start it: a branch choice with Start preview when the entry has a `preview` recipe, otherwise the start command when one is listed. It rechecks every 3 seconds and when the window regains focus. |
 | A server answers, but the manifest is missing, unreadable or invalid | No manifest | The reason. Typical cause: the served branch does not include the connector. |
 | A valid manifest | Live | The screens, loaded near the viewport. Rechecked every 10 seconds. |
 
