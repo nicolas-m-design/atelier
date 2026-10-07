@@ -1,8 +1,10 @@
 # TODOS
 
-> **Summary:** Current handoff, remaining work and known limits for Atelier. The first milestone is built and verified locally; nothing is merged, pushed or published.
+> **Summary:** Current handoff, remaining work and known limits for Atelier. The current implementation is built and verified locally; handoff entries record integration and publishing status.
 
 ## Handoff note
+
+*2026-10-07, Codex.* **Nicolas authorized commit, push and merge of `codex/design-polish`.** Remote `main` was still the initial repository commit, so integration includes the 44 accumulated commits through `924043f`, including the design pass and softer selection backgrounds. The history allows a fast-forward. The separate `codex/graphical-sidebar` worktree is outside this integration. Earlier “not merged/pushed” entries describe their individual sessions, not the current integration request. No package publication or installed-app update is part of this request.
 
 *2026-10-07, Codex.* Softened selected page/screen rows to a shared `#eeeeee` background after Nicolas found the active fill too contrasty. Text and selection behavior are unchanged. Typecheck and 88 tests pass; browser-computed backgrounds and appearance verified. Source-only; install through the native updater. The unrelated untracked `src/update-notice-probe.ts` was left alone.
 

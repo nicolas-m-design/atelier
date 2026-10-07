@@ -450,3 +450,8 @@ Diagnosed the missing notice: the installed app still lacked the availability ch
 ## 2026-10-07 — Softer sidebar selection
 
 Selected page and screen rows now share a lighter `#eeeeee` fill instead of neutral-200, following Nicolas’s contrast feedback. Text contrast, keyboard focus and selection behavior remain unchanged. Typecheck and all 88 tests pass; browser inspection confirms both row types use the new color. Source-only; installed app unchanged.
+
+
+## 2026-10-07 — Main integration authorized
+
+Nicolas requested commit, push and merge of the current work. `origin/main` was the initial repository commit and is an ancestor of `codex/design-polish`, so the integration includes its accumulated implementation history through the design polish and softer selection fill. The separate graphical-sidebar branch/worktree is excluded. Existing historical “no merge or push” entries remain accurate for their sessions. This integration does not publish the package or update the installed app.
