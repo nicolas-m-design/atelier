@@ -6,6 +6,7 @@ import type { Project } from "../projects";
 import type { Status } from "../status";
 import type { Store } from "../storage";
 import { Canvas, type CanvasHandle } from "./Canvas";
+import { AppUpdate } from "./AppUpdate";
 import { Page } from "./Page";
 import { STATUS_DOT, StatusCard, statusLine } from "./StatusCard";
 import { DEFAULT_VIEWPORTS, DEVICE_VIEWPORTS, type Device, type ViewportMode } from "../viewports";
@@ -128,6 +129,7 @@ export function Workspace({ project, status, store, sidebar, onSidebar, onRetry,
             ))}
             {!board && <p className="px-2 py-2 leading-relaxed text-neutral-500">No screens to list yet.</p>}
           </nav>
+          <AppUpdate />
         </aside>
       )}
       <div className="relative flex min-w-0 flex-1">

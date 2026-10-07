@@ -23,6 +23,10 @@ final class Atelier: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNaviga
     private var reloadedAfterCrash = false
     private var titleObservation: NSKeyValueObservation?
     private var localUpdate: LocalUpdate?
+    private var updateMenu: NSMenuItem?
+    private var availability: UpdateAvailability?
+    private var updateAvailable = false
+    private var updating = false
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         buildMenus()
@@ -43,6 +47,10 @@ final class Atelier: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNaviga
         window.delegate = self
         window.contentView = web
         localUpdate = LocalUpdate(window: window)
+        localUpdate?.onUpdating = { [weak self] busy in
+            self?.updating = busy; self?.publishUpdate()
+            if !busy { self?.availability?.check() }
+        }
         window.center()
         window.setFrameAutosaveName("AtelierWindow")
         if let screen = NSScreen.screens.first(where: { $0.visibleFrame.intersects(window.frame) }) ?? NSScreen.main {
@@ -69,6 +77,7 @@ final class Atelier: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNaviga
         app.addItem(withTitle: "About Atelier", action: #selector(NSApplication.orderFrontStandardAboutPanel(_:)), keyEquivalent: "")
         let update = app.addItem(withTitle: "Update Atelier…", action: #selector(updateAtelier(_:)), keyEquivalent: "")
         update.target = self
+        updateMenu = update
         app.autoenablesItems = false
         app.addItem(.separator())
         app.addItem(withTitle: "Hide Atelier", action: #selector(NSApplication.hide(_:)), keyEquivalent: "h")
@@ -92,9 +101,9 @@ final class Atelier: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNaviga
         NSApp.windowsMenu = win
     }
 
-    @objc private func updateAtelier(_ sender: NSMenuItem) {
-        guard let helper, helper.isRunning, let node = helper.executableURL else { return }
-        localUpdate?.start(menu: sender, node: node, helperPID: helper.processIdentifier)
+    @objc private func updateAtelier(_ sender: Any?) {
+        guard let updateMenu, let helper, helper.isRunning, let node = helper.executableURL else { return }
+        localUpdate?.start(menu: updateMenu, node: node, helperPID: helper.processIdentifier)
     }
 
     private func startHelper() {
@@ -145,6 +154,10 @@ final class Atelier: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNaviga
         }
         do { try process.run() }
         catch { fail("Could not start Node at \(node): \(error.localizedDescription)"); return }
+        let checker = UpdateAvailability(node: URL(fileURLWithPath: node))
+        checker.visible = { [weak self] in self?.window.occlusionState.contains(.visible) == true && !NSApp.isHidden }
+        checker.onChange = { [weak self] available in self?.updateAvailable = available == true; self?.publishUpdate() }
+        availability = checker; checker.start()
         DispatchQueue.main.asyncAfter(deadline: .now() + 10) { [weak self] in
             guard let self, !self.ready, !self.quitting else { return }
             self.fail("Atelier's local server did not start within 10 seconds. Reopen Atelier to retry.")
@@ -172,6 +185,15 @@ final class Atelier: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNaviga
     }
 
     func webView(_ webView: WKWebView, decidePolicyFor action: WKNavigationAction, decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
+        // Only an actual link click from Atelier's main document opens the native sheet.
+        // Framed projects and new windows cannot invoke this path.
+        if action.navigationType == .linkActivated, action.sourceFrame.isMainFrame,
+           action.targetFrame?.isMainFrame == true, isHome(action.sourceFrame.request.url),
+           action.request.url?.absoluteString == "http://localhost:\(appPort)/__atelier/update" {
+            decisionHandler(.cancel)
+            updateAtelier(nil)
+            return
+        }
         if action.targetFrame == nil {
             if action.navigationType == .linkActivated { openExternal(action.request.url) }
             decisionHandler(.cancel)
@@ -193,7 +215,7 @@ final class Atelier: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNaviga
         return nil
     }
 
-    func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) { loaded = true; visibility() }
+    func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) { loaded = true; visibility(); publishUpdate() }
     func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) {
         if (error as NSError).code != NSURLErrorCancelled { fail("Could not load Atelier: \(error.localizedDescription)") }
     }
@@ -205,6 +227,12 @@ final class Atelier: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNaviga
 
     // Host-to-page lifecycle events only; no page-to-native handlers. The web
     // code uses these to pause its own polling and flush its existing store.
+    private func publishUpdate() {
+        guard loaded, !quitting, isHome(web.url) else { return }
+        let state = updating ? "updating" : updateAvailable ? "available" : "current"
+        web.evaluateJavaScript("document.documentElement.dataset.atelierUpdate = '\(state)'; window.dispatchEvent(new Event('atelier:update'))", completionHandler: nil)
+    }
+
     private func visibility() {
         guard loaded, !quitting else { return }
         let visible = NSApp.isHidden == false && window.isMiniaturized == false && window.occlusionState.contains(.visible)
@@ -215,12 +243,13 @@ final class Atelier: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNaviga
     func windowDidDeminiaturize(_ notification: Notification) { visibility() }
     func applicationDidHide(_ notification: Notification) { visibility() }
     func applicationDidUnhide(_ notification: Notification) { visibility() }
-    func windowDidBecomeKey(_ notification: Notification) { if loaded { web.evaluateJavaScript("window.dispatchEvent(new Event('focus'))", completionHandler: nil) }; visibility() }
+    func windowDidBecomeKey(_ notification: Notification) { availability?.check(); if loaded { web.evaluateJavaScript("window.dispatchEvent(new Event('focus'))", completionHandler: nil) }; visibility() }
     func windowShouldClose(_ sender: NSWindow) -> Bool { NSApp.terminate(nil); return false }
     func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
         if quitting { return .terminateLater }
         quitting = true
         localUpdate?.cancel()
+        availability?.stop()
         if loaded && isHome(web.url) {
             web.evaluateJavaScript("window.dispatchEvent(new Event('atelier:flush'))") { [weak self] _, _ in self?.stopHelper() }
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in self?.stopHelper() }

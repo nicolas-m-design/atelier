@@ -4,7 +4,7 @@
 
 ## Personal Mac app
 
-On a Mac with Xcode and Node 22.12 or newer installed, run `npm run build:mac`. Copy `macos/build/Atelier.app` into Applications and open it normally. The app bundles the built UI and server, uses installed Node, and starts without a terminal. After this first install, choose **Atelier → Update Atelier… → Update and Reopen** to build the current local source, install it and relaunch automatically. The source checkout, its installed dependencies and Xcode command-line tools must remain available; this is a local updater, not a published-release service.
+On a Mac with Xcode and Node 22.12 or newer installed, run `npm run build:mac`. Copy `macos/build/Atelier.app` into Applications and open it normally. The app bundles the built UI and server, uses installed Node, and starts without a terminal. When saved local source differs from the installed build, an **Update available** button appears at the bottom of the sidebar. Click it, or choose **Atelier → Update Atelier… → Update and Reopen**, to build the current local source, install it and relaunch automatically. The source checkout, its installed dependencies and Xcode command-line tools must remain available; this is a local updater, not a published-release service.
 
 It uses `http://localhost:3201`, leaving port 3200 for browser development. Closing the window or quitting stops its helper; owned branch previews stop with it; externally started Working previews stay running. The project list is shared with the command, while canvas preferences live in the app's own WebKit storage. See [Mac build details](macos/README.md) in the source repository.
 

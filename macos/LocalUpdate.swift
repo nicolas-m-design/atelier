@@ -1,6 +1,6 @@
 import AppKit
 
-/// Only the native menu can start an update. Preview pages have no bridge to it.
+/// The native menu and trusted main-page link open the same confirmation.
 @MainActor
 final class LocalUpdate {
     private weak var window: NSWindow?
@@ -16,6 +16,14 @@ final class LocalUpdate {
     private let report = FileManager.default.homeDirectoryForCurrentUser
         .appendingPathComponent("Library/Application Support/Atelier/update-result.json")
 
+    var onUpdating: ((Bool) -> Void)?
+
+    static var sourceDirectory: String? {
+        let metadata = Bundle.main.resourceURL.flatMap { try? Data(contentsOf: $0.appendingPathComponent("macos/source.json")) }
+            .flatMap { try? JSONSerialization.jsonObject(with: $0) as? [String: String] }
+        return UserDefaults.standard.string(forKey: "SourceDirectory") ?? metadata?["path"]
+    }
+
     init(window: NSWindow) { self.window = window }
 
     func showPreviousFailure() {
@@ -28,11 +36,9 @@ final class LocalUpdate {
     }
 
     func start(menu: NSMenuItem, node: URL, helperPID: Int32) {
-        guard process == nil, let window, let resources = Bundle.main.resourceURL else { return }
+        guard process == nil, let window else { return }
         self.menu = menu
-        let metadata = (try? Data(contentsOf: resources.appendingPathComponent("macos/source.json")))
-            .flatMap { try? JSONSerialization.jsonObject(with: $0) as? [String: String] }
-        let source = UserDefaults.standard.string(forKey: "SourceDirectory") ?? metadata?["path"]
+        let source = Self.sourceDirectory
         guard let source, FileManager.default.fileExists(atPath: source + "/package.json") else {
             chooseSource(menu: menu, node: node, helperPID: helperPID)
             return
@@ -102,6 +108,7 @@ final class LocalUpdate {
             menu?.title = "Updating Atelier…"
             window?.subtitle = "Building update…"
             try worker.run()
+            onUpdating?(true)
         } catch {
             cleanup()
             showError(error.localizedDescription)
@@ -144,6 +151,7 @@ final class LocalUpdate {
         menu?.title = "Update Atelier…"
         menu?.isEnabled = true
         window?.subtitle = ""
+        onUpdating?(false)
         if let workerFolder { try? FileManager.default.removeItem(at: workerFolder) }
         workerFolder = nil
     }
@@ -156,4 +164,53 @@ final class LocalUpdate {
         alert.addButton(withTitle: "OK")
         alert.beginSheetModal(for: window)
     }
+}
+
+/// A bounded, read-only check of saved build inputs. Missing source is unknown.
+@MainActor
+final class UpdateAvailability {
+    private var worker: Process?
+    private var timer: Timer?
+    var onChange: ((Bool?) -> Void)?
+    var visible: () -> Bool = { true }
+    private let node: URL
+    init(node: URL) { self.node = node }
+    func start() {
+        check()
+        timer = Timer.scheduledTimer(withTimeInterval: 30, repeats: true) { [weak self] _ in
+            Task { @MainActor in if self?.visible() == true { self?.check() } }
+        }
+    }
+    func check() {
+        guard worker == nil, let source = LocalUpdate.sourceDirectory, let resources = Bundle.main.resourceURL,
+              let data = try? Data(contentsOf: resources.appendingPathComponent("macos/source.json")),
+              let metadata = try? JSONSerialization.jsonObject(with: data) as? [String: String],
+              let fingerprint = metadata["fingerprint"] else { return }
+        let process = Process(), output = Pipe()
+        process.executableURL = node
+        process.arguments = [resources.appendingPathComponent("macos/update-status.mjs").path, source, fingerprint]
+        process.environment = ["HOME": FileManager.default.homeDirectoryForCurrentUser.path, "TMPDIR": NSTemporaryDirectory()]
+        process.standardInput = FileHandle.nullDevice
+        process.standardOutput = output
+        process.standardError = FileHandle.nullDevice
+        worker = process
+        process.terminationHandler = { [weak self] process in
+            let data = output.fileHandleForReading.readDataToEndOfFile()
+            let message = try? JSONSerialization.jsonObject(with: data) as? [String: Any]
+            let result = process.terminationStatus == 0 ? message?["available"] as? Bool : nil
+            DispatchQueue.main.async {
+                guard let self, self.worker === process else { return }
+                self.worker = nil; self.onChange?(result)
+            }
+        }
+        do { try process.run() } catch { worker = nil; onChange?(nil); return }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 5) { [weak self] in
+            guard let self, self.worker === process, process.isRunning else { return }
+            process.terminate()
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+                if process.isRunning { kill(process.processIdentifier, SIGKILL) }
+            }
+        }
+    }
+    func stop() { timer?.invalidate(); timer = nil; if let worker, worker.isRunning { worker.terminate() }; worker = nil }
 }

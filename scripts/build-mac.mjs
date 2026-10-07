@@ -1,3 +1,4 @@
+import { sourceFingerprint } from '../macos/sourceFingerprint.mjs';
 import { spawnSync } from 'node:child_process';
 import { cpSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
@@ -10,6 +11,7 @@ const run = (command, args) => {
   if (result.status !== 0) process.exit(result.status ?? 1);
 };
 if (process.platform !== 'darwin') throw new Error('Build Atelier.app on a Mac with Xcode installed.');
+const fingerprint = await sourceFingerprint(root);
 run('npm', ['run', 'build']);
 const app = join(root, 'macos/build/Atelier.app');
 rmSync(app, { recursive: true, force: true });
@@ -20,8 +22,9 @@ mkdirSync(join(resources, 'macos'), { recursive: true });
 cpSync(join(root, 'dist'), join(resources, 'dist'), { recursive: true });
 cpSync(join(root, 'macos/helper.mjs'), join(resources, 'macos/helper.mjs'));
 cpSync(join(root, 'macos/update.mjs'), join(resources, 'macos/update.mjs'));
+for (const file of ['sourceFingerprint.mjs', 'update-status.mjs']) cpSync(join(root, 'macos', file), join(resources, 'macos', file));
 // Personal local build only; this metadata is not part of the npm package.
-writeFileSync(join(resources, 'macos/source.json'), JSON.stringify({ path: root }));
+writeFileSync(join(resources, 'macos/source.json'), JSON.stringify({ path: root, fingerprint }));
 cpSync(join(root, 'macos/Info.plist'), join(contents, 'Info.plist'));
 const iconset = join(root, 'macos/build/Atelier.iconset');
 rmSync(iconset, { recursive: true, force: true });
@@ -40,5 +43,6 @@ for (const [name, file] of [['Inter-OFL', '@fontsource-variable/inter/LICENSE'],
   cpSync(join(root, 'node_modules', file), join(resources, `${name}.txt`));
 }
 run('xcrun', ['swiftc', '-parse-as-library', '-O', '-swift-version', '5', '-target', `${process.arch === 'arm64' ? 'arm64' : 'x86_64'}-apple-macos14.0`, '-framework', 'AppKit', '-framework', 'WebKit', 'macos/Atelier.swift', 'macos/LocalUpdate.swift', '-o', join(contents, 'MacOS/Atelier')]);
+if (await sourceFingerprint(root) !== fingerprint) throw new Error('Source changed during the build. Build again before installing.');
 run('codesign', ['--force', '--sign', '-', app]);
 console.log(`Built ${app}`);
