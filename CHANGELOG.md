@@ -348,3 +348,11 @@ Added Device to the left of Size: Desktop has 1536 × 864, 1920 × 1080 and 2560
 A preset now sets every canvas frame to its exact CSS dimensions, replacing the desktop-minimum rule, including for screens with explicit source sizes. Project sizes restores those dimensions. Device switches choose a starting size and any size change focuses the selected or first screen. Routes and mounted iframes are retained; choices are transient. This changes viewport dimensions only, not user agent, touch or pixel density, and a connected project must supply its own responsive layout.
 
 Checks: typecheck and all 71 tests pass, covering mixed source dimensions, all eight presets, non-overlapping frames and source restoration. Live UI checks against the installed app verified all eight iframe dimensions and restoration to the project’s original size. Updated via Atelier’s native menu and visually verified Device/Size in the reopened app. No neighboring project changes, merge or push.
+
+## 2026-10-07 — Branch preview plan and independent review prompt
+
+Reviewed the existing branch inventory, registry, preview/status/state handling and shared server/native lifecycle for Nicolas's request to switch branches. He confirmed Atelier should prepare and start previews that are not running. Added `docs/branch-preview-plan.md` and a copy-ready Claude Code Opus 5.5 review request in `docs/claude-branch-preview-review.md`.
+
+The proposal uses exact-commit detached snapshots and explicit project recipes, keeps the current preview until a candidate is ready, and separates target identity from project identity. It identifies readiness proof, abrupt-helper-death cleanup and the first project's recipe as decisions to resolve before implementation. Existing external previews remain separate and cannot be assigned a branch from Git inventory alone. Updated the handoff and preview-branch task accordingly.
+
+Checks: typecheck and all 71 existing tests pass. Documentation only; no runtime, connector contract, installed app, local registry or neighbouring project/server change. Claude has not reviewed the proposal yet. No merge or push.
