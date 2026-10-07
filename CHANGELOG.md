@@ -424,3 +424,8 @@ Added a dark **Update available** action pinned to the sidebar footer in the Mac
 The build records a SHA-256 fingerprint of saved source/build inputs. Native checks run on startup/focus and every 30 seconds while visible using a bounded, clean-environment Node process that only reads files. Uncommitted saved edits, additions and deletions count; documentation, tests, dependencies, Git metadata and generated output do not. Missing or unreadable source, unrecognized metadata and source symlinks are unknown rather than “up to date”. This detects local content differences, not release versions or whether a Git branch is newer. Source changes during the build now refuse to produce an installable success.
 
 Checks: typecheck, 88 web/process tests, 17 Mac tests, Mac build/signature verification, npm pack and installed tarball CLI/preview/cleanup. An isolated native copy verified matching source hides the action, a disposable saved source addition reveals it, clicking opens the normal confirmation, and restoring the source hides it again. The probe file and test app process were removed. Nicolas’s installed app and active branch preview were left running; this feature needs one normal menu update to become available there. No merge or push.
+
+
+## 2026-10-07 — Blue update button
+
+Changed the update-available button to Nicolas’s requested `#2354f3`, with white text, darker blue hover and matching focus outline. Updating behavior is unchanged. Typecheck and all 88 web/process tests pass.
