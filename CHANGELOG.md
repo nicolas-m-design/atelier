@@ -356,3 +356,27 @@ Reviewed the existing branch inventory, registry, preview/status/state handling 
 The proposal uses exact-commit detached snapshots and explicit project recipes, keeps the current preview until a candidate is ready, and separates target identity from project identity. It identifies readiness proof, abrupt-helper-death cleanup and the first project's recipe as decisions to resolve before implementation. Existing external previews remain separate and cannot be assigned a branch from Git inventory alone. Updated the handoff and preview-branch task accordingly.
 
 Checks: typecheck and all 71 existing tests pass. Documentation only; no runtime, connector contract, installed app, local registry or neighbouring project/server change. Claude has not reviewed the proposal yet. No merge or push.
+
+## 2026-10-07 — Review of the branch-preview plan
+
+Nicolas asked Claude (Opus 5.5) to review `docs/branch-preview-plan.md` against the code before any implementation. Verdict: **proceed with changes**. The review was returned in the session with a reply to paste to Codex; it is not stored here, and it does not authorize implementation. HEAD was `786b8d1`, which differs from the reviewed baseline `e0917b5` in documents only.
+
+What the review changes, and why:
+
+- **Snapshot by `git archive`, not a linked worktree.** A linked worktree shares the repository's configuration and hooks folder, so an install step inside it can change the real repository; it also appears in every worktree list, Atelier's own included, and cannot be removed without `--force` once a tool rewrites a tracked file. An export writes nothing to the repository and is deleted like any folder Atelier made.
+- **A guardian process per run.** It stops its own process group when its input pipe closes, which happens however Atelier's server dies. No host needs its own shutdown code, and no process is ever signalled from a recorded id.
+- **Readiness from process ownership.** Every listener on the assigned port must belong to the run's process group (`lsof`), then the manifest is fetched and checked. No connector change, so branches without a new connector piece stay previewable.
+- **Left out of the first version:** the mutation token, per-commit saved views, environment files, a configured port range, submodule and LFS detection, and any platform but macOS.
+
+**Probes, all disposable and in the session's scratch folder.** A process group started detached survived a `SIGKILL` of its parent and kept listening; the same group under a guardian was gone within 300 ms with no signal from outside it. `lsof` reported the listener's process group and bound address in 20 to 50 ms. In a temporary repository: `git archive` wrote nothing to the repository; `git worktree add` wrote under `.git/worktrees/` and ran `post-checkout` unless `core.hooksPath` was overridden; a `git config` write inside the linked worktree changed the main repository's setting; removal without `--force` deleted an ignored `node_modules` but refused after a tracked file changed. A Vite restart built a second handler in the same process.
+
+**A hypothesis the probe refuted.** Under `npm run dev` Atelier's endpoints do not check the Host header themselves (`server/handler.ts`), but Vite 8.3.2 rejects a foreign Host before they run. The mutation route should still check it in shared code so it does not rest on a Vite default.
+
+**What a newcomer would get wrong.**
+
+- Palier's `dev` script fixes port 3100, the Working preview's own port. A recipe that reuses the script would serve a snapshot at the address labelled as the working copy.
+- Next 16.3 rewrites a block in a tracked `AGENTS.md` when its dev server starts (stated in Palier's own rules and present in its installed Next). A snapshot is not guaranteed clean after a run.
+- `/Users/nico/package.json` exists with a lockfile and `node_modules`; `/Users/nico/Sites/package.json` does not. See `parent-package-rule` in `TODOS.md`.
+- Krux's `main` contains the connector's manifest route; three of its branches checked do not, which makes them a real case of "not connected".
+
+Checks: typecheck, all 71 tests and the 12 Mac helper and updater tests pass. Neighbouring repositories were read only (their rules first, then branch, lockfile and configuration listings). No runtime, registry, installed app or project server was changed, started or stopped. No merge or push.
