@@ -440,3 +440,13 @@ Project and screen navigation now highlight immediately. Screen groups use top s
 **Intentional differences from the skill defaults:** the incumbent shell retains 11/14, 12/18, 13/20, 14/20 and 15/20 px pairs instead of introducing the default 28 px display style. Canvas labels still scale with zoom up to their existing caps. The only active-state weight change is in full-width page navigation, which needs no reserved ghost width. The blue updater, native selects' outline-free focus, product previews and connector contract are unchanged.
 
 **Verification:** typecheck, 88 tests and production build pass. Browser inspection at 1280 × 720 and the Mac minimum 900 × 600 covered live/offline views, a long branch selection, linked-page navigation, 820 × 1180 Tablet frames, keyboard selector focus and preview enter/exit. Computed axes, colors, line heights, root background and unchanged desktop iframe dimensions were checked; no console errors in the final review. No neighboring checkout/server was edited or restarted. The temporary dev server was stopped. Installed native acceptance requires the existing updater; this pass does not install, merge, push or publish. Impeccable's non-executable launcher prevented its automated context/scan path; the pass used direct skill references, current source and rendered evidence.
+
+
+## 2026-10-07 — Install the update indicator
+
+Diagnosed the missing notice: the installed app still lacked the availability checker and bundled fingerprint. Used its native Update Atelier flow to build/install/reopen the current source. Verified the installed content fingerprint matches, including the blue update control. A current build hides the button by design. The existing Working preview remains externally owned.
+
+
+## 2026-10-07 — Softer sidebar selection
+
+Selected page and screen rows now share a lighter `#eeeeee` fill instead of neutral-200, following Nicolas’s contrast feedback. Text contrast, keyboard focus and selection behavior remain unchanged. Typecheck and all 88 tests pass; browser inspection confirms both row types use the new color. Source-only; installed app unchanged.

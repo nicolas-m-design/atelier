@@ -5,6 +5,7 @@
   --font-weight-semibold: 550;
   --color-foreground: #252525;
   --color-muted: #626262;
+  --color-selected: #eeeeee;
   /* Preserve Atelier's existing compact scale; canvas annotations scale separately. */
   --text-ui-title: 15px;
   --text-ui-title--line-height: 20px;

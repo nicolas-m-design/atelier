@@ -77,7 +77,7 @@ export function Workspace({ project, status, store, sidebar, onSidebar, onRetry,
   const [reloads, setReloads] = useState(0);
   const reloadAll = () => { setReloads((n) => n + 1); onRetry(); };
   const showSidebar = <button type="button" onClick={() => onSidebar(true)} aria-label="Show the sidebar" className="tool"><PanelLeftOpen size={17} aria-hidden /></button>;
-  const pageItem = (active: boolean) => `flex min-h-10 w-full items-center gap-2.5 rounded-md px-2 text-left outline-offset-2 focus-visible:outline-2 focus-visible:outline-neutral-700 ${active ? "bg-neutral-200 font-semibold text-foreground" : "text-foreground hover:bg-neutral-100"}`;
+  const pageItem = (active: boolean) => `flex min-h-10 w-full items-center gap-2.5 rounded-md px-2 text-left outline-offset-2 focus-visible:outline-2 focus-visible:outline-neutral-700 ${active ? "bg-selected font-semibold text-foreground" : "text-foreground hover:bg-neutral-100"}`;
   // Escape leaves a preview whenever the keyboard is in Atelier. Keys pressed inside
   // a preview stay in that page, which is why the Exit controls are always on screen.
   useEffect(() => {
@@ -121,7 +121,7 @@ export function Workspace({ project, status, store, sidebar, onSidebar, onRetry,
                 <button type="button" onClick={() => canvas.current?.focusGroup(group.id)} className="flex w-full items-center gap-2 rounded-md px-2 py-2 text-left font-semibold outline-offset-2 hover:bg-neutral-100 focus-visible:outline-2 focus-visible:outline-neutral-700"><ChevronDown size={12} className="shrink-0 text-muted" aria-hidden />{group.title}</button>
                 {group.screens.map(({ id, title }) => (
                   <button key={id} type="button" onClick={() => { setInteractive(null); canvas.current?.focusScreen(id); }} aria-current={current === id ? "true" : undefined}
-                    className={`flex w-full items-center gap-2.5 rounded-md py-2 pr-2 pl-6 text-left outline-offset-2 focus-visible:outline-2 focus-visible:outline-neutral-700 ${current === id ? "bg-neutral-200 text-foreground" : "text-foreground hover:bg-neutral-100"}`}>
+                    className={`flex w-full items-center gap-2.5 rounded-md py-2 pr-2 pl-6 text-left outline-offset-2 focus-visible:outline-2 focus-visible:outline-neutral-700 ${current === id ? "bg-selected text-foreground" : "text-foreground hover:bg-neutral-100"}`}>
                     <FrameIcon size={14} className="shrink-0 text-muted" aria-hidden /><span className="min-w-0 break-words">{title}</span>
                   </button>
                 ))}
