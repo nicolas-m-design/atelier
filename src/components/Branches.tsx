@@ -18,11 +18,11 @@ export function Branches({ project, store }: { project: Project; store: Store })
   const now = Date.now() / 1000;
 
   return (
-    <section aria-label={`${project.name} local branches`} className="mt-auto shrink-0 border-t border-black/[0.07] px-3 py-2 text-[12px]">
+    <section aria-label={`${project.name} local branches`} className="mt-auto shrink-0 border-t border-black/[0.07] px-3 py-2 text-ui-control">
       <button type="button" onClick={toggle} aria-expanded={open} title="Branches in the project's repository. Atelier cannot tell which one a preview is serving."
-        className="flex w-full items-center gap-2 rounded-md px-2 py-2 text-left font-medium outline-offset-2 hover:bg-neutral-100 focus-visible:outline-2 focus-visible:outline-neutral-700">
-        <Chevron size={12} className="shrink-0 text-neutral-400" aria-hidden />Local branches
-        {open && failed && report && <span className="ml-auto text-[11px] font-normal text-neutral-400">Not refreshed</span>}
+        className="flex w-full items-center gap-2 rounded-md px-2 py-2 text-left font-semibold outline-offset-2 hover:bg-neutral-100 focus-visible:outline-2 focus-visible:outline-neutral-700">
+        <Chevron size={12} className="shrink-0 text-muted" aria-hidden />Local branches
+        {open && failed && report && <span className="ml-auto text-ui-caption font-normal text-muted">Not refreshed</span>}
       </button>
       {open && (
         !report ? <Note>{failed ? "Not available. The list needs Atelier's own dev server (npm run dev)." : "Reading…"}</Note>
@@ -35,10 +35,10 @@ export function Branches({ project, store }: { project: Project; store: Store })
             {report.branches.map((branch) => (
               <li key={branch.name} className="px-2 py-1.5" title={[branch.name, `${branch.hash} · ${branch.subject}`, branch.checkout && where(branch.checkout)].filter(Boolean).join("\n")}>
                 <div className="flex items-baseline gap-2">
-                  <span className="min-w-0 flex-1 truncate text-neutral-800">{branch.name}</span>
-                  <time dateTime={new Date(branch.committed * 1000).toISOString()} className="shrink-0 text-[11px] text-neutral-400 tabular-nums">{age(branch.committed, now)}</time>
+                  <span className="min-w-0 flex-1 truncate text-foreground">{branch.name}</span>
+                  <time dateTime={new Date(branch.committed * 1000).toISOString()} className="shrink-0 text-ui-caption text-muted tabular-nums">{age(branch.committed, now)}</time>
                 </div>
-                <div className="mt-0.5 flex items-center gap-1.5 text-[11px] leading-4 text-neutral-400">
+                <div className="mt-0.5 flex items-center gap-1.5 text-ui-caption text-muted">
                   {branch.checkout && <CheckoutMark checkout={branch.checkout} />}
                   <span className="truncate">{branch.subject}</span>
                 </div>
@@ -46,8 +46,8 @@ export function Branches({ project, store }: { project: Project; store: Store })
             ))}
             {report.detached.map((checkout) => (
               <li key={checkout.path} className="px-2 py-1.5" title={where(checkout)}>
-                <div className="truncate text-neutral-800">Detached at {checkout.hash}</div>
-                <div className="mt-0.5 flex items-center text-[11px] leading-4 text-neutral-400"><CheckoutMark checkout={checkout} /></div>
+                <div className="truncate text-foreground">Detached at {checkout.hash}</div>
+                <div className="mt-0.5 flex items-center text-ui-caption text-muted"><CheckoutMark checkout={checkout} /></div>
               </li>
             ))}
           </ul>
@@ -63,12 +63,12 @@ const where = (checkout: Checkout) => checkout.missing ? `Checked out in ${check
 function CheckoutMark({ checkout }: { checkout: Checkout }) {
   const Icon = checkout.missing ? FolderX : Folder;
   return (
-    <span className="flex shrink-0 items-center gap-1 text-neutral-600">
+    <span className="flex shrink-0 items-center gap-1 text-muted">
       <Icon size={11} aria-hidden /><span className="sr-only">Checked out in </span>{folderName(checkout.path)}{checkout.missing && " (missing)"}
     </span>
   );
 }
 
 function Note({ children }: { children: ReactNode }) {
-  return <p className="px-2 pt-0.5 pb-2 leading-relaxed text-neutral-500">{children}</p>;
+  return <p className="px-2 pt-0.5 pb-2 text-muted">{children}</p>;
 }

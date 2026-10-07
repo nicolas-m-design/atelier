@@ -34,7 +34,7 @@ export function PreviewControls({ project, session, report, branchesFailed, choi
   return (
     <section aria-label="Branch preview" className="preview-controls shrink-0 border-t border-black/[0.07] px-4 py-3">
       <div className="flex items-center gap-2">
-        <GitBranch size={14} className="shrink-0 text-neutral-600" aria-hidden />
+        <GitBranch size={14} className="shrink-0 text-muted" aria-hidden />
         <select ref={selector} aria-label="Preview source" value={choice} onChange={event => onChoice(event.target.value)} disabled={session.pending || !!candidate}
           className="min-w-0 flex-1 rounded-[5px] bg-transparent px-1 py-2 outline-none focus-visible:bg-neutral-200" title={choice || "Working preview"}>
           <option value="">Working preview</option>
@@ -43,24 +43,24 @@ export function PreviewControls({ project, session, report, branchesFailed, choi
         </select>
         {project.origin && !active && workingLive && <a href={project.origin} target="_blank" rel="noreferrer" className="preview-icon" aria-label="Open working preview" title="Open working preview"><ExternalLink size={14} aria-hidden /></a>}
       </div>
-      <div className="mt-2 flex gap-2">
+      {(choice || active || candidate) && <div className="mt-2 flex gap-2">
         {choice ? <button type="button" className="preview-action flex-1" disabled={!canStart} onClick={() => void act({ action: "start", projectId: project.id, branch: choice })}><Play size={13} aria-hidden />{label}</button>
           : active ? <button type="button" className="preview-action flex-1" disabled={busy || !session.connected} onClick={() => void act({ action: "stop", projectId: project.id, runId: active.id })}>Show working preview</button> : null}
         {candidate ? <button type="button" className="preview-action flex-1" disabled={session.pending || !session.connected} onClick={() => void act({ action: "cancel", projectId: project.id, runId: candidate.id })}><X size={13} aria-hidden />Cancel</button>
           : active && choice ? <button type="button" className="preview-action" disabled={busy || !session.connected} onClick={() => void act({ action: "stop", projectId: project.id, runId: active.id })}><Square size={12} aria-hidden />Stop</button> : null}
-      </div>
-      <div className="mt-2 text-neutral-600" role="status" aria-live="polite" aria-atomic="true">
+      </div>}
+      <div className="mt-2 text-muted" role="status" aria-live="polite" aria-atomic="true">
         {candidate ? <p className="break-words">{phase} {candidate.branch}…</p>
           : <p className="truncate" title={active ? `${active.branch} · ${active.commit}` : "Working preview"}>{active ? `Viewing ${active.branch} · ${active.commit.slice(0, 7)}` : "Viewing working preview"}</p>}
         {candidate && <p className="mt-1 truncate">Still viewing {active?.branch ?? "working preview"}.</p>}
       </div>
-      {choice && !project.canPreview && <p className="mt-2 text-pretty text-neutral-600">Branch previews need a recipe in your project list.</p>}
-      {state && !state.supported && <p className="mt-2 text-neutral-600">Branch previews require macOS.</p>}
-      {!session.connected && <p className="mt-2 text-neutral-600">Preview controls are reconnecting…</p>}
-      {branchProblem && <p className="mt-2 text-neutral-600">{branchProblem}</p>}
-      {report?.state === "listed" && report.branches.length >= 200 && <p className="mt-2 text-neutral-600">Showing the 200 most recently updated branches.</p>}
-      {choice && state?.active && !active && <p className="mt-2 text-pretty text-neutral-600">Replaces the preview for {state.active.projectId} when ready.</p>}
-      {state?.candidate && !candidate && <p className="mt-2 text-pretty text-neutral-600">Preparing {state.candidate.projectId}. Cancel there before starting another preview.</p>}
+      {choice && !project.canPreview && <p className="mt-2 text-pretty text-muted">Branch previews need a recipe in your project list.</p>}
+      {state && !state.supported && <p className="mt-2 text-muted">Branch previews require macOS.</p>}
+      {!session.connected && <p className="mt-2 text-muted">Preview controls are reconnecting…</p>}
+      {branchProblem && <p className="mt-2 text-muted">{branchProblem}</p>}
+      {report?.state === "listed" && report.branches.length >= 200 && <p className="mt-2 text-muted">Showing the 200 most recently updated branches.</p>}
+      {choice && state?.active && !active && <p className="mt-2 text-pretty text-muted">Replaces the preview for {state.active.projectId} when ready.</p>}
+      {state?.candidate && !candidate && <p className="mt-2 text-pretty text-muted">Preparing {state.candidate.projectId}. Cancel there before starting another preview.</p>}
       {error && <p role="alert" className="mt-2 break-words text-red-700">{error}</p>}
     </section>
   );

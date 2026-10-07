@@ -77,7 +77,7 @@ export function Workspace({ project, status, store, sidebar, onSidebar, onRetry,
   const [reloads, setReloads] = useState(0);
   const reloadAll = () => { setReloads((n) => n + 1); onRetry(); };
   const showSidebar = <button type="button" onClick={() => onSidebar(true)} aria-label="Show the sidebar" className="tool"><PanelLeftOpen size={17} aria-hidden /></button>;
-  const pageItem = (active: boolean) => `flex min-h-10 w-full items-center gap-2.5 rounded-md px-2 text-left font-medium outline-offset-2 focus-visible:outline-2 focus-visible:outline-neutral-700 ${active ? "bg-neutral-200 text-neutral-900" : "text-neutral-600 hover:bg-neutral-100"}`;
+  const pageItem = (active: boolean) => `flex min-h-10 w-full items-center gap-2.5 rounded-md px-2 text-left outline-offset-2 focus-visible:outline-2 focus-visible:outline-neutral-700 ${active ? "bg-neutral-200 font-semibold text-foreground" : "text-foreground hover:bg-neutral-100"}`;
   // Escape leaves a preview whenever the keyboard is in Atelier. Keys pressed inside
   // a preview stay in that page, which is why the Exit controls are always on screen.
   useEffect(() => {
@@ -93,8 +93,8 @@ export function Workspace({ project, status, store, sidebar, onSidebar, onRetry,
         <aside className="z-10 flex w-[248px] shrink-0 flex-col border-r border-black/10 bg-[#fafafa]">
           <div className="flex h-16 shrink-0 items-center justify-between gap-2 pr-3 pl-5">
             <div className="min-w-0">
-              <h1 className="truncate text-[15px] leading-5 font-semibold tracking-[-0.01em]">{project.name}</h1>
-              <p className="mt-0.5 flex items-center gap-1.5 text-[11px] leading-4 text-neutral-500">
+              <h1 className="truncate text-ui-title font-semibold">{project.name}</h1>
+              <p className="mt-0.5 flex items-center gap-1.5 text-ui-caption text-muted">
                 <span aria-hidden className={`size-1.5 shrink-0 rounded-full ${STATUS_DOT[status.state]}`} /><span className="truncate">{statusLine(project, status)}</span>
               </p>
             </div>
@@ -106,7 +106,7 @@ export function Workspace({ project, status, store, sidebar, onSidebar, onRetry,
           </div>
           {previewControls}
           {links.length > 0 && (
-            <nav aria-label={`${project.name} pages`} className="shrink-0 space-y-1 border-t border-black/[0.07] px-3 py-3 text-[13px]">
+            <nav aria-label={`${project.name} pages`} className="shrink-0 space-y-1 border-t border-black/[0.07] px-3 py-3 text-ui-body">
               <button type="button" onClick={() => showPage(null)} aria-current={open ? undefined : "page"} className={pageItem(!open)}><Layers size={16} className="shrink-0" aria-hidden />Screens</button>
               {links.map((link) => {
                 const Icon = link.id === "library" ? Library : File;
@@ -115,35 +115,35 @@ export function Workspace({ project, status, store, sidebar, onSidebar, onRetry,
             </nav>
           )}
           {/* A linked page brings its own navigation, so the screen list steps aside for it. */}
-          <nav aria-label={`${project.name} screens`} hidden={Boolean(open)} className="flex-1 overflow-y-auto border-t border-black/[0.07] px-3 py-4 text-[12px]">
+          <nav aria-label={`${project.name} screens`} hidden={Boolean(open)} className="flex-1 overflow-y-auto border-t border-black/[0.07] px-3 py-4 text-ui-control">
             {board?.groups.map((group) => (
-              <div key={group.id} className="mb-5">
-                <button type="button" onClick={() => canvas.current?.focusGroup(group.id)} className="mb-1 flex w-full items-center gap-2 rounded-md px-2 py-2 text-left font-medium outline-offset-2 hover:bg-neutral-100 focus-visible:outline-2 focus-visible:outline-neutral-700"><ChevronDown size={12} className="shrink-0 text-neutral-400" aria-hidden />{group.title}</button>
+              <div key={group.id} className="screen-group">
+                <button type="button" onClick={() => canvas.current?.focusGroup(group.id)} className="flex w-full items-center gap-2 rounded-md px-2 py-2 text-left font-semibold outline-offset-2 hover:bg-neutral-100 focus-visible:outline-2 focus-visible:outline-neutral-700"><ChevronDown size={12} className="shrink-0 text-muted" aria-hidden />{group.title}</button>
                 {group.screens.map(({ id, title }) => (
                   <button key={id} type="button" onClick={() => { setInteractive(null); canvas.current?.focusScreen(id); }} aria-current={current === id ? "true" : undefined}
-                    className={`flex w-full items-center gap-2.5 rounded-md py-2 pr-2 pl-6 text-left outline-offset-2 transition-colors focus-visible:outline-2 focus-visible:outline-neutral-700 ${current === id ? "bg-neutral-200 text-neutral-900" : "text-neutral-500 hover:bg-neutral-100 hover:text-neutral-900"}`}>
-                    <FrameIcon size={14} className="shrink-0 opacity-60" aria-hidden /><span>{title}</span>
+                    className={`flex w-full items-center gap-2.5 rounded-md py-2 pr-2 pl-6 text-left outline-offset-2 focus-visible:outline-2 focus-visible:outline-neutral-700 ${current === id ? "bg-neutral-200 text-foreground" : "text-foreground hover:bg-neutral-100"}`}>
+                    <FrameIcon size={14} className="shrink-0 text-muted" aria-hidden /><span className="min-w-0 break-words">{title}</span>
                   </button>
                 ))}
               </div>
             ))}
-            {!board && <p className="px-2 py-2 leading-relaxed text-neutral-500">No screens to list yet.</p>}
+            {!board && <p className="px-2 py-2 text-muted">No screens to list yet.</p>}
           </nav>
           <AppUpdate />
         </aside>
       )}
       <div className="relative flex min-w-0 flex-1">
-        {!sidebar && !open && <div className="absolute top-4 left-4 z-20 flex items-center gap-1 rounded-[5px] bg-white shadow-sm">{showSidebar}<span className="max-w-64 truncate pr-3 text-[12px] leading-4 text-neutral-600" title={sourceLabel}>{sourceLabel}</span></div>}
+        {!sidebar && !open && <div className="absolute top-4 left-4 z-20 flex items-center gap-1 rounded-[5px] bg-white shadow-sm">{showSidebar}<span className="max-w-64 truncate pr-3 text-ui-control text-muted" title={sourceLabel}>{sourceLabel}</span></div>}
         {/* The canvas stays mounted under an open page, so its previews and position are there on return. */}
         <div className="flex min-w-0 flex-1" inert={Boolean(open)}>
           <Canvas ref={canvas} label={`${project.name} canvas`} origin={project.origin} board={board ?? EMPTY_BOARD} live={live} reloads={reloads}
             initialScreenId={focusInitialSelection ? current : undefined} initialCamera={view.camera} selected={current} interactive={entered}
             viewportControl={board?.screens.length ? (
-              <div className="pointer-events-auto flex min-h-10 flex-wrap items-center justify-center gap-x-3 gap-y-1 rounded-lg border border-black/[0.08] bg-white px-3 py-1 text-[12px] text-neutral-700">
+              <div className="pointer-events-auto flex min-h-10 flex-wrap items-center justify-center gap-x-3 gap-y-1 rounded-lg border border-black/[0.08] bg-white px-3 py-1 text-ui-control text-muted">
                 <label className="flex items-center gap-2">
                   <span>Device</span>
                   <select aria-label="Device" value={device}
-                    className="h-[30px] rounded-[5px] bg-white text-[12px] font-medium text-neutral-900 outline-none focus-visible:bg-neutral-100"
+                    className="h-[30px] rounded-[5px] bg-white text-ui-control font-semibold text-foreground outline-none focus-visible:bg-neutral-100"
                     onChange={(event) => {
                       const next = event.target.value as Device;
                       setInteractive(null); setDevice(next); setViewportMode(DEFAULT_VIEWPORTS[next]);
@@ -157,7 +157,7 @@ export function Workspace({ project, status, store, sidebar, onSidebar, onRetry,
                   <span>Size</span>
                   <select aria-label="Viewport size" value={viewportMode}
                     title="Resize all previews in CSS pixels. Project sizes restores the original dimensions."
-                    className="h-[30px] rounded-[5px] bg-white text-[12px] font-medium tabular-nums text-neutral-900 outline-none focus-visible:bg-neutral-100"
+                    className="h-[30px] rounded-[5px] bg-white text-ui-control font-semibold tabular-nums text-foreground outline-none focus-visible:bg-neutral-100"
                     onChange={(event) => { setInteractive(null); setViewportMode(event.target.value as ViewportMode); }}>
                     {DEVICE_VIEWPORTS[device].map((size) => <option key={size.id} value={size.id}>{size.width} × {size.height}</option>)}
                     <option value="project">Project sizes</option>
@@ -170,7 +170,7 @@ export function Workspace({ project, status, store, sidebar, onSidebar, onRetry,
           </Canvas>
         </div>
         {open && (
-          <Page key={open.id} link={open} reloads={reloads} src={live && project.origin ? project.origin + open.route : null} leading={sidebar ? null : <div className="flex items-center gap-2">{showSidebar}<span className="max-w-64 truncate text-[12px] leading-4 text-neutral-600">{sourceLabel}</span></div>}>
+          <Page key={open.id} link={open} reloads={reloads} src={live && project.origin ? project.origin + open.route : null} leading={sidebar ? null : <div className="flex items-center gap-2">{showSidebar}<span className="max-w-64 truncate text-ui-control text-muted">{sourceLabel}</span></div>}>
             <StatusCard project={project} status={status} hasBoard={false} onRetry={onRetry} />
           </Page>
         )}

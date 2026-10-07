@@ -196,10 +196,10 @@ export function Canvas({ ref, label, origin, board, live, reloads, initialCamera
             <section key={group.id} aria-label={group.title}>
               <div className="absolute whitespace-nowrap" style={{ left: camera.x + group.x * camera.zoom, top: camera.y + group.y * camera.zoom }}>
                 {/* Capped, so headings stay annotations beside actual-size frames; the caps only ever shrink them. */}
-                <h2 className="flex items-baseline font-semibold tracking-[-0.02em]" style={{ gap: Math.min(33 * camera.zoom, 12), fontSize: Math.min(TYPE.groupTitle.size * camera.zoom, 26), lineHeight: 1.33 }}>
-                  {group.label && <span className="font-medium tracking-normal text-neutral-600">{group.label}</span>}{group.title}
+                <h2 className="flex items-baseline font-semibold" style={{ gap: Math.min(33 * camera.zoom, 12), fontSize: Math.min(TYPE.groupTitle.size * camera.zoom, 26), lineHeight: `${Math.round(Math.min(TYPE.groupTitle.size * camera.zoom, 26) * 1.33)}px` }}>
+                  {group.label && <span className="font-semibold text-muted">{group.label}</span>}{group.title}
                 </h2>
-                {group.description && <p className="text-neutral-600" style={{ marginTop: Math.min(TYPE.groupDescription.gap * camera.zoom, 6), fontSize: Math.min(TYPE.groupDescription.size * camera.zoom, 15), lineHeight: 1.41 }}>{group.description}</p>}
+                {group.description && <p className="text-muted" style={{ marginTop: Math.min(TYPE.groupDescription.gap * camera.zoom, 6), fontSize: Math.min(TYPE.groupDescription.size * camera.zoom, 15), lineHeight: `${Math.round(Math.min(TYPE.groupDescription.size * camera.zoom, 15) * 1.41)}px` }}>{group.description}</p>}
               </div>
               {group.screens.map((screen) => (
                 <Frame key={screen.id} screen={screen} camera={camera}
@@ -219,14 +219,14 @@ export function Canvas({ ref, label, origin, board, live, reloads, initialCamera
         <div className="pointer-events-none absolute right-0 bottom-5 left-0 flex flex-wrap items-center justify-center gap-3 px-5">
           {viewportControl}
           {interacting && (
-            <div role="status" className="pointer-events-auto flex h-[38px] items-center gap-3 rounded-lg bg-neutral-900 pr-1 pl-3 text-[12px] text-white shadow-[0_2px_8px_#00000026]">
-              <span className="max-w-[40ch] truncate">Interacting with <span className="font-medium">{interacting.title}</span></span>
-              <button type="button" onClick={() => onInteractive(null)} className="flex h-[30px] items-center gap-1.5 rounded-[5px] bg-white px-2.5 font-medium text-neutral-900 hover:bg-neutral-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"><LogOut size={14} aria-hidden />Exit preview</button>
+            <div role="status" className="pointer-events-auto flex h-[38px] items-center gap-3 rounded-lg bg-neutral-900 pr-1 pl-3 text-ui-control text-white shadow-[0_2px_8px_#00000026]">
+              <span className="max-w-[40ch] truncate">Interacting with <span className="font-semibold">{interacting.title}</span></span>
+              <button type="button" onClick={() => onInteractive(null)} className="flex h-[30px] items-center gap-1.5 rounded-[5px] bg-white px-2.5 font-semibold text-foreground hover:bg-neutral-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"><LogOut size={14} aria-hidden />Exit preview</button>
             </div>
           )}
-          <div className="pointer-events-auto flex items-center gap-1 rounded-lg border border-black/[0.08] bg-white p-1 shadow-[0_2px_8px_#00000008]">
+          <div className="pointer-events-auto flex items-center gap-1 rounded-[10px] border border-black/[0.08] bg-white p-1 shadow-[0_2px_8px_#00000008]">
             <button type="button" className="tool" aria-label="Zoom out" onClick={() => zoomBy(1 / 1.2)} disabled={camera.zoom <= MIN_ZOOM}><Minus size={15} aria-hidden /></button>
-            <button type="button" className="h-[30px] w-12 rounded-[5px] text-[11px] tabular-nums hover:bg-neutral-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-700" aria-label="Actual size" title="Actual size (1)" onClick={() => zoomBy(1, undefined, true)}>{Math.round(camera.zoom * 100)}%</button>
+            <button type="button" className="h-[30px] w-12 rounded-[5px] text-ui-caption tabular-nums hover:bg-neutral-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-700" aria-label="Actual size" title="Actual size (1)" onClick={() => zoomBy(1, undefined, true)}>{Math.round(camera.zoom * 100)}%</button>
             <button type="button" className="tool" aria-label="Zoom in" onClick={() => zoomBy(1.2)} disabled={camera.zoom >= MAX_ZOOM}><Plus size={15} aria-hidden /></button>
             <span className="mx-1 h-4 border-l border-black/10" />
             <button type="button" className="tool" aria-label="Show everything" title="Show everything (0)" onClick={fit}><Maximize size={15} aria-hidden /></button>

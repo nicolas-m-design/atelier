@@ -429,3 +429,14 @@ Checks: typecheck, 88 web/process tests, 17 Mac tests, Mac build/signature verif
 ## 2026-10-07 — Blue update button
 
 Changed the update-available button to Nicolas’s requested `#2354f3`, with white text, darker blue hover and matching focus outline. Updating behavior is unchanged. Typecheck and all 88 web/process tests pass.
+
+
+## 2026-10-07 — Craft and typography polish
+
+Preserved Atelier's compact neutral interface while replacing scattered type/color choices with shared tokens. The initial source inventory had five fixed sizes, three weights and seven neutral foreground values, plus inverse white/error red. The shell now uses explicit size/line-height pairs, regular and 550 semibold, and foreground/muted colors; Inter's optical-size font is actually loaded and its axes are paired with weights. The shared muted color has contrast ratios from 4.53:1 on the darkest neutral hover fill to 6.10:1 on white. Labels remain foreground; status/meta text is muted. Removed manual tracking and text/icon opacity, added balanced headings and pretty paragraphs, and retained tabular dimensions/zoom counts. Code examples share the interface font. Trimming is limited to stable-height actions, with a support guard; coarse-pointer fields get 16 px text.
+
+Project and screen navigation now highlight immediately. Screen groups use top spacing, working-preview controls omit their empty action row, and the zoom toolbar's 10 px outer radius matches 5 px buttons plus its 5 px border/padding inset. The document root explicitly uses the canvas gray. Frame annotations use pixel line heights and an anchored label offset, leaving their layout and preview dimensions intact.
+
+**Intentional differences from the skill defaults:** the incumbent shell retains 11/14, 12/18, 13/20, 14/20 and 15/20 px pairs instead of introducing the default 28 px display style. Canvas labels still scale with zoom up to their existing caps. The only active-state weight change is in full-width page navigation, which needs no reserved ghost width. The blue updater, native selects' outline-free focus, product previews and connector contract are unchanged.
+
+**Verification:** typecheck, 88 tests and production build pass. Browser inspection at 1280 × 720 and the Mac minimum 900 × 600 covered live/offline views, a long branch selection, linked-page navigation, 820 × 1180 Tablet frames, keyboard selector focus and preview enter/exit. Computed axes, colors, line heights, root background and unchanged desktop iframe dimensions were checked; no console errors in the final review. No neighboring checkout/server was edited or restarted. The temporary dev server was stopped. Installed native acceptance requires the existing updater; this pass does not install, merge, push or publish. Impeccable's non-executable launcher prevented its automated context/scan path; the pass used direct skill references, current source and rendered evidence.

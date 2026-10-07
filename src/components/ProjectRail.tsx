@@ -12,7 +12,7 @@ export function ProjectRail({ projects, statuses, active, onSelect }: { projects
         return (
           <button key={project.id} type="button" onClick={() => onSelect(project.id)} aria-current={current ? "true" : undefined}
             aria-label={`${project.name}. ${statusLine(project, status)}`} title={`${project.name} · ${statusLine(project, status)}`}
-            className={`relative flex size-9 items-center justify-center rounded-[10px] text-[13px] font-semibold transition-colors outline-offset-2 focus-visible:outline-2 focus-visible:outline-neutral-700 ${current ? "bg-neutral-900 text-white" : "bg-white text-neutral-600 shadow-[0_1px_2px_#0000000f] hover:text-neutral-900"}`}>
+            className={`relative flex size-9 items-center justify-center rounded-[10px] text-ui-body font-semibold outline-offset-2 focus-visible:outline-2 focus-visible:outline-neutral-700 ${current ? "bg-neutral-900 text-white" : "bg-white text-muted shadow-[0_1px_2px_#0000000f] hover:text-foreground"}`}>
             {project.name.slice(0, 1)}
             <span aria-hidden className={`absolute -right-0.5 -bottom-0.5 size-2.5 rounded-full ring-2 ring-[#f1f1f0] ${STATUS_DOT[status.state]} ${status.state === "empty" ? "!bg-[#f1f1f0]" : ""}`} />
           </button>

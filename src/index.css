@@ -2,12 +2,31 @@
 
 @theme inline {
   --font-sans: "Inter Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-weight-semibold: 550;
+  --color-foreground: #252525;
+  --color-muted: #626262;
+  /* Preserve Atelier's existing compact scale; canvas annotations scale separately. */
+  --text-ui-title: 15px;
+  --text-ui-title--line-height: 20px;
+  --text-ui-subtitle: 14px;
+  --text-ui-subtitle--line-height: 20px;
+  --text-ui-body: 13px;
+  --text-ui-body--line-height: 20px;
+  --text-ui-control: 12px;
+  --text-ui-control--line-height: 18px;
+  --text-ui-caption: 11px;
+  --text-ui-caption--line-height: 14px;
 }
+
+/* The loaded Inter file includes both axes. Weight and optical size travel together. */
+@utility font-normal { font-weight: 400; font-variation-settings: "wght" 400, "opsz" 14; }
+@utility font-semibold { font-weight: 550; font-variation-settings: "wght" 550, "opsz" 18; }
 
 @layer base {
   html, body, #root { height: 100%; }
+  html { background: #e8e8e8; }
   body {
-    @apply bg-[#e8e8e8] font-sans text-[#252525] antialiased;
+    @apply bg-[#e8e8e8] font-sans text-ui-control text-foreground font-normal antialiased;
     cursor: default;
     overscroll-behavior: none;
     -webkit-user-select: none;
@@ -19,6 +38,25 @@
   }
   button, a { cursor: pointer; }
   button:disabled { cursor: default; }
+  h1, h2, h3 { text-wrap: balance; }
+  p { text-wrap: pretty; }
+  button, select { font-variation-settings: inherit; }
+  code, pre { font-family: inherit; }
+  ::selection { background: #dedede; color: #252525; }
+  input, textarea { caret-color: #252525; }
+}
+
+/* Top spacing keeps each group anchored as its content grows. */
+.screen-group + .screen-group { margin-top: 20px; }
+.screen-group > button:first-child + button { margin-top: 4px; }
+
+/* Flex items are block containers, so trimming is a progressive enhancement.
+   Explicit control heights keep the fallback and trimmed layouts the same size. */
+@supports (text-box: trim-both cap alphabetic) {
+  .control-label, .preview-action { text-box: trim-both cap alphabetic; }
+}
+@media (pointer: coarse) {
+  input, textarea, select { font-size: 16px; }
 }
 
 /* Workspace controls. They live outside every preview frame. */
@@ -30,16 +68,16 @@
   height: 30px;
   flex-shrink: 0;
   border-radius: 5px;
-  color: #737373;
+  color: var(--color-muted);
 }
 .tool:hover { background: #f0f0f0; color: #252525; }
 .tool:focus-visible { outline: 2px solid #404040; outline-offset: 2px; }
-.tool:disabled { opacity: 0.3; }
-.tool:disabled:hover { background: none; color: #737373; }
+.tool:disabled { color: var(--color-muted); background: #f0f0f0; }
+.tool:disabled:hover { background: #f0f0f0; color: var(--color-muted); }
 
 
 /* Preview controls reuse the sidebar's compact type and neutral surfaces. */
-.preview-controls { font-size: 12px; line-height: 18px; color: #252525; }
+.preview-controls { color: var(--color-foreground); }
 .preview-action, .preview-icon {
   display: inline-flex; align-items: center; justify-content: center; gap: 6px;
   min-height: 32px; padding: 6px 8px; border-radius: 5px;
@@ -48,4 +86,4 @@
 .preview-icon { width: 32px; padding: 0; background: transparent; }
 .preview-action:hover, .preview-icon:hover { background: #dedede; }
 .preview-action:focus-visible, .preview-icon:focus-visible { outline: 2px solid #404040; outline-offset: 2px; }
-.preview-action:disabled { background: #f0f0f0; color: #737373; }
+.preview-action:disabled { background: #f0f0f0; color: var(--color-muted); }

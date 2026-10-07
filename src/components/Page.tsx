@@ -41,7 +41,7 @@ export function Page({ link, src, reloads, leading, children }: Props) {
     <section aria-label={link.title} className="absolute inset-0 z-10 flex flex-col bg-[#e8e8e8]">
       <header className="flex h-12 shrink-0 items-center gap-2 border-b border-black/10 bg-[#fafafa] pr-3 pl-4">
         {leading}
-        <h2 className="truncate text-[13px] font-medium">{link.title}</h2>
+        <h2 className="truncate text-ui-body font-semibold">{link.title}</h2>
         {src && (
           <div className="ml-auto flex shrink-0 items-center gap-0.5">
             <button type="button" className="tool" onClick={() => setOwn((n) => n + 1)} aria-label={`Reload ${link.title}`} title="Reload from its starting route"><RotateCcw size={14} aria-hidden /></button>
@@ -52,7 +52,7 @@ export function Page({ link, src, reloads, leading, children }: Props) {
       <div ref={area} className="relative min-h-0 flex-1 overflow-hidden">
         {src && fit && (
           <>
-            {!loaded && <p className="absolute inset-0 flex items-center justify-center text-[12px] text-neutral-500">Loading…</p>}
+            {!loaded && <p className="absolute inset-0 flex items-center justify-center text-ui-control text-muted">Loading…</p>}
             <iframe key={`${reloads}:${own}`} title={link.title} src={src} onLoad={() => setLoaded(true)}
               className="block origin-top-left border-0"
               // With room to spare the page is left untransformed, exactly as the browser would lay it out alone.

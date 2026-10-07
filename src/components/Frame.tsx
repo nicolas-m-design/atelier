@@ -35,10 +35,10 @@ export function Frame({ screen, camera, src, mounted, reloads, selected, interac
 
   return (
     <div className="absolute" style={{ left: rect.x, top: rect.y, width: rect.width }} data-frame={screen.id} data-state={interactive ? "interactive" : selected ? "selected" : "idle"}>
-      <div className="absolute right-0 bottom-full left-0 flex items-end justify-between gap-3" style={{ marginBottom: TYPE.labelGap * zoom }}>
+      <div className="absolute right-0 left-0 flex items-end justify-between gap-3" style={{ bottom: `calc(100% + ${TYPE.labelGap * zoom}px)` }}>
         <div className="min-w-0">
-          <h3 className="truncate font-medium text-neutral-800" style={{ fontSize: titleSize, lineHeight: 1.4 }}>{screen.title}</h3>
-          <p className="truncate text-neutral-600" style={{ marginTop: TYPE.screenCaption.gap * zoom, fontSize: captionSize, lineHeight: 1.45 }}>
+          <h3 className="truncate font-semibold text-foreground" style={{ fontSize: titleSize, lineHeight: `${Math.round(titleSize * 1.4)}px` }}>{screen.title}</h3>
+          <p className="truncate text-muted" style={{ marginTop: TYPE.screenCaption.gap * zoom, fontSize: captionSize, lineHeight: `${Math.round(captionSize * 1.45)}px` }}>
             {screen.caption && <>{screen.caption}<span aria-hidden> · </span></>}
             <span className="tabular-nums" title="Preview viewport in CSS pixels">{screen.rect.width} × {screen.rect.height}</span>
           </p>
@@ -46,7 +46,7 @@ export function Frame({ screen, camera, src, mounted, reloads, selected, interac
         {src && (selected || interactive) && (
           <div className="pointer-events-auto flex shrink-0 items-center gap-0.5 rounded-lg border border-black/[0.08] bg-white p-0.5 shadow-[0_2px_8px_#00000008]">
             {interactive
-              ? <button type="button" onClick={onExit} className="flex h-[30px] items-center gap-1.5 rounded-[5px] bg-neutral-900 px-2.5 text-[12px] font-medium whitespace-nowrap text-white hover:bg-neutral-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-700"><LogOut size={14} aria-hidden />Exit preview</button>
+              ? <button type="button" onClick={onExit} className="flex h-[30px] items-center gap-1.5 rounded-[5px] bg-neutral-900 px-2.5 text-ui-control font-semibold whitespace-nowrap text-white hover:bg-neutral-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-700"><LogOut size={14} aria-hidden />Exit preview</button>
               : <button type="button" className="tool" onClick={onEnter} aria-label={`Interact with ${screen.title}`} title="Interact (double-click or Enter)"><MousePointerClick size={15} aria-hidden /></button>}
             <button type="button" className="tool" onClick={() => setOwn((n) => n + 1)} aria-label={`Reload ${screen.title}`} title="Reload from its starting route"><RotateCcw size={14} aria-hidden /></button>
             <a className="tool" href={src} target="_blank" rel="noreferrer" aria-label={`Open ${screen.title} in a new tab`} title="Open in a new tab"><ArrowUpRight size={15} aria-hidden /></a>
@@ -93,7 +93,7 @@ function Preview({ screen, src, zoom, interactive }: { screen: BoardScreen; src:
 function Placeholder({ label, wide, muted }: { label: string | null; wide: boolean; muted: boolean }) {
   return (
     <div className={`absolute inset-0 flex items-center justify-center ${muted ? "border border-dashed border-neutral-300 bg-neutral-100" : ""}`}>
-      {label && wide && <span className="text-[12px] text-neutral-500">{label}</span>}
+      {label && wide && <span className="text-ui-control text-muted">{label}</span>}
     </div>
   );
 }
