@@ -444,7 +444,7 @@ Project and screen navigation now highlight immediately. Screen groups use top s
 
 ## 2026-10-07 — Install the update indicator
 
-Diagnosed the missing notice: the installed app still lacked the availability checker and bundled fingerprint. Used its native Update Atelier flow to build/install/reopen the current source. Verified the installed content fingerprint matches, including the blue update control. A current build hides the button by design. The existing Working preview remains externally owned.
+Diagnosed the missing notice: the installed app still lacked the availability checker and bundled fingerprint. Used its native Update Atelier flow to build/install/reopen the current source. Verified the installed content fingerprint matches, including the blue update control. A current build hides the button by design. The existing Working preview remains externally owned. Confirmed the blue action in the installed app using a temporary source addition, then removed that probe. A concurrent sidebar refinement changed the source after installation, so a real update is now available and the notice correctly remains visible. Typecheck and all 88 tests pass.
 
 
 ## 2026-10-07 — Softer sidebar selection
