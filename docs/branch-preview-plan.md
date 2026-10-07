@@ -1,16 +1,16 @@
 # Plan: switch between branch previews
 
-> **Status: revised after Claude Code Opus 5.5 review, 2026-10-07 — proceed with changes; implementation awaits Nicolas.** Nicolas confirmed that Atelier should **prepare and start branch previews**, including branches that are not running. This document incorporates the review he relayed. It does not authorize implementation or name the first real project. The original runtime baseline is `e0917b594f8311ca26d463527afb625518ca2586`; Claude recorded the review in `d1fd57c` after reviewing `786b8d1` (documentation-only changes).
+> **Status: first runner increment implemented, 2026-10-07; API/UI integration remains next.** Nicolas confirmed that Atelier should **prepare and start branch previews**, including branches that are not running. This document incorporates the review he relayed. Nicolas subsequently authorized the runner increment, chose Palier, and accepted committed-only snapshots and one managed preview at a time. The original runtime baseline is `e0917b594f8311ca26d463527afb625518ca2586`; Claude recorded the review in `d1fd57c` after reviewing `786b8d1` (documentation-only changes).
 
 ## Recommendation
 
 Make a branch selectable in Atelier and prepare its preview from an Atelier-owned **archive export**. Resolve the selected local branch to a full commit ID, export it with `git archive <commit>`, run the project's explicitly configured preparation and start commands under a guardian, and switch the canvas once the candidate is ready. Keep the current preview available during preparation and on failure. V1 targets macOS only.
 
-This adds a narrowly scoped preview runner to the existing Node backend. Nicolas's clarification asks for that capability; the repository's restriction on unsolicited server management should not be interpreted as blocking this plan. It does not authorize implementing it in this planning session. At implementation, update the relevant repository rules and documentation to distinguish owned previews from existing project servers.
+This adds a narrowly scoped preview runner to the existing Node backend. Nicolas's clarification asks for that capability; the repository's restriction on unsolicited server management should not be interpreted as blocking this plan. The first increment now supplies an internal runner; it is not wired into the app or registry. Existing project servers remain externally owned.
 
 The first release must actually start a branch that has no running preview. A selector limited to existing ports would be useful groundwork but would not fulfill this request.
 
-Use committed snapshots for this release. Display **branch + short commit**, with the full commit available in details. Changes in somebody else's working copy are not copied into the snapshot. Keep the registered external preview available as **Working preview** for reviewing ongoing edits; do not infer its branch from the registered repository. This snapshot choice is a recommendation for review, not an additional preference Nicolas has confirmed.
+Use committed snapshots for this release. Display **branch + short commit**, with the full commit available in details. Changes in somebody else's working copy are not copied into the snapshot. Keep the registered external preview available as **Working preview** for reviewing ongoing edits; do not infer its branch from the registered repository. Nicolas confirmed this snapshot choice before implementation.
 
 ## What the current code establishes
 
@@ -25,7 +25,7 @@ Use committed snapshots for this release. Display **branch + short commit**, wit
 | Native process ownership exists only for Atelier's helper and Git reads. | `macos/helper.mjs`; `server/branches.ts`, `cancelBranchReads`; `server/cli.ts`; `server/vite.ts`. | Extend one shared lifecycle implementation to all three hosts. Native wrapper behavior alone will not clean up CLI/Vite previews. |
 | The branch list is capped at 200 refs. | `server/branches.ts`, `--count=200`. | Avoid silent incompleteness: show a truncation indicator or bounded pagination. Remote-only refs stay out of v1. |
 
-These are implementation constraints for the requested feature, not claims that the existing read-only feature is broken. The original baseline passed typecheck and all 71 tests. Claude reports disposable process-group, guardian, listener-ownership, Git and Vite probes in `CHANGELOG.md`, plus passing web and Mac tests. Those findings inform this revision; Codex has not reproduced the probes and there is no implemented branch runner yet.
+These are implementation constraints for the requested feature, not claims that the existing read-only feature is broken. The original baseline passed typecheck and all 71 tests. Claude reports disposable process-group, guardian, listener-ownership, Git and Vite probes in `CHANGELOG.md`, plus passing web and Mac tests. Those findings inform this revision; Codex has since verified the runner with real process-level fixture tests and a cold Palier export. See the implementation record below; Claude’s other probes remain attributed findings.
 
 ## User experience
 
@@ -58,7 +58,7 @@ Resolve executables predictably under Finder and the terminal. Commands and path
 
 Dependencies and generated output stay inside the disposable export; do not share another checkout's `node_modules` or build output. Configured installs may use their ordinary package-manager cache. No automatic package-manager installation, service/database orchestration, credential copying or dependency-cache framework. Package scripts still execute project code: this is not a security sandbox.
 
-For the first real project, inspect its rules and startup script before specifying the recipe. Claude found that Palier's `dev` script fixes the Working preview's port; blindly invoking it would defeat `{port}`. Palier is Claude's recommendation only, not Nicolas's selection.
+For the first real project, inspect its rules and startup script before specifying the recipe. Claude found that Palier's `dev` script fixes the Working preview's port; blindly invoking it would defeat `{port}`. Nicolas selected Palier for the first cold-start check; its tested recipe is in `docs/local-setup.md`.
 
 ### 2. Disposable archive exports
 
@@ -80,7 +80,7 @@ The guardian must survive long enough to perform bounded termination/escalation 
 
 Expose an idempotent dispose operation on the coordinator. Vite integration must dispose on **`httpServer` close**, including restart: Claude observed that restart can create a second handler in the same process, so process exit alone is insufficient. CLI and Mac hosts use the same coordinator/guardian mechanism; the existing native helper ownership pipe remains in place. App quit/update and helper death must also end all managed runs without touching external servers.
 
-State flow: `resolving → preparing → starting → ready`, with `failed` and `cancelled` outcomes and bounded cleanup. Deduplicate identical requests. A new selection cancels the superseded candidate before launching another; Cancel affects the candidate only. Keep one active managed server plus one temporary candidate per backend, subject to Nicolas confirming the single-managed-preview policy. On promotion, retire the previous owned run. Separate Atelier ports have separate cache namespaces; multiple tabs on one backend share its state.
+State flow: `resolving → preparing → starting → ready`, with `failed` and `cancelled` outcomes and bounded cleanup. Deduplicate identical requests. A new selection cancels the superseded candidate before launching another; Cancel affects the candidate only. Keep one active managed server plus one temporary candidate per backend, as confirmed by Nicolas. On promotion, retire the previous owned run. Separate Atelier ports have separate cache namespaces; multiple tabs on one backend share its state.
 
 ### 4. System-assigned port and readiness
 
@@ -108,9 +108,9 @@ One preview port is not a separate browser profile. Project routes retain respon
 
 The first increment has **no API or UI**. When wiring them later, keep read endpoints GET-only and add narrow POST operations with bounded JSON and exact schema validation. Require the exact allowed Host and Origin plus same-origin Fetch Metadata in shared code, before any action; reject missing headers, cross-port preview requests and arbitrary command/path/port input. No mutation token in v1. No native script-message bridge. These defend the browser boundary, not a hostile program running as the user.
 
-## Implementation sequence — waiting for Nicolas
+## Implementation sequence
 
-1. **Runner and guardian only.** Add `server/previews.ts`, the guardian and process-level tests using a disposable fixture repository. Cover cold start, `kill -9` of the coordinator, foreign listeners, missing manifest and leftover cleanup, along with cancellation, required-file checks and tracked-file rewrites inside the export. Then perform one real cold start on **the project Nicolas names**, after reading its rules. No API or UI in this increment. No implementation until Nicolas authorizes it.
+1. **Runner and guardian only — done.** Add `server/previews.ts`, the guardian and process-level tests using a disposable fixture repository. Cover cold start, `kill -9` of the coordinator, foreign listeners, missing manifest and leftover cleanup, along with cancellation, required-file checks and tracked-file rewrites inside the export. Then perform one real cold start on Palier, after reading its rules. Nicolas authorized this increment; it includes no API or UI.
 2. **Lifecycle and selection integration.** Wire disposal into Vite's `httpServer` close and the CLI/Mac lifecycle; exercise Vite restart. Add revisioned APIs, branch selection, progress/cancel/failure handling and atomic promotion. Key the inner workspace by run ID, lift Device/Size and tag status results. Verify multiple tabs and stale replies. No per-commit persistence.
 3. **Complete macOS-host acceptance.** Exercise Vite, the installed tarball and bundled Mac app, including quit/update during preparation/start. Check real iframe/HMR behavior and document the recipe and disposable cache policy. Commit finished increments, update handoff/changelog and run the required package/native checks when those files change. No merge, push or publication without instruction.
 
@@ -130,8 +130,16 @@ Keep v1 macOS-only. Explicitly excluded: mutation token, per-commit views, envir
 | Modified export and interrupted-run cleanup | Tool-rewritten source files do not block disposal; remove only owned disposable cache content, never a live sibling run or an external directory. No recorded PIDs. |
 | Packaging and real browser/native behavior | Typecheck, unit/integration tests, required native tests/build, `npm pack` plus install/start from tarball. Verify real iframe/HMR and CORS/framing on 3200 and 3201; do not equate a 200 response with visual acceptance. |
 
-## Pending decisions and review record
+## Implementation record and review history
 
-Claude recommends proceeding with the changes incorporated above. Nicolas still needs to authorize implementation, name the first real project, confirm committed-only managed snapshots, and confirm one managed preview at a time across projects (plus a temporary candidate during a switch). The existing Working preview remains the route to uncommitted work. Do not treat Claude's recommendation of Palier as a selection or its verdict as implementation approval.
+Nicolas approved all three proposed defaults and the first implementation increment: Palier first, committed-only snapshots, one active managed preview plus a replacement candidate. The existing Working preview remains the route to uncommitted work.
+
+`server/previews.ts` exposes `createPreviewRunner`, with start/cancel/stop/dispose, revisioned state and stale-cache cleanup. `server/previewGuardian.ts` owns Git/export, preparation, listener checks, manifest validation and server lifetime. Cache run directories contain `source/` (the export) and `owner.json`; a private per-run Unix socket under `/tmp` supplies a live lease without recording PIDs. Only marked, unleased directories are eligible for cleanup. Unknown/unmarked folders and symlinks are preserved. Source rewrites inside a disposable export do not prevent cleanup.
+
+Eleven process tests cover cold starts/replacement, dirty working-copy isolation, missing files/manifests, path containment, cancellation and supersession, preparation timeout, foreign IPv4 and mixed owned-IPv4/foreign-IPv6 listeners, coordinator SIGKILL during preparation/serving, and cleanup that preserves live sibling runs and unknown directories. The runner passes from source and from an installed tarball, including its compiled guardian. Palier `main` at `1591aac` cold-started with a fresh dependency install; its manifest and first screen responded successfully and the original checkout/worktree list/3100 listener were unchanged. The owned server/export were removed afterward.
+
+Limits of this increment: no registry recipe parsing or HTTP API, no UI, no Vite-close/CLI/Mac lifecycle wiring, and no visual/HMR acceptance. Hosts must eventually call dispose at their documented lifecycle boundaries. The guardian handles coordinator death now; directly killing the guardian itself or a recipe deliberately daemonizing outside its group is outside the trusted-recipe model. Recipes must keep descendants in the group. Child output is drained but not exposed, to avoid printing dependency credentials; richer bounded diagnostics are deferred. System port allocation is one attempt per start; a collision fails safely and can be retried without killing its occupant. This increment does not add automatic collision retries.
+
+The next increment is lifecycle/API/UI integration, with the Vite `httpServer` close requirement unchanged. The installed app has not been updated with this internal runner.
 
 The original [review prompt](claude-branch-preview-review.md) is retained as historical context; it describes the superseded worktree proposal. Claude's probe findings are recorded in the 2026-10-07 review entry in `CHANGELOG.md`. The full review was returned in Claude's session; this revision incorporates the essential changes Nicolas relayed and has not received a second review.

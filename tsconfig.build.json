@@ -13,6 +13,8 @@
     "rewriteRelativeImportExtensions": true
   },
   "include": [
-    "server/cli.ts"
+    "server/cli.ts",
+    "server/previews.ts",
+    "server/previewGuardian.ts"
   ]
 }

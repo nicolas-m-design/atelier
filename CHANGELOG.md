@@ -389,3 +389,16 @@ Revised `docs/branch-preview-plan.md` after Nicolas relayed Claude's “proceed 
 The first increment is strictly `server/previews.ts`, the guardian and process-level fixture tests, followed by a cold start on the project Nicolas names. Implementation remains unauthorized. The first project, committed-only snapshots and single-managed-preview policy await his decision. The original review prompt is labelled historical; Claude's reported probes have not been reproduced by Codex. No runtime, connector, local configuration, installed app or neighbouring project/server changed.
 
 Checks for this documentation revision: `npm run typecheck`, all 71 tests and `git diff --check` pass. No merge or push.
+
+
+## 2026-10-07 — Internal branch-preview runner and guardian
+
+Nicolas authorized the first runner increment with Palier, committed-only snapshots and one managed preview at a time. Added `server/previews.ts` and `server/previewGuardian.ts`, plus eleven macOS process-level tests. The coordinator preserves its active run until a replacement is ready; cancellation/supersession stop only owned candidates. Recipes use explicit commands, required files and a mandatory `{port}` start argument. Archive exports and private dependencies stay in disposable cache directories, with no linked-worktree or neighbouring-checkout writes.
+
+Every command runs beneath an EOF guardian in its own process group. A dropped coordinator pipe—including coordinator SIGKILL—causes group TERM then KILL; no recorded PID is used. A live Unix socket protects each marked cache directory from recovery cleanup. Listener readiness uses all `lsof` results on the assigned port, including both address families, then validates a bounded manifest response on the server. Preparation/timeouts, missing files/manifests, external symlinks, foreign listeners, source rewrites and leftover cleanup have real fixture coverage. A test caught cancellation reported as a command error; cancellation now wins consistently.
+
+Palier's archive of `main` at `1591aac` installed dependencies cold and served its manifest plus the first screen. Its original HEAD, status, worktree list and port-3100 listener were unchanged. The temporary server/export were removed; the tested recipe is in `docs/local-setup.md`. The build explicitly includes the runner and guardian so the installed tarball can launch the compiled child.
+
+Limits: this is an internal backend increment, with no registry configuration change, HTTP API, UI or host lifecycle wiring. Vite restart disposal and native/CLI integration remain next. No visual/HMR claim. Recipes must not daemonize outside the guardian's group; killing the guardian itself is not the tested coordinator-death path. Output is drained without exposing dependency credentials; richer diagnostics are deferred. Port collision fails safely for explicit retry. Unknown cache folders are preserved. The installed app was not replaced.
+
+Checks: typecheck, all 82 web/process tests and 12 Mac helper/update tests pass. `npm pack` installs and its command serves the page/registry; the installed runner also cold-starts and disposes a fixture through the compiled guardian. No merge or push.

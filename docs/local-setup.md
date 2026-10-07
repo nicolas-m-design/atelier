@@ -42,3 +42,21 @@ The preview uses `.claude/launch.json` (`atelier-dev`), from a session opened on
 The same file has `marvin-dev`, which runs Marvin's own `npm run dev` from `/Users/nico/Sites/marvin` on port 3210, so that a session here can start Marvin when Nicolas asks. It changes nothing in Marvin, and it names a folder that exists on this machine only.
 
 `krux-dev` does the same for Krux, from the worktree `/Users/nico/Worktrees/krux/atelier-connector` on port 3220. That folder goes away once Krux's branch is merged, and the entry has to name another checkout then.
+
+
+## Palier cold branch-preview check (2026-10-07)
+
+Nicolas selected Palier for the first internal runner check. This did not change the machine registry or make branch selection available in the app. The runner exported `main` at `1591aacbc9d4e39abaa53fc7de5ffca18a3d944c` under Atelier test namespace 3298 and used this explicit recipe:
+
+```js
+{
+  dir: ".",
+  requires: ["package.json", "package-lock.json"],
+  prepare: [["npm", "ci", "--no-audit", "--no-fund"]],
+  start: [process.execPath, "node_modules/next/dist/bin/next", "dev",
+    "--hostname", "127.0.0.1", "--port", "{port}"],
+  env: { NEXT_TELEMETRY_DISABLED: "1", PALIER_DEV_ORIGIN: "127.0.0.1" }
+}
+```
+
+This invokes Next directly because `npm run dev` fixes port 3100. A new export with its own installed dependencies reached manifest readiness; `/scenarios/photo-1/accueil` returned HTTP 200, and the manifest allowed the app's localhost:3201 origin via its existing `*` CORS header. The original HEAD, tracked/untracked status, worktree inventory and 3100 listener matched before/after. The owned preview was stopped and its export removed. This was a server/process acceptance check, not visual or HMR verification. No `.env` files, existing dependencies or project servers were copied, replaced or stopped.
