@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { NoProjects } from "./components/NoProjects";
 import { ProjectRail } from "./components/ProjectRail";
-import { Workspace } from "./components/Workspace";
+import { ProjectWorkspace } from "./components/ProjectWorkspace";
+import { usePreviews } from "./usePreviews";
 import type { Project } from "./projects";
 import { browserStorage, createStore } from "./storage";
 import { useProjects } from "./useProjects";
@@ -20,7 +21,10 @@ export function App() {
 function Projects({ projects }: { projects: readonly Project[] }) {
   const [active, setActive] = useState(() => projects.find((project) => project.id === store.get().active)?.id ?? projects[0]!.id);
   const [sidebar, setSidebar] = useState(() => store.get().sidebar);
+  const session = usePreviews();
   const { statuses, recheck } = useStatuses(projects);
+  const managed = session.state?.active;
+  const railStatuses = managed ? { ...statuses, [managed.projectId]: { state: "online" as const, manifest: managed.manifest } } : statuses;
   const project = projects.find((project) => project.id === active)!;
 
   useEffect(() => { store.update((saved) => { saved.active = active; saved.sidebar = sidebar; }); }, [active, sidebar]);
@@ -37,8 +41,8 @@ function Projects({ projects }: { projects: readonly Project[] }) {
 
   return (
     <div className="flex h-dvh overflow-hidden">
-      <ProjectRail projects={projects} statuses={statuses} active={active} onSelect={(id) => { setActive(id); recheck(); }} />
-      <Workspace key={project.id} project={project} status={statuses[project.id] ?? { state: "checking" }} store={store} sidebar={sidebar} onSidebar={setSidebar} onRetry={recheck} />
+      <ProjectRail projects={projects.map(p => managed?.projectId === p.id ? { ...p, origin: managed.origin } : p)} statuses={railStatuses} active={active} onSelect={(id) => { setActive(id); recheck(); }} />
+      <ProjectWorkspace session={session} key={project.id} project={project} status={statuses[project.id] ?? { state: "checking" }} store={store} sidebar={sidebar} onSidebar={setSidebar} onRetry={recheck} />
     </div>
   );
 }

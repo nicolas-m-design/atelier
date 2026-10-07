@@ -1,4 +1,4 @@
-/** Internal macOS preview runner. No HTTP routes or project-registry changes yet. */
+/** macOS preview coordinator. Registry and HTTP concerns live in previewService. */
 import { spawn } from "node:child_process";
 import { randomBytes } from "node:crypto";
 import { mkdir, lstat, readFile, readdir, realpath, rm } from "node:fs/promises";
@@ -26,11 +26,14 @@ export interface PreviewState {
   active: PreviewRun | null;
   candidate: { id: string; projectId: string; branch: string; phase: string } | null;
   error: string | null;
+  errorProjectId: string | null;
 }
 export interface PreviewOptions {
   atelierPort: number;
   /** Tests may isolate the cache; production uses the machine cache. */
   cacheRoot?: string;
+  /** Vite bundles its config; its child still runs this explicit source file. */
+  guardianPath?: string;
   prepareTimeoutMs?: number;
   startupTimeoutMs?: number;
 }
@@ -123,7 +126,7 @@ export async function createPreviewRunner(options: PreviewOptions) {
     return removed;
   };
   await cleanLeftovers();
-  let state: PreviewState = { revision: 0, active: null, candidate: null, error: null };
+  let state: PreviewState = { revision: 0, active: null, candidate: null, error: null, errorProjectId: null };
   let active: Owned | null = null;
   let candidate: Owned | null = null;
   let disposed = false;
@@ -140,7 +143,7 @@ export async function createPreviewRunner(options: PreviewOptions) {
   function launch(request: PreviewRequest): Owned {
     const id = randomBytes(12).toString("hex");
     const directory = join(namespace, id);
-    const guardianFile = fileURLToPath(new URL(import.meta.url.endsWith(".ts") ? "./previewGuardian.ts" : "./previewGuardian.js", import.meta.url));
+    const guardianFile = options.guardianPath ?? fileURLToPath(new URL(import.meta.url.endsWith(".ts") ? "./previewGuardian.ts" : "./previewGuardian.js", import.meta.url));
     const child = spawn(process.execPath, [...(guardianFile.endsWith(".ts") ? ["--experimental-strip-types"] : []), guardianFile], {
       detached: true, env: previewEnvironment(), stdio: ["pipe", "pipe", "pipe", "pipe"],
     });
@@ -154,7 +157,7 @@ export async function createPreviewRunner(options: PreviewOptions) {
       child.once("close", () => {
         closed = true;
         fail(stopping ? "Preview cancelled." : "Preview guardian exited before readiness.");
-        if (active?.id === id) { active = null; update({ active: null, error: "The preview process stopped." }); }
+        if (active?.id === id) { active = null; update({ active: null, error: "The preview process stopped.", errorProjectId: request.projectId }); }
         resolve();
       });
     });
@@ -208,19 +211,19 @@ export async function createPreviewRunner(options: PreviewOptions) {
     const result = enqueue(async () => {
       if (disposed || generation !== token) throw new Error("Preview cancelled.");
       const owned = launch(request); candidate = owned;
-      update({ candidate: { id: owned.id, projectId: request.projectId, branch: request.branch, phase: "resolving" }, error: null });
+      update({ candidate: { id: owned.id, projectId: request.projectId, branch: request.branch, phase: "resolving" }, error: null, errorProjectId: null });
       try {
         const run = await owned.ready;
         if (disposed || generation !== token) throw new Error("Preview cancelled.");
         const previous = active;
         active = owned; candidate = null;
-        update({ active: run, candidate: null, error: null });
-        await previous?.stop();
+        update({ active: run, candidate: null, error: null, errorProjectId: null });
+        await previous?.stop().catch(() => update({ error: "The previous preview stopped, but its cache could not be removed.", errorProjectId: request.projectId }));
         return structuredClone(run);
       } catch (error) {
         await owned.stop();
         if (candidate === owned) candidate = null;
-        update({ candidate: null, error: message(error) });
+        update({ candidate: null, error: message(error), errorProjectId: request.projectId });
         throw error;
       }
     });
@@ -232,11 +235,12 @@ export async function createPreviewRunner(options: PreviewOptions) {
     ++generation;
     await candidate?.stop();
     await tail;
+    if (state.error === "Preview cancelled.") update({ error: null, errorProjectId: null });
   }
   async function stop() {
     await cancel();
     const previous = active; active = null;
-    update({ active: null, error: null });
+    update({ active: null, error: null, errorProjectId: null });
     await previous?.stop();
   }
   return {

@@ -105,14 +105,15 @@ Atelier's code names no project. Add the project to the list on the machine, `~/
 
 | Field | Meaning |
 | --- | --- |
-| `repo` | The project's main folder, as an absolute path. Atelier's server reads the local branches there for the sidebar's "Local branches" list, and never writes to it. Without it the list says no folder is registered. |
+| `repo` | The project's main folder, as an absolute path. Atelier’s server reads local branches there for the preview selector and never checks out or edits that repository. Without it the list says no folder is registered. |
 | `origin` | Where the preview answers: scheme, host and port, no path. Left out or `null`, the project appears as an empty one. |
 | `start` | The command that starts the preview, run in `repo`. Atelier shows it; it never runs it. |
+| `preview` | Optional machine-local branch recipe: `dir`, `requires`, `prepare`, `start`, `env`. Explicit launch commands for committed exports, separate from the display-only `start` string. See README, “Branch-preview recipes”. macOS only. |
 | `id`, `name` | Default to the `name` in the folder's `package.json` (without its scope), and to that id with a capital. The id is lowercase letters, digits and hyphens; Atelier stores each project's canvas view under it, so keep it stable. |
 
 An entry may be just the folder, as a string. A project can then describe itself, in an `atelier` field of its own `package.json`: `{ "origin": "http://localhost:3300", "start": "npm run dev" }`, and optionally `name`. What the list entry gives wins over that field. Neither connected project has the field yet; their entries in the list are complete.
 
-This is outside the contract: Atelier reads only the manifest from a running project, and the list only tells it where to look.
+The recipe is outside the connector contract. Managed readiness checks every listener’s process-group ownership, then fetches and validates the same `/atelier.json` on the server. No new endpoint or connector script is required. Existing external servers remain Working previews.
 
 To show a project at a different address without editing the list, for example a worktree's preview on another port: `--origin <id>=<address>` on the `agent-atelier` command, or `VITE_ORIGIN_<ID>` in Atelier's `.env.local` under `npm run dev`, where hyphens in the id become underscores.
 

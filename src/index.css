@@ -36,3 +36,16 @@
 .tool:focus-visible { outline: 2px solid #404040; outline-offset: 2px; }
 .tool:disabled { opacity: 0.3; }
 .tool:disabled:hover { background: none; color: #737373; }
+
+
+/* Preview controls reuse the sidebar's compact type and neutral surfaces. */
+.preview-controls { font-size: 12px; line-height: 18px; color: #252525; }
+.preview-action, .preview-icon {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  min-height: 32px; padding: 6px 8px; border-radius: 5px;
+  background: #ebebeb; color: #252525; font-weight: 400;
+}
+.preview-icon { width: 32px; padding: 0; background: transparent; }
+.preview-action:hover, .preview-icon:hover { background: #dedede; }
+.preview-action:focus-visible, .preview-icon:focus-visible { outline: 2px solid #404040; outline-offset: 2px; }
+.preview-action:disabled { background: #f0f0f0; color: #737373; }

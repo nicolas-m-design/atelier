@@ -89,3 +89,34 @@ test('shutdown reaps in-flight Git commands, including one ignoring SIGTERM', as
   await request;
   for (const pid of children) assert.throws(() => process.kill(pid, 0), { code: 'ESRCH' });
 });
+
+for (const phase of ['preparing', 'ready']) {
+  test(`parent pipe EOF stops owned branch previews while ${phase}`, { skip: process.platform !== 'darwin' }, async t => {
+    const { execFileSync } = await import('node:child_process');
+    const { dirname } = await import('node:path');
+    const port = await unusedPort(); const run = await launch(t, port);
+    const repo = dirname(run.registry);
+    const pidFile = join(repo, 'owned-child');
+    const manifest = { atelier: 1, name: 'Fixture', frame: { width: 800, height: 600 }, groups: [] };
+    await writeFile(join(repo, 'server.mjs'), `import {createServer} from 'node:http'; import {writeFileSync} from 'node:fs'; writeFileSync(process.env.PID_FILE,String(process.pid)); createServer((q,r)=>{r.setHeader('content-type','application/json');r.end(${JSON.stringify(JSON.stringify(manifest))})}).listen(Number(process.argv[2]),'127.0.0.1');`);
+    const git = (...args) => execFileSync('/usr/bin/git', args, { cwd: repo, stdio: 'pipe' });
+    git('init', '-q', '-b', 'main'); git('add', 'server.mjs'); git('-c', 'user.name=Fixture', '-c', 'user.email=fixture@example.invalid', 'commit', '-qm', 'Fixture');
+    await writeFile(run.registry, JSON.stringify({ projects: [{ id: 'test', repo, preview: { dir: '.', requires: ['server.mjs'], prepare: phase === 'ready' ? [] : [[process.execPath, '-e', "require('fs').writeFileSync(process.env.PID_FILE,String(process.pid)); process.on('SIGTERM',()=>{}); setInterval(()=>{},1000)"]], start: [process.execPath, 'server.mjs', '{port}'], env: { PID_FILE: pidFile } } }] }));
+    await ready(run);
+    const url = `http://localhost:${port}/__atelier/previews`;
+    const headers = { 'sec-fetch-site': 'same-origin', 'content-type': 'application/json', origin: `http://localhost:${port}` };
+    const state = await (await fetch(url, { headers })).json();
+    assert.equal((await fetch(url, { method: 'POST', headers, body: JSON.stringify({ action: 'start', projectId: 'test', branch: 'main', instance: state.instance, revision: state.revision }) })).status, 202);
+    let pid, active;
+    await deadline((async () => {
+      while (!pid || (phase === 'ready' && !active)) {
+        pid = await readFile(pidFile, 'utf8').then(Number, () => null);
+        active = (await (await fetch(url, { headers })).json()).active;
+        await new Promise(resolve => setTimeout(resolve, 30));
+      }
+    })());
+    run.child.stdin.end(); assert.equal((await deadline(run.exit))[0], 0);
+    assert.throws(() => process.kill(pid, 0), { code: 'ESRCH' });
+    if (active) await assert.rejects(fetch(active.origin));
+  });
+}

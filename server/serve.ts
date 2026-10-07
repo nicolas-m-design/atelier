@@ -3,6 +3,7 @@
  * own endpoints, on this machine's loopback addresses only. Node's built-in
  * modules, nothing else.
  */
+import { createPreviewService } from "./previewService.ts";
 import { createReadStream } from "node:fs";
 import { stat } from "node:fs/promises";
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from "node:http";
@@ -79,7 +80,8 @@ export function requestListener({ root, port, ...options }: ServeOptions): (requ
  * copies never share a port between them.
  */
 export async function serve(options: ServeOptions): Promise<() => Promise<void>> {
-  const onRequest = requestListener(options);
+  const previews = options.previews ?? createPreviewService({ atelierPort: options.port, file: options.file, read: options.read });
+  const onRequest = requestListener({ ...options, previews });
   const servers: Server[] = [];
   for (const host of ["127.0.0.1", "::1"]) {
     const server = createServer(onRequest);
@@ -91,8 +93,9 @@ export async function serve(options: ServeOptions): Promise<() => Promise<void>>
       // A machine without IPv6 has no `::1` to listen on; the other address is enough.
       if (host === "::1" && (code === "EADDRNOTAVAIL" || code === "EAFNOSUPPORT")) continue;
       await Promise.all(servers.map((open) => new Promise((done) => open.close(done))));
+      await previews.dispose();
       throw error;
     }
   }
-  return async () => { await Promise.all(servers.map((open) => new Promise((done) => { open.closeAllConnections(); open.close(done); }))); };
+  return async () => { await Promise.all([previews.dispose(), ...servers.map((open) => new Promise((done) => { open.closeAllConnections(); open.close(done); }))]); };
 }

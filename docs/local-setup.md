@@ -60,3 +60,10 @@ Nicolas selected Palier for the first internal runner check. This did not change
 ```
 
 This invokes Next directly because `npm run dev` fixes port 3100. A new export with its own installed dependencies reached manifest readiness; `/scenarios/photo-1/accueil` returned HTTP 200, and the manifest allowed the app's localhost:3201 origin via its existing `*` CORS header. The original HEAD, tracked/untracked status, worktree inventory and 3100 listener matched before/after. The owned preview was stopped and its export removed. This was a server/process acceptance check, not visual or HMR verification. No `.env` files, existing dependencies or project servers were copied, replaced or stopped.
+
+
+## Branch-preview controls enabled (2026-10-07)
+
+Palier’s entry in `~/.config/agent-atelier/projects.json` now has the recipe above, using `"node"` as the executable so the guardian resolves the current Node runtime. The previous registry was saved beside it as `projects.json.before-branch-previews-*`. Other entries are unchanged. Choosing a local branch only stages the choice; **Start preview** installs and starts its committed export. The display-only `start` command still belongs to the external Working preview.
+
+The integrated browser check on Atelier port 3298 cold-started main at `1591aac`, switched to `codex/activity-video-draft` at `6c53deb`, then back to main. Tablet size and the selected screen survived; a linked library page switched to the new run’s origin. Cancellation kept the old preview, and another tab reconnected to the same run. The original port-3100 server remained untouched. The review server and its main snapshot are left running for Nicolas; **Stop** ends only the snapshot. The installed app remains on its previous build until **Atelier → Update Atelier…** is used. Actual installed-WebKit acceptance and editing a snapshot to demonstrate project HMR have not been exercised.

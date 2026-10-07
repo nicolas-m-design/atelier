@@ -5,6 +5,7 @@
  * `atelier` field of that folder's `package.json`. Reading never writes; the
  * one thing that does is `addProject`, for the `add` command.
  */
+import { validateRecipe, type PreviewRecipe } from "./previews.ts";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { homedir } from "node:os";
 import { dirname, isAbsolute, join } from "node:path";
@@ -68,8 +69,11 @@ async function resolveEntry(entry: unknown, read: Read): Promise<Project> {
   if (typeof id !== "string") throw new Error("it needs an id, or a repo whose package.json has a name");
   const start = given.start ?? own.start;
   if (start !== undefined && (typeof start !== "string" || !repo)) throw new Error("the start command must be text, and needs a repo to run in");
+  let canPreview = false;
+  try { if (repo && given.preview !== undefined) { validateRecipe(given.preview as PreviewRecipe); canPreview = true; } } catch { /* Keep the project usable; the start endpoint reports invalid recipes. */ }
   return parseProject({
     id,
+    canPreview,
     name: given.name ?? own.name ?? id.slice(0, 1).toUpperCase() + id.slice(1),
     origin: given.origin ?? own.origin,
     repo,
@@ -147,4 +151,18 @@ export async function addProject(file: string, entry: NewEntry, read: Read = rea
   const stored = Object.keys(given).length === 0 ? repo : { repo, ...given };
   await write(file, `${JSON.stringify({ ...data, projects: [...data.projects, stored] }, null, 2)}\n`);
   return project;
+}
+
+/** Read privileged configuration only for the requested registered project. Never return this in a public list. */
+export async function readPreviewRecipe(file: string, id: string, read: Read = readText): Promise<{ repo: string; recipe: PreviewRecipe }> {
+  const { data, problem } = await readEntries(file, read);
+  if (problem) throw new Error("The project list could not be read.");
+  for (const entry of data.projects) {
+    let project: Project;
+    try { project = await resolveEntry(entry, read); } catch { continue; }
+    if (project.id !== id) continue;
+    if (!project.repo || !isRecord(entry) || entry.preview === undefined) throw new Error("Branch previews need a preview recipe in the project list.");
+    return { repo: project.repo, recipe: validateRecipe(entry.preview as PreviewRecipe) };
+  }
+  throw new Error("No such registered project.");
 }

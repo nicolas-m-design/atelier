@@ -1,15 +1,14 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { ChevronDown, File, Frame as FrameIcon, Layers, Library, PanelLeftClose, PanelLeftOpen, RefreshCw } from "lucide-react";
 import type { Camera } from "../camera";
 import { layoutBoard } from "../layout";
 import type { Project } from "../projects";
 import type { Status } from "../status";
 import type { Store } from "../storage";
-import { Branches } from "./Branches";
 import { Canvas, type CanvasHandle } from "./Canvas";
 import { Page } from "./Page";
 import { STATUS_DOT, StatusCard, statusLine } from "./StatusCard";
-import { DEFAULT_DEVICE, DEFAULT_VIEWPORT, DEFAULT_VIEWPORTS, DEVICE_VIEWPORTS, type Device, type ViewportMode } from "../viewports";
+import { DEFAULT_VIEWPORTS, DEVICE_VIEWPORTS, type Device, type ViewportMode } from "../viewports";
 
 interface Props {
   project: Project;
@@ -18,6 +17,14 @@ interface Props {
   sidebar: boolean;
   onSidebar(open: boolean): void;
   onRetry(): void;
+  focusInitialSelection: boolean;
+  device: Device;
+  viewportMode: ViewportMode;
+  onDevice(value: Device): void;
+  onViewport(value: ViewportMode): void;
+  previewControls: ReactNode;
+  sourceLabel: string;
+  onSelection(selected: string | null, page: string | null): void;
 }
 
 /**
@@ -25,16 +32,13 @@ interface Props {
  * Mounted per project, so its camera, selection and previews never leak into
  * another project's.
  */
-export function Workspace({ project, status, store, sidebar, onSidebar, onRetry }: Props) {
+export function Workspace({ project, status, store, sidebar, onSidebar, onRetry, focusInitialSelection, device, viewportMode, onDevice: setDevice, onViewport: setViewportMode, previewControls, sourceLabel, onSelection }: Props) {
   const canvas = useRef<CanvasHandle>(null);
   const [view] = useState(() => store.get().projects[project.id] ?? {});
   const live = status.state === "online";
   // While the project is stopped, keep listing what it last served.
   const [lastManifest, setLastManifest] = useState(view.manifest);
   const manifest = status.state === "online" ? status.manifest : lastManifest;
-  // Deliberately not saved: each project opens at the documented desktop preset.
-  const [device, setDevice] = useState<Device>(DEFAULT_DEVICE);
-  const [viewportMode, setViewportMode] = useState<ViewportMode>(DEFAULT_VIEWPORT);
   const board = useMemo(() => manifest ? layoutBoard(manifest, viewportMode) : null, [manifest, viewportMode]);
   const [selected, setSelected] = useState<string | null>(view.selected ?? null);
   const [interactive, setInteractive] = useState<string | null>(null);
@@ -54,6 +58,7 @@ export function Workspace({ project, status, store, sidebar, onSidebar, onRetry 
   const [page, setPage] = useState<string | null>(view.page ?? null);
   const links = manifest?.links ?? [];
   const open = links.find((link) => link.id === page) ?? null;
+  useEffect(() => { onSelection(current, open?.id ?? null); }, [current, open?.id, onSelection]);
 
   useEffect(() => {
     if (status.state !== "online") return;
@@ -98,6 +103,7 @@ export function Workspace({ project, status, store, sidebar, onSidebar, onRetry 
               <button type="button" className="tool" onClick={() => onSidebar(false)} aria-label="Hide the sidebar"><PanelLeftClose size={16} aria-hidden /></button>
             </div>
           </div>
+          {previewControls}
           {links.length > 0 && (
             <nav aria-label={`${project.name} pages`} className="shrink-0 space-y-1 border-t border-black/[0.07] px-3 py-3 text-[13px]">
               <button type="button" onClick={() => showPage(null)} aria-current={open ? undefined : "page"} className={pageItem(!open)}><Layers size={16} className="shrink-0" aria-hidden />Screens</button>
@@ -122,15 +128,14 @@ export function Workspace({ project, status, store, sidebar, onSidebar, onRetry 
             ))}
             {!board && <p className="px-2 py-2 leading-relaxed text-neutral-500">No screens to list yet.</p>}
           </nav>
-          <Branches project={project} store={store} />
         </aside>
       )}
       <div className="relative flex min-w-0 flex-1">
-        {!sidebar && !open && <div className="absolute top-4 left-4 z-20 rounded-[5px] bg-white shadow-sm">{showSidebar}</div>}
+        {!sidebar && !open && <div className="absolute top-4 left-4 z-20 flex items-center gap-1 rounded-[5px] bg-white shadow-sm">{showSidebar}<span className="max-w-64 truncate pr-3 text-[12px] leading-4 text-neutral-600" title={sourceLabel}>{sourceLabel}</span></div>}
         {/* The canvas stays mounted under an open page, so its previews and position are there on return. */}
         <div className="flex min-w-0 flex-1" inert={Boolean(open)}>
           <Canvas ref={canvas} label={`${project.name} canvas`} origin={project.origin} board={board ?? EMPTY_BOARD} live={live} reloads={reloads}
-            initialCamera={view.camera} selected={current} interactive={entered}
+            initialScreenId={focusInitialSelection ? current : undefined} initialCamera={view.camera} selected={current} interactive={entered}
             viewportControl={board?.screens.length ? (
               <div className="pointer-events-auto flex min-h-10 flex-wrap items-center justify-center gap-x-3 gap-y-1 rounded-lg border border-black/[0.08] bg-white px-3 py-1 text-[12px] text-neutral-700">
                 <label className="flex items-center gap-2">
@@ -163,7 +168,7 @@ export function Workspace({ project, status, store, sidebar, onSidebar, onRetry 
           </Canvas>
         </div>
         {open && (
-          <Page key={open.id} link={open} reloads={reloads} src={live && project.origin ? project.origin + open.route : null} leading={sidebar ? null : showSidebar}>
+          <Page key={open.id} link={open} reloads={reloads} src={live && project.origin ? project.origin + open.route : null} leading={sidebar ? null : <div className="flex items-center gap-2">{showSidebar}<span className="max-w-64 truncate text-[12px] leading-4 text-neutral-600">{sourceLabel}</span></div>}>
             <StatusCard project={project} status={status} hasBoard={false} onRetry={onRetry} />
           </Page>
         )}

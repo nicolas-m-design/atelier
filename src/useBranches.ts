@@ -1,3 +1,4 @@
+import { canRefresh, observeVisibility } from "./lifecycle";
 import { useEffect, useState } from "react";
 import { BRANCHES_PATH, parseReport, type BranchReport } from "./branches";
 
@@ -19,16 +20,21 @@ export function useBranches(id: string, open: boolean): { report: BranchReport |
 
   useEffect(() => {
     if (!open) return;
-    let current = true;
+    let current = true, sequence = 0;
     const read = () => {
+      const ticket = ++sequence;
       void fetchBranches(id).then(
-        (next) => { if (current) { setReport(next); setFailed(false); } },
-        () => { if (current) setFailed(true); },
+        (next) => { if (current && ticket === sequence) { setReport(next); setFailed(false); } },
+        () => { if (current && ticket === sequence) setFailed(true); },
       );
     };
     read();
-    window.addEventListener("focus", read);
-    return () => { current = false; window.removeEventListener("focus", read); };
+    const wake = () => { if (canRefresh()) read(); };
+    const timer = setInterval(wake, 10_000);
+    const unobserve = observeVisibility(wake);
+    window.addEventListener("focus", wake);
+    document.addEventListener("visibilitychange", wake);
+    return () => { current = false; clearInterval(timer); unobserve(); window.removeEventListener("focus", wake); document.removeEventListener("visibilitychange", wake); };
   }, [id, open]);
 
   return { report, failed };

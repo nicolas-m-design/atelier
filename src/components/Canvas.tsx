@@ -28,6 +28,7 @@ interface Props {
   /** Changes when every preview should start again from its route. */
   reloads: number;
   initialCamera?: Camera;
+  initialScreenId?: string | null;
   selected: string | null;
   interactive: string | null;
   onSelect(id: string | null): void;
@@ -39,7 +40,7 @@ interface Props {
 
 const sameSet = (a: ReadonlySet<string>, b: ReadonlySet<string>) => a.size === b.size && [...a].every((id) => b.has(id));
 
-export function Canvas({ ref, label, origin, board, live, reloads, initialCamera, selected, interactive, onSelect, onInteractive, onCamera, viewportControl, children }: Props) {
+export function Canvas({ ref, label, origin, board, live, reloads, initialCamera, initialScreenId, selected, interactive, onSelect, onInteractive, onCamera, viewportControl, children }: Props) {
   const viewport = useRef<HTMLDivElement>(null);
   const [camera, setCamera] = useState<Camera>(initialCamera ?? { x: 56, y: 60, zoom: OVERVIEW_ZOOM.max });
   const latestCamera = useRef(camera);
@@ -120,6 +121,7 @@ export function Canvas({ ref, label, origin, board, live, reloads, initialCamera
   useEffect(() => {
     if (placed.current || !size || !board.screens.length) return;
     placed.current = true;
+    if (initialScreenId && board.screens.some(screen => screen.id === initialScreenId)) { focusScreen(initialScreenId); return; }
     setCamera({ x: 56, y: 60, zoom: clampZoom(Math.max(OVERVIEW_ZOOM.min, Math.min(OVERVIEW_ZOOM.max, (size.width - 112) / board.width))) });
   }, [size, board]);
 

@@ -37,7 +37,13 @@ async function run(command: Command): Promise<void> {
   const cwd = process.cwd();
   const extra = await isAtelierProject(cwd) ? cwd : undefined;
   try {
-    await serve({ root, port: command.port, file, extra, overrides: (id) => command.overrides.get(id) });
+    const close = await serve({ root, port: command.port, file, extra, overrides: (id) => command.overrides.get(id) });
+    let closing = false;
+    const shutdown = () => {
+      if (closing) return; closing = true;
+      void close().then(() => process.exit(0), () => process.exit(1));
+    };
+    process.once("SIGTERM", shutdown); process.once("SIGINT", shutdown);
   } catch (error) {
     if ((error as NodeJS.ErrnoException).code !== "EADDRINUSE") throw error;
     throw new Error(`Port ${command.port} is already in use, perhaps by another Atelier. Saved canvas positions belong to this address, so Atelier does not move by itself. Stop the other server, or pass --port.`);

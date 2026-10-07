@@ -3,6 +3,8 @@
  * each project's local branches. The dev server mounts this (`server/vite.ts`),
  * and so does the packaged command (`server/serve.ts`).
  */
+import type { PreviewService } from "./previewService.ts";
+import { PREVIEWS_PATH } from "../src/previews.ts";
 import type { IncomingMessage, ServerResponse } from "node:http";
 import { BRANCHES_PATH, type BranchReport } from "../src/branches.ts";
 import { PROJECTS_PATH, withOverrides, type Overrides, type ProjectList } from "../src/projects.ts";
@@ -11,6 +13,7 @@ import { readProjects, type Read } from "./projects.ts";
 import { refusal, type Answer } from "./request.ts";
 
 export interface ServerOptions {
+  previews?: PreviewService;
   /** The file the project list is read from. */
   file: string;
   /** Another preview address for a project, by its id. */
@@ -53,6 +56,16 @@ export function createHandler({ file, overrides = () => undefined, extra, read, 
 export function listener(options: ServerOptions): (request: IncomingMessage, response: ServerResponse, next: () => void) => void {
   const handle = createHandler(options);
   return (request, response, next) => {
+    if ((request.url ?? "").split("?")[0] === PREVIEWS_PATH) {
+      if (!options.previews) { response.writeHead(503); response.end(); return; }
+      void options.previews.answer(request).then(result => {
+        response.statusCode = result?.status ?? 404;
+        response.setHeader("Content-Type", "application/json");
+        response.setHeader("Cache-Control", "no-store");
+        response.end(JSON.stringify(result?.body ?? { error: "Not found." }));
+      }, () => { response.writeHead(503); response.end(JSON.stringify({ error: "Preview service unavailable." })); });
+      return;
+    }
     const site = request.headers["sec-fetch-site"];
     void handle({ method: request.method, url: request.url, site: typeof site === "string" ? site : undefined }).then((result) => {
       if (!result) return next();

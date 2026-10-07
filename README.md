@@ -6,14 +6,14 @@
 
 On a Mac with Xcode and Node 22.12 or newer installed, run `npm run build:mac`. Copy `macos/build/Atelier.app` into Applications and open it normally. The app bundles the built UI and server, uses installed Node, and starts without a terminal. After this first install, choose **Atelier → Update Atelier… → Update and Reopen** to build the current local source, install it and relaunch automatically. The source checkout, its installed dependencies and Xcode command-line tools must remain available; this is a local updater, not a published-release service.
 
-It uses `http://localhost:3201`, leaving port 3200 for browser development. Closing the window or quitting stops its helper; project preview servers are still started separately. The project list is shared with the command, while canvas preferences live in the app's own WebKit storage. See [Mac build details](macos/README.md) in the source repository.
+It uses `http://localhost:3201`, leaving port 3200 for browser development. Closing the window or quitting stops its helper; owned branch previews stop with it; externally started Working previews stay running. The project list is shared with the command, while canvas preferences live in the app's own WebKit storage. See [Mac build details](macos/README.md) in the source repository.
 
 ## What it is
 
 Atelier started as the canvas inside one project, and was moved out so it can be improved once and used by every project:
 
 - a narrow **project rail** to switch projects, each with a status dot;
-- the selected project's **sidebar**: a switch between its screens and its linked pages, such as a UI library, then the list of screens, and at the foot the local branches of its repository;
+- the selected project's **sidebar**: a switch between its screens and its linked pages, such as a UI library, a branch-preview selector and launch controls, then the list of screens;
 - the **canvas**, with each screen shown as a live preview from the project's own server.
 
 Atelier holds no product code. A project lists its screens in a small manifest it serves itself, and each screen is one of the project's own pages in an iframe, so it keeps its own styles, dependencies and state. The contract is in [docs/connector.md](docs/connector.md).
@@ -42,7 +42,7 @@ The package is not published. `npm pack` here builds it into a tarball that anot
 
 Either way Atelier runs at http://localhost:3200. The port is fixed, because saved canvas positions belong to that address; if 3200 is taken, it fails instead of moving. The command takes `--port` for a second copy, which keeps its own positions. It listens on this machine only.
 
-Start each project's own server yourself, in its own folder. Atelier never starts or stops anything.
+Start a project’s **Working preview** yourself. On macOS, Atelier can also prepare and start a committed branch snapshot when its entry has an explicit preview recipe (below). It only stops servers it owns.
 
 ### The project list
 
@@ -72,6 +72,24 @@ Two more things the command does that `npm run dev` does not:
 - **A project is shown without being listed** when the command is run in its folder and the project has `agent-atelier` among its dependencies, or an `atelier` field in its `package.json`. It appears after the listed ones, for that run.
 - **`--origin <id>=<address>`** shows a listed project at another address for that run, for example a worktree's preview on another port. Under `npm run dev` the same is done with `VITE_ORIGIN_<ID>` in `.env.local`.
 
+### Branch-preview recipes
+
+Add `preview` to an object entry in the machine project list. It is never inferred from the branch’s code or manifest. This example fits a project using Vite:
+
+```json
+"preview": {
+  "dir": ".",
+  "requires": ["package.json", "package-lock.json"],
+  "prepare": [["npm", "ci", "--no-audit", "--no-fund"]],
+  "start": ["node", "node_modules/vite/bin/vite.js", "--host", "127.0.0.1", "--port", "{port}", "--strictPort"],
+  "env": {}
+}
+```
+
+Choose commands appropriate to the project. `dir` is relative to the export root; `requires` names files within it that must exist before preparation. Commands are executable/argument arrays without an implicit shell. `start` must contain `{port}` and bind strictly to loopback. The older `start` string remains display-only. Reload Atelier after configuring a recipe.
+
+Atelier resolves a local branch to its commit and exports it with `git archive` beneath `~/.cache/agent-atelier/previews/<atelier port>/<run id>/source`. Uncommitted and ignored files are excluded. Each export installs its own dependencies; no existing checkout or worktree is modified. Closing Atelier stops its owned processes and removes their exports. After an abrupt exit, marked unused exports are cleaned on the next preview-service startup; unknown folders and live runs are preserved.
+
 ## Using the canvas
 
 - **Move:** drag, or scroll. **Zoom:** pinch on a trackpad, or Ctrl/Command + wheel, or the controls at the bottom. 100% is the screen's real size.
@@ -82,9 +100,10 @@ Two more things the command does that `npm run dev` does not:
 - **Interact with a screen:** double-click it, or press Enter on a selected one. Its links, forms and scrolling now work; the rest of the canvas still pans and zooms.
 - **Leave a screen:** "Exit preview" above the screen or in the bar at the bottom, a click on the bare canvas, or Escape while the keyboard is in Atelier.
 
-- **Local branches:** the foot of the sidebar lists the branches of the project's repository: name, age of the last commit, its subject, and a folder mark on each branch that is checked out, with the folder's name. Hover a row for the commit hash and the full path. It is a list to read; nothing in it is a control. It is read when the list opens and when the window regains focus, and it does not depend on the project's server running.
+- **Branch previews (macOS):** choose a local branch, then press **Start preview**. Selection alone runs nothing. Atelier prepares a fresh committed export and keeps the old preview visible until the new manifest is validated. Cancel stops preparation; Stop returns to the external Working preview. The branch and commit identify what is showing. A changed branch tip offers **Update preview**. Device/Size survive a preview switch within the same project. One managed preview runs per Atelier server, plus a temporary replacement while preparing.
 
-Each project remembers its own position, zoom, selected screen and open page in this browser. Previews are never affected by that memory: a screen's state comes from its route alone.
+
+Each project’s Working preview remembers its own position, zoom, selected screen and open page in this browser. Managed branch views are temporary and do not overwrite that memory. Previews are never affected by that memory: a screen's state comes from its route alone.
 
 ## What the project states mean
 
@@ -101,7 +120,8 @@ Each project remembers its own position, zoom, selected screen and open page in 
 - **A pinch or Ctrl/Command + wheel over an entered preview goes to the preview, not the canvas**, and the browser may zoom the whole page instead. Pinch outside the preview, or exit first. (Wheel input was confirmed to stay inside an entered preview; the browser's page zoom itself was not exercised.)
 - **A preview's current page is not shown.** After you navigate inside a preview, its label still names the starting screen. Reload returns it there.
 - **Loaded previews stay loaded** until more than twelve are held, so in-preview navigation survives panning. Switching projects, or a project going offline, discards them.
-- **The branch list does not say which branch a preview shows.** Atelier cannot tell which folder a server on a given port was started from. A folder mark means "checked out there", which is the most a preview could be served from.
+- **Working preview has no verified branch identity.** Atelier cannot tell which checkout an external server uses. Managed previews identify the exact exported commit.
+- **Branch recipes are trusted local commands.** Installs run project code; exports are not a security sandbox. Recipes must keep descendants in the guardian’s process group. No environment files, submodule/LFS handling or non-macOS branch runner in v1.
 - **The project list and the branch list need Atelier's own server.** `npm run dev` and the `agent-atelier` command both provide it. The built page opened any other way says the project list is not available.
 - **Each preview is a full page.** That is fine for a handful of screens; a project with dozens would need thumbnails, which do not exist yet.
 - **Text can shimmer while zooming**, and settles when the zoom stops. At 100% a preview is not scaled at all.
@@ -135,6 +155,6 @@ npm run typecheck
 
 ## Not in scope yet
 
-Annotations, an MCP server, collaboration, starting or stopping project servers, switching or creating branches, public publishing, and shared component libraries across projects.
+Annotations, an MCP server, collaboration, managing external project servers, checking out or creating Git branches, public publishing, and shared component libraries across projects.
 
 An installable package is no longer out of scope. It follows `docs/package-plan.md`: the project list read from a file and the `agent-atelier` command are done; the connector a project imports is next. Until then the connector remains a documented contract.

@@ -14,6 +14,8 @@ export interface Project {
   start?: { cwd: string; command: string };
   /** The project's main folder, where its local branches are read from. Atelier never writes there. */
   repo?: string;
+  /** Only capability is public; executable recipes and environment stay on the server. */
+  canPreview?: boolean;
 }
 
 /** What the server answers at `PROJECTS_PATH`. */
@@ -56,6 +58,7 @@ export function parseProject(input: unknown): Project {
     if (!isRecord(input.start) || typeof input.start.cwd !== "string" || !isText(input.start.command)) throw new Error("the start command must name a folder and a command");
     project.start = { cwd: input.start.cwd, command: input.start.command };
   }
+  if (input.canPreview === true) project.canPreview = true;
   return project;
 }
 
@@ -87,7 +90,7 @@ export function withOverrides(list: ProjectList, override: Overrides): ProjectLi
     const address = override(entry.id);
     if (typeof address !== "string" || !address) return entry;
     try {
-      return { id: entry.id, name: entry.name, origin: parseOrigin(address) };
+      return { id: entry.id, name: entry.name, origin: parseOrigin(address), ...(entry.canPreview ? { canPreview: true } : {}) };
     } catch {
       problems.push(`The address override for "${entry.id}" is not an address such as http://localhost:3000; the listed one is used.`);
       return entry;
