@@ -472,3 +472,10 @@ The card adds no state and no endpoint. It reads the same draft choice as the si
 - The card is already a `role="status"` region, so its lines carry no live-region or alert role of their own; the sidebar keeps the alert.
 
 Checks: typecheck and all 88 tests. In the browser, against a disposable fixture repository with three branches and a scratch project list on port 3296 (`ATELIER_PROJECTS`, through a launch entry removed afterwards): choosing on the card updates the sidebar; start goes through Preparing to live; Stop returns to the card with the choice kept; a branch missing a required file shows its reason on the card with the sidebar hidden; Cancel returns to a startable card and the server reports no candidate; the layout holds at 900 × 600 with a long branch name; a second entry without a recipe shows the command as before. The fixture server and its export were gone after the dev server stopped. Not seen: Palier's own card, because its server on 3100 was running and was left alone; the installed Mac app, which needs its updater. No `server/`, build or `package.json` change, so no `npm pack`. No merge or push.
+
+
+## 2026-10-08 — Open in browser tooltip
+
+Renamed the sidebar working-preview link to “Open in browser”, including its accessible name. Replaced its native title with a custom tooltip: solid black background, white text in the existing 12/18 px style, five-pixel corners, hover and keyboard focus, a hoverable gap, and Escape/click dismissal. The tooltip stays outside preview frames. Other native titles are unchanged.
+
+Typecheck and all 88 tests pass. Browser inspection confirmed the rendered tooltip, exact black/white colors, removal of the native title, keyboard opening, Escape dismissal and reopening on refocus. The temporary review server was stopped. This is source-only; the installed Mac app needs its existing updater. No server, build or package changes, so no tarball check; no merge or push.

@@ -3,6 +3,7 @@ import { ExternalLink, GitBranch, Play, Square, X } from "lucide-react";
 import type { Project } from "../projects";
 import type { Branch, BranchReport } from "../branches";
 import type { PreviewSession } from "../usePreviews";
+import { Tooltip } from "./Tooltip";
 
 export interface PreviewProps {
   project: Project;
@@ -65,7 +66,9 @@ export function PreviewControls(props: PreviewProps) {
           <option value="">Working preview</option>
           <BranchOptions choice={choice} branches={branches} />
         </select>
-        {project.origin && !active && workingLive && <a href={project.origin} target="_blank" rel="noreferrer" className="preview-icon" aria-label="Open working preview" title="Open working preview"><ExternalLink size={14} aria-hidden /></a>}
+        {project.origin && !active && workingLive && <Tooltip label="Open in browser">
+          {descriptionId => <a href={project.origin ?? undefined} target="_blank" rel="noreferrer" className="preview-icon" aria-label="Open in browser" aria-describedby={descriptionId}><ExternalLink size={14} aria-hidden /></a>}
+        </Tooltip>}
       </div>
       {(choice || active || candidate) && <div className="mt-2 flex gap-2">
         {choice ? <button type="button" className="preview-action flex-1" disabled={!canStart} onClick={() => void act({ action: "start", projectId: project.id, branch: choice })}><Play size={13} aria-hidden />{label}</button>
