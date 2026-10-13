@@ -479,3 +479,20 @@ Checks: typecheck and all 88 tests. In the browser, against a disposable fixture
 Renamed the sidebar working-preview link to “Open in browser”, including its accessible name. Replaced its native title with a custom tooltip: solid black background, white text in the existing 12/18 px style, five-pixel corners, hover and keyboard focus, a hoverable gap, and Escape/click dismissal. The tooltip stays outside preview frames. Other native titles are unchanged.
 
 Typecheck and all 88 tests pass. Browser inspection confirmed the rendered tooltip, exact black/white colors, removal of the native title, keyboard opening, Escape dismissal and reopening on refocus. The temporary review server was stopped. This is source-only; the installed Mac app needs its existing updater. No server, build or package changes, so no tarball check; no merge or push.
+
+## 2026-10-13 — The repository moved to the `krux-works` organization
+
+Nicolas wants Benjamin Li, Krux's co-founder, to build the Mac app from source, with access to pull and none to push. A repository on a personal GitHub account gives every collaborator write access, and rules that block pushes need a paid plan there. Nicolas created the free organization `krux-works` and transferred `nicolas-m-design/atelier` into it himself; Benjamin is invited as a member.
+
+- The remote here is `https://github.com/krux-works/atelier.git`. The worktree `~/Worktrees/atelier/graphical-sidebar` shares it.
+- `docs/package-plan.md` names the new address in its install-from-GitHub option.
+
+**What a newcomer would get wrong.**
+
+- Benjamin's read-only access comes from the organization's base permission, which is Read. Raising that setting, or giving him a role on this repository, would let him push.
+- Members may create repositories in the organization. That setting was left at its default.
+- The organization carries the studio's name, and Atelier is still not a Krux project: it names no project in its code, and Krux connects to it like any other.
+- GitHub redirects the old address, so a clone that still names it keeps working. A new repository called `atelier` on the personal account would end that redirect.
+- Benjamin gets what is on GitHub's `main`. Nicolas had it pushed the same day with the three commits that existed on this Mac only, this entry's among them. The branches they were made on are not on GitHub.
+
+**Checks.** `gh` reports `krux-works/atelier` as private with `main` as its default branch; `git fetch` works at the new address. The invitation was still pending, so nobody has cloned with Benjamin's account yet. `npm run typecheck` and `npm test` pass.

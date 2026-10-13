@@ -114,7 +114,7 @@ Steps 1 to 3 change only this repository. Step 4 changes two neighbouring projec
 | Decision | Options | Recommendation |
 | --- | --- | --- |
 | Package name | **Decided, 2026-10-02: `agent-atelier`.** Unclaimed on the npm registry that day, as was `agentatelier`, so npm's rule against names that differ only by punctuation does not block it. | Before publishing, check the registry again and check trademarks: a name is not reserved until something is published under it. See "What the name is up against". |
-| How it is distributed | (a) Public npm. (b) Straight from the private GitHub repository: `npm install -D github:nicolas-m-design/atelier`, which needs a build-on-install script. (c) A local tarball. | (c) for steps 2 to 4, then (b) if only your machines use it, (a) if others should. Only (a), or a paid private registry, gives the exact `npm install agent-atelier` of Agentation. |
+| How it is distributed | (a) Public npm. (b) Straight from the private GitHub repository: `npm install -D github:krux-works/atelier`, which needs a build-on-install script. (c) A local tarball. | (c) for steps 2 to 4, then (b) if only your machines use it, (a) if others should. Only (a), or a paid private registry, gives the exact `npm install agent-atelier` of Agentation. |
 | Licence | MIT, or none (all rights reserved, private use only) | Needed only for (a). |
 | Whether the manifest route answers in production builds | Always, or only when a flag is set | Always, as now: Palier's preview on 3100 is a production build. It lists titles and routes only. |
 
