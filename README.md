@@ -2,6 +2,10 @@
 
 > **Summary:** A local workspace that shows several projects' prototype screens on one pannable, zoomable canvas, with a project switcher. Each project stays in its own repository and runs its own server; Atelier embeds its screens as live previews. Local only: nothing is published or deployed. Its full name is Agent Atelier and its package name `agent-atelier`; these documents and the interface say Atelier. What is specific to the machine it is developed on is in [docs/local-setup.md](docs/local-setup.md).
 
+[![Atelier canvas with five prototype screens arranged in two groups](https://raw.githubusercontent.com/nicolas-m-design/atelier-showcase/c206bd71ffd5b28111eefb75baa41ad22b04d2f2/assets/canvas-overview.png)](https://nicolas-m-design.github.io/atelier-showcase/)
+
+[Watch the demo · 33 seconds](https://nicolas-m-design.github.io/atelier-showcase/)
+
 ## Personal Mac app
 
 On a Mac with Xcode and Node 22.12 or newer installed, run `npm run build:mac`. Copy `macos/build/Atelier.app` into Applications and open it normally. The app bundles the built UI and server, uses installed Node, and starts without a terminal. When saved local source differs from the installed build, an **Update available** button appears at the bottom of the sidebar. Click it, or choose **Atelier → Update Atelier… → Update and Reopen**, to build the current local source, install it and relaunch automatically. The source checkout, its installed dependencies and Xcode command-line tools must remain available; this is a local updater, not a published-release service.
